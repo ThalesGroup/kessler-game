@@ -1,7 +1,13 @@
+# -*- coding: utf-8 -*-
+# Copyright © 2022 Thales. All Rights Reserved.
+# NOTICE: This file is subject to the license agreement defined in file 'LICENSE', which is part of
+# this source code package.
+
 import time
 
 from src.kessler_game import Scenario, KesslerGame, GraphicsType
 from test_controller import TestController
+
 
 my_test_scenario = Scenario(name='Test Scenario',
                             num_asteroids=10,

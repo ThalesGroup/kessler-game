@@ -1,3 +1,8 @@
+# -*- coding: utf-8 -*-
+# Copyright © 2022 Thales. All Rights Reserved.
+# NOTICE: This file is subject to the license agreement defined in file 'LICENSE', which is part of
+# this source code package.
+
 from typing import List
 
 import numpy as np
@@ -6,6 +11,7 @@ from .ship import Ship
 from .asteroid import Asteroid
 from .scenario import Scenario
 from .team import Team
+
 
 class Score:
     def __init__(self, scenario: Scenario):

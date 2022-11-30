@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-# Copyright © 2018-2020 Thales Avionics USA
+# Copyright © 2022 Thales. All Rights Reserved.
 # NOTICE: This file is subject to the license agreement defined in file 'LICENSE', which is part of
 # this source code package.
 
