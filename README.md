@@ -20,9 +20,19 @@ If you need assistance or have question, please contact oss@thalesgroup.com
 
 ## Get started
 
-XXX project purpose it to ...
-
 **Please also add the description into the About section (Description field)**
+
+Kessler is a simulation environment loosely modeled after our internal project PsiBee and the external project [Fuzzy Asteroids](https://github.com/xfuzzycomp/FuzzyAsteroids). The game has ships that shoot bullets at asteroids to gain score. Ships can collide with asteroids and lose lives. If the ship runs out of lives, the game terminates. In multi-ship scenarios, ships can collide with each other as well, but cannot shoot each other.
+
+# Using the UE5 graphics engine
+Under kessler_graphics is an Unreal Engine 5 project for receiving simulation data from the Kessler Python process and displaying it in a 3d environment. To contribute to the UE5 project, do the following.
+- Install Visual Studio 2019 v16.11.5 or later with "Game Development with C++" selected on install
+- Install the .NET Core 3.1 Runtime from https://dotnet.microsoft.com/en-us/download/dotnet/thank-you/runtime-3.1.30-windows-x64-installer?cid=getdotnetcore
+- Install Unreal Engine 5.0.x from the Epic Games Launcher
+- Grab the latest release of the UDP-Unreal plugin from https://github.com/getnamo/UDP-Unreal/releases
+- Follow installation instructions for UDP-Unreal from its included README
+- Right click kessler_graphics.uproject and select "Generate Visual Studio Project Files"
+- Launch the project, and select "Yes" if prompted to rebuild engine modules
 
 ## Documentation
 
