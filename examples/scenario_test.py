@@ -1,6 +1,6 @@
 import time
 
-from src import Scenario, KesslerGame, TrainerEnvironment, GraphicsType
+from src.kessler_game import Scenario, KesslerGame, GraphicsType
 from test_controller import TestController
 
 my_test_scenario = Scenario(name='Test Scenario',

@@ -1,4 +1,4 @@
-from src import KesslerController
+from src.kessler_game import KesslerController
 from typing import Dict, Tuple
 
 

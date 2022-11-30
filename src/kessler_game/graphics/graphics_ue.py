@@ -4,7 +4,6 @@ from typing import List
 from ..ship import Ship
 from ..asteroid import Asteroid
 from ..bullet import Bullet
-from ..scenario import Scenario
 from ..score import Score
 
 class GraphicsUE:
