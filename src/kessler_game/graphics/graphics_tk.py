@@ -12,6 +12,7 @@ class GraphicsTK:
     def __init__(self, scenario, UI_settings):
         self.game_width = scenario.map_size[0]
         self.height = scenario.map_size[1]
+        self.max_time = scenario.time_limit
         self.score_width = 300
         self.window_width = self.game_width + self.score_width
         ship_radius = scenario.ships()[0].radius * 2 - 5
@@ -112,6 +113,10 @@ class GraphicsTK:
         self.canvas.create_rectangle(self.game_width, 0, self.window_width, self.height, outline="white", fill="black",)
         self.canvas.create_line(self.window_width - self.score_width / 2, 0,
                                 self.window_width - self.score_width / 2, self.height, fill="white")
+
+        # show simulation time
+        time_text = "Time: " + f'{score.sim_time:.2f}' + " / " + str(self.max_time) + " sec"
+        self.canvas.create_text(10, 10, text=time_text, fill="white", font=("Courier New", 10), anchor=NW)
 
         # index for loop: allows teams to be displayed in order regardless of team num skipping or strings for team name
         team_num = 0
