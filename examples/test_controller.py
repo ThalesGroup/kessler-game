@@ -19,3 +19,7 @@ class TestController(KesslerController):
         fire = True
 
         return thrust, turn_rate, fire
+
+    @property
+    def name(self) -> str:
+        return "Test Controller"
