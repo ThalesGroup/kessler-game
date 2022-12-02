@@ -32,3 +32,7 @@ class KesslerController:
     @ship_id.setter
     def ship_id(self, value):
         self._ship_id = value
+
+    @property
+    def name(self) -> str:
+        raise NotImplementedError(f"This controller {self.__class__} needs to have a name() property specified.")
