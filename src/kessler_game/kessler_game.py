@@ -40,7 +40,7 @@ class KesslerGame:
         self.time_limit = settings.get("time_limit", None)
 
         # UI settings
-        default_ui = {'ships': True, 'lives_remaining': True, 'accuracy': True, 'asteroids_hit': True}
+        default_ui = {'ships': True, 'lives_remaining': True, 'accuracy': True, 'asteroids_hit': True, 'bullets_remaining': True}
         self.UI_settings = settings.get("UI_settings", default_ui)
         if self.UI_settings == 'all':
             self.UI_settings = {'ships': True, 'lives_remaining': True, 'accuracy': True,
