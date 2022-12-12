@@ -1,30 +1,29 @@
-Describe in this file:
-
-- team organization, roles, communication
-- the rules to be respected by your future contributors
-
 # Contributing guidelines
 
-## Team organization
+## Contributing
 
-### Roles
+### Create an Issue
+- Use the standard GitHub issue tracker in this repository and outline a well-defined bug, feature request, or 
+improvement.
+- Utilize tags to assign appropriate labels to the issue
+- Wait for the repository Administrators to respond to or approve your issue
 
-## How to become a contributor
+### Fork the Repository
+- Click on the fork button at the upper-right of the repository
+- Make sure your fork from the appropriate branch that your desired changes apply to
+- Once you have created a fork in your own account, clone it to your development environment
 
-### Contributor License Agreements
+### Make Your Changes
+- Add the desired feature, or fix a bug!
+- Commit and push your changes to your fork
 
-### Contributing code
+### Open a Pull Request
+- Navigate the main Kessler repository and create a pull request against the branch you forked from
+- Wait for approval and your changes to be merged
 
-## Pull Request Checklist
+## License
+- All contributions should be made under the requirements of the Apache 2.0 License outlined in [LICENSE](LICENSE)
 
-### License
-
-### Coding style
-
-### Testing
-
-#### Running sanity check
-
-#### Running unit tests
-
-### Issues management
+## Coding style
+- No explicit coding style is required for contributing to Kessler, however unorganized or messy code will not be
+considered for contributions. Well-commented, concise, and clean code is required.

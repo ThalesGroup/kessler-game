@@ -1,45 +1,21 @@
-Describe here all the security policies in place on this repository to help your contributors to handle security issues efficiently.
+# Security Policy
 
-## Goods practices to follow
+## Security considerations
+
+Kessler is not a standalone compiled application and is there for susceptible to any security threats possible in
+the execution of any unknown source code. As always, best practices apply of not executing code unless it is from a
+trusted source. The code maintained on this repository will be maintained to be free of any such security
+vulnerabilities.
+
+## Reporting a Vulnerability
+
+If a potential security issue is found, please immediately contact this repository's administrators with a detailed
+explanation of the issue and potential consequences. The current administrator can be reached at
+zachariah.phillips@us.thalesgroup.com
+
+## Goods Practices to Follow
 
 :warning:**You must never store credentials information into source code or config file in a GitHub repository**
 - Block sensitive data being pushed to GitHub by git-secrets or its likes as a git pre-commit hook
 - Audit for slipped secrets with dedicated tools
 - Use environment variables for secrets in CI/CD (e.g. GitHub Secrets) and secret managers in production
-
-# Security Policy
-
-## Supported Versions
-
-Use this section to tell people about which versions of your project are currently being supported with security updates.
-
-| Version | Supported          |
-| ------- | ------------------ |
-| 5.1.x   | :white_check_mark: |
-| 5.0.x   | :x:                |
-| 4.0.x   | :white_check_mark: |
-| < 4.0   | :x:                |
-
-## Reporting a Vulnerability
-
-Use this section to tell people how to report a vulnerability.
-Tell them where to go, how often they can expect to get an update on a reported vulnerability, what to expect if the vulnerability is accepted or declined, etc.
-
-You can ask for support by contacting security@opensource.thalesgroup.com
-
-## Disclosure policy
-
-Define the procedure for what a reporter who finds a security issue needs to do in order to fully disclose the problem safely, including who to contact and how.
-
-## Security Update policy
-
-Define how you intend to update users about new security vulnerabilities as they are found.
-
-## Security related configuration
-
-Settings users should consider that would impact the security posture of deploying this project, such as HTTPS, authorization and many others.
-
-## Known security gaps & future enhancements
-
-Security improvements you haven’t gotten to yet.
-Inform users those security controls aren’t in place, and perhaps suggest they contribute an implementation
