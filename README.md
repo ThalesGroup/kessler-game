@@ -40,4 +40,4 @@ If you are interested in contributing to the Kessler project, start by reading t
 
 ## License
 
-Kessler is licensed under the Apache 2.0 license. Please read [License](License) for more information.
+Kessler is licensed under the Apache 2.0 license. Please read [LICENSE](LICENSE) for more information.
