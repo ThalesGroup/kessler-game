@@ -32,7 +32,7 @@ displaying it in a 3d environment. To contribute to the UE5 project, you will ne
 ## Documentation
 
 Documentation is not yet available for Kessler. If you would like to contribute to documentation, check out 
-[CONTRIBUTING.md] for info on how to get started
+[CONTRIBUTING.md](CONTRIBUTING.md) for info on how to get started
 
 ## Contributing
 
@@ -40,4 +40,4 @@ If you are interested in contributing to the Kessler project, start by reading t
 
 ## License
 
-Kessler is licensed under the Apache 2.0 license. Please read [License] for more information.
+Kessler is licensed under the Apache 2.0 license. Please read [License](License) for more information.
