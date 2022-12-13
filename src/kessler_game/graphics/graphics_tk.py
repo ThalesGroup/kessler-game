@@ -13,7 +13,7 @@ class GraphicsTK:
         self.game_width = scenario.map_size[0]
         self.height = scenario.map_size[1]
         self.max_time = scenario.time_limit
-        self.score_width = 300
+        self.score_width = 385
         self.window_width = self.game_width + self.score_width
         ship_radius = scenario.ships()[0].radius * 2 - 5
 
@@ -50,6 +50,7 @@ class GraphicsTK:
         self.show_asteroids_hit = UI_settings.get('asteroids_hit', False)
         self.show_shots_fired = UI_settings.get('shots_fired', False)
         self.show_bullets_remaining = UI_settings.get('bullets_remaining', False)
+        self.show_controller_name = UI_settings.get('controller_name', False)
 
     def update(self, score, ships, asteroids, bullets):
         # reset canvas
@@ -133,9 +134,10 @@ class GraphicsTK:
             if self.show_ships:
                 for ship in ships:
                     if ship.team == team.team_id:
-                        # TODO add controller name
-                        # ships_text += ("Ship " + str(ship.id) + ": " + str(ship.controller_name))
-                        ships_text += ("Ship " + str(ship.id) + "\n")
+                        ships_text += ("Ship " + str(ship.id))
+                        if self.show_controller_name:
+                            ships_text += ": " + str(ship.controller.name)
+                        ships_text += '\n'
 
             team_info = self.format_ui(team)
             score_board = title + ships_text + team_info
@@ -161,7 +163,8 @@ class GraphicsTK:
             self.canvas.create_text(output_location_x, output_location_y,
                                     text=score_board, fill="white", font=("Courier New", 10), anchor=NW, )
 
-            self.canvas.create_image(output_location_x + 120, output_location_y + 30, image=self.team_images[(team.team_id-1) % self.num_images])
+            self.canvas.create_image(output_location_x + 120, output_location_y + 15,
+                                     image=self.team_images[(team.team_id-1) % self.num_images])
             team_num += 1
 
     def format_ui(self, team):

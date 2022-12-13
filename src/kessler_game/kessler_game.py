@@ -40,11 +40,13 @@ class KesslerGame:
         self.time_limit = settings.get("time_limit", None)
 
         # UI settings
-        default_ui = {'ships': True, 'lives_remaining': True, 'accuracy': True, 'asteroids_hit': True, 'bullets_remaining': True}
+        default_ui = {'ships': True, 'lives_remaining': True, 'accuracy': True,
+                      'asteroids_hit': True, 'bullets_remaining': True, 'controller_name': True}
         self.UI_settings = settings.get("UI_settings", default_ui)
         if self.UI_settings == 'all':
             self.UI_settings = {'ships': True, 'lives_remaining': True, 'accuracy': True,
-                                'asteroids_hit': True, 'shots_fired': True, 'bullets_remaining': True}
+                                'asteroids_hit': True, 'shots_fired': True, 'bullets_remaining': True,
+                                'controller_name': True}
         
     def run(self, scenario: Scenario, controllers: List[KesslerController]) -> (Score, OrderedDict):
         """
@@ -71,6 +73,7 @@ class KesslerGame:
         # Assign controllers to each ship
         for controller, ship in zip(controllers, ships):
             controller.ship_id = ship.id
+            ship.controller = controller
 
         # Initialize graphics display
         graphics = GraphicsHandler(self.graphics_type, scenario, self.UI_settings)
