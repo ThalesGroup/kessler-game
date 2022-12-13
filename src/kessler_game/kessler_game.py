@@ -71,6 +71,7 @@ class KesslerGame:
         # Assign controllers to each ship
         for controller, ship in zip(controllers, ships):
             controller.ship_id = ship.id
+            ship.controller = controller
 
         # Initialize graphics display
         graphics = GraphicsHandler(self.graphics_type, scenario, self.UI_settings)

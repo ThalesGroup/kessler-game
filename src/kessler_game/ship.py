@@ -22,6 +22,7 @@ class Ship:
         """
 
         # Control information
+        self.controller = None
         self.thrust = 0.0     # speed defaults to minimum
         self.turn_rate = 0.0
 
