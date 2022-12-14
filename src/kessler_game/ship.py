@@ -16,6 +16,7 @@ class Ship:
                  angle: float = 90,
                  lives: int = 3,
                  team: int = 1,
+                 team_name: str = None,
                  bullets_remaining: int = -1):
         """
         Instantiate a ship with default parameters and infinite bullets if not specified
@@ -35,6 +36,7 @@ class Ship:
         self.lives = lives
         self.deaths = 0
         self.team = team
+        self.team_name = team_name if team_name is not None else 'Team ' + str(self.team)
 
         # Controller inputs
         self.fire = False
@@ -72,7 +74,7 @@ class Ship:
             "mass": float(self.mass),
             "radius": float(self.radius),
             "id": int(self.id),
-            "team": int(self.team),
+            "team": str(self.team),
             "lives_remaining": int(self.lives),
         }
 

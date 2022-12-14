@@ -7,8 +7,9 @@ import numpy as np
 
 
 class Team:
-    def __init__(self, id):
+    def __init__(self, id, name):
         self.team_id = id
+        self.team_name = name
 
         self.total_bullets = 0
         self.total_asteroids = 0

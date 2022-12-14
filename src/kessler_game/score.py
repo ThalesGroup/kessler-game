@@ -21,7 +21,8 @@ class Score:
 
         # Initialize team classes to score team-specific scores
         team_ids = [ship.team for ship in scenario.ships()]
-        self.teams = [Team(team_id) for team_id in np.unique(team_ids)]
+        team_names = [ship.team_name for ship in scenario.ships()]
+        self.teams = [Team(team_id, team_name) for team_id, team_name in zip(np.unique(team_ids), np.unique(team_names))]
 
         # Populate scenario initial conditions into score parameters
         for team in self.teams:
