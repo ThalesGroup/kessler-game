@@ -127,7 +127,7 @@ class GraphicsTK:
 
         for team in score.teams:
             # create text contents
-            title = "Team " + str(team.team_id) + "\n"
+            title = team.team_name + "\n"
             ships_text = "_________\n"
 
             # add each ship to text if enabled
