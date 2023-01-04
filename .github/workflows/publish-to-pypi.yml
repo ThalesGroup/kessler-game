@@ -31,8 +31,8 @@ jobs:
           TWINE_USERNAME: __token__
           TWINE_PASSWORD: ${{ secrets.PYPI_API_TOKEN }}
         run: |
-        python setup.py sdist bdist_wheel
-        twine upload dist/*
+          python setup.py sdist bdist_wheel
+          twine upload dist/*
 #      - name: Publish distribution to PyPI
 #        uses: pypa/gh-action-pypi-publish@27b31702a0e7fc50959f5ad993c78deac1bdfc29
 #        with:
