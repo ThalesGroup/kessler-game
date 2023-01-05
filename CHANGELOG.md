@@ -1,5 +1,9 @@
 # Changelog
 
+## [1.3.0] - 5 January 2023
+
+- Project name refactor for PyPI. Breaking change for imports, now named `kesslergame` instead of `kessler_game`.
+
 ## [1.2.0] - 4 January 2023
 
 - `team_name` property added for teams
