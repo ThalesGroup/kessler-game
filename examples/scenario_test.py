@@ -7,6 +7,7 @@ import time
 
 from src.kesslergame import Scenario, KesslerGame, GraphicsType
 from test_controller import TestController
+from graphics_both import GraphicsBoth
 
 
 my_test_scenario = Scenario(name='Test Scenario',
@@ -20,10 +21,10 @@ my_test_scenario = Scenario(name='Test Scenario',
                             ammo_limit_multiplier=0,
                             stop_if_no_ammo=False)
 
-
 game_settings = {'perf_tracker': True,
-                 'graphics_mode': GraphicsType.Tkinter,
-                 'realtime_multiplier': 1}
+                 'graphics_type': GraphicsType.Custom,
+                 'realtime_multiplier': 1,
+                 'graphics_obj': GraphicsBoth()}
 game = KesslerGame(settings=game_settings)  # Use this to visualize the game scenario
 # game = TrainerEnvironment(settings=game_settings)  # Use this for max-speed, no-graphics simulation
 
