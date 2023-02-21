@@ -7,9 +7,23 @@ import os
 from tkinter import *
 from PIL import Image, ImageTk
 
+from .graphics_base import KesslerGraphics
 
-class GraphicsTK:
-    def __init__(self, scenario, UI_settings):
+
+class GraphicsTK(KesslerGraphics):
+    def __init__(self, UI_settings):
+        # UI settings
+        # lives, accuracy, asteroids hit, shots taken, bullets left
+        # default_ui = {'ships': True, 'lives_remaining': True, 'accuracy': True, 'asteroids_hit': True}
+        self.show_ships = UI_settings.get('ships', False)
+        self.show_lives = UI_settings.get('lives_remaining', False)
+        self.show_accuracy = UI_settings.get('accuracy', False)
+        self.show_asteroids_hit = UI_settings.get('asteroids_hit', False)
+        self.show_shots_fired = UI_settings.get('shots_fired', False)
+        self.show_bullets_remaining = UI_settings.get('bullets_remaining', False)
+        self.show_controller_name = UI_settings.get('controller_name', False)
+
+    def start(self, scenario):
         self.game_width = scenario.map_size[0]
         self.height = scenario.map_size[1]
         self.max_time = scenario.time_limit
@@ -41,17 +55,6 @@ class GraphicsTK:
         self.ship_images = [(Image.open(os.path.join(script_dir, image))).resize((ship_radius, ship_radius)) for image in self.images]
         self.team_images = [ImageTk.PhotoImage(img) for img in self.ship_images]
 
-        # UI settings
-        # lives, accuracy, asteroids hit, shots taken, bullets left
-        # default_ui = {'ships': True, 'lives_remaining': True, 'accuracy': True, 'asteroids_hit': True}
-        self.show_ships = UI_settings.get('ships', False)
-        self.show_lives = UI_settings.get('lives_remaining', False)
-        self.show_accuracy = UI_settings.get('accuracy', False)
-        self.show_asteroids_hit = UI_settings.get('asteroids_hit', False)
-        self.show_shots_fired = UI_settings.get('shots_fired', False)
-        self.show_bullets_remaining = UI_settings.get('bullets_remaining', False)
-        self.show_controller_name = UI_settings.get('controller_name', False)
-
     def update(self, score, ships, asteroids, bullets):
         # reset canvas
         self.canvas.delete("all")
@@ -61,7 +64,7 @@ class GraphicsTK:
 
         # plot ships
         for ship in ships:
-            current_images.append(ImageTk.PhotoImage(self.ship_images[(ship.team-1) % self.num_images].rotate(-ship.heading - 90)))
+            current_images.append(ImageTk.PhotoImage(self.ship_images[(ship.team-1) % self.num_images].rotate(180-(-ship.heading - 90))))
             if ship.alive:
 
                 # use respawn time to determine color of ring, ring shows ship radius
@@ -77,25 +80,25 @@ class GraphicsTK:
                 color = "#%02x%02x%02x" % (r, g, b)
 
                 # plot ring
-                self.canvas.create_oval(ship.position[0] - ship.radius, ship.position[1] + ship.radius,
-                                        ship.position[0] + ship.radius, ship.position[1] - ship.radius,
+                self.canvas.create_oval(ship.position[0] - ship.radius, self.height - (ship.position[1] + ship.radius),
+                                        ship.position[0] + ship.radius, self.height - (ship.position[1] - ship.radius),
                                         fill="black", outline=color)
 
                 # plot image and ship number text
-                self.canvas.create_image(ship.position[0], ship.position[1], image=current_images[ship.id-1])
-                self.canvas.create_text(ship.position[0] + ship.radius, ship.position[1] + ship.radius, text=str(ship.id), fill='white')
+                self.canvas.create_image(ship.position[0], self.height - ship.position[1], image=current_images[ship.id-1])
+                self.canvas.create_text(ship.position[0] + ship.radius, self.height - (ship.position[1] + ship.radius), text=str(ship.id), fill='white')
 
         # plot bullets
         for bullet in bullets:
-            self.canvas.create_line(bullet.position[0], bullet.position[1],
-                                    bullet.tail[0], bullet.tail[1],
+            self.canvas.create_line(bullet.position[0], self.height - bullet.position[1],
+                                    bullet.tail[0], self.height - bullet.tail[1],
                                     fill="red")
 
         # plot asteroids
         # create_oval(x0,y0,x1,y1) where (x0,y0) is the top left corner of the object and (x1,y1) is the bottom right
         for asteroid in asteroids:
-            self.canvas.create_oval(asteroid.position[0]-asteroid.radius, asteroid.position[1] + asteroid.radius,
-                                    asteroid.position[0] + asteroid.radius, asteroid.position[1] - asteroid.radius,
+            self.canvas.create_oval(asteroid.position[0]-asteroid.radius, self.height - (asteroid.position[1] + asteroid.radius),
+                                    asteroid.position[0] + asteroid.radius, self.height - (asteroid.position[1] - asteroid.radius),
                                     fill="grey")
 
         self.update_score(score, ships)

@@ -36,6 +36,7 @@ class KesslerGame:
         self.perf_tracker = settings.get("perf_tracker", True)
         self.prints_on = settings.get("prints_on", True)
         self.graphics_type = settings.get("graphics_type", GraphicsType.Tkinter)
+        self.graphics_obj = settings.get("graphics_obj", None)
         self.realtime_multiplier = settings.get("realtime_multiplier", 0 if self.graphics_type==GraphicsType.NoGraphics else 1)
         self.time_limit = settings.get("time_limit", None)
 
@@ -76,7 +77,7 @@ class KesslerGame:
             ship.controller = controller
 
         # Initialize graphics display
-        graphics = GraphicsHandler(self.graphics_type, scenario, self.UI_settings)
+        graphics = GraphicsHandler(type=self.graphics_type, scenario=scenario, UI_settings=self.UI_settings, graphics_obj=self.graphics_obj)
 
         if self.perf_tracker:
             perf_list = []

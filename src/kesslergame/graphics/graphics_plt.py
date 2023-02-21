@@ -9,12 +9,11 @@ import matplotlib.pyplot as plt
 import matplotlib.image as mpimg
 import scipy.ndimage as ndimage
 
+from .graphics_base import KesslerGraphics
 
-class GraphicsPLT:
-    def __init__(self, map_size):
 
-        # Environment data
-        self.map_size = map_size
+class GraphicsPLT(KesslerGraphics):
+    def __init__(self):
 
         # Objects for plotting data
         self.fig = None
@@ -27,7 +26,13 @@ class GraphicsPLT:
         self.ship_images = [mpimg.imread(os.path.join(script_dir, image)) for image in self.images]
         self.bullets_line = 0
 
-    def plot_first(self, ships, bullets, asteroids):
+    def start(self, scenario):
+        # Environment data
+        self.map_size = scenario.map_size
+
+        ships = scenario.ships()
+        bullets = []
+        asteroids = scenario.asteroids()
 
         plt.ion()
         # self.fig = plt.figure(figsize=(self.map_size[0], self.map_size[1]))
@@ -39,7 +44,7 @@ class GraphicsPLT:
 
         # plt.show()
 
-    def update(self, ships, bullets, asteroids):
+    def update(self, score, ships, bullets, asteroids):
         # clears ax
         plt.cla()
 
