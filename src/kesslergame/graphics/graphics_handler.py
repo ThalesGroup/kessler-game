@@ -24,7 +24,7 @@ class GraphicsHandler:
         self.type = type
         if graphics_obj is not None:
             self.graphics = graphics_obj
-            if not issubclass(graphics_obj, KesslerGraphics):
+            if not issubclass(graphics_obj.__class__, KesslerGraphics):
                 raise ValueError('Settings "graphics_obj" must be a child of type "KesslerGraphics"')
         else:
             match self.type:

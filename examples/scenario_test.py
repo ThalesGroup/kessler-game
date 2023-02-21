@@ -24,7 +24,7 @@ my_test_scenario = Scenario(name='Test Scenario',
 game_settings = {'perf_tracker': True,
                  'graphics_type': GraphicsType.Custom,
                  'realtime_multiplier': 1,
-                 'graphics_obj': GraphicsBoth()}
+                 'graphics_obj': None}
 game = KesslerGame(settings=game_settings)  # Use this to visualize the game scenario
 # game = TrainerEnvironment(settings=game_settings)  # Use this for max-speed, no-graphics simulation
 
