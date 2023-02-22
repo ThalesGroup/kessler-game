@@ -8,8 +8,9 @@ from .kessler_game import KesslerGame, TrainerEnvironment
 from .controller import KesslerController
 from .scenario import Scenario
 from .score import Score
-from .graphics import GraphicsType
+from .graphics import GraphicsType, KesslerGraphics
 
 
-__all__ = ['KesslerGame', 'TrainerEnvironment', 'KesslerController', 'Scenario', 'Score', 'GraphicsType']
+__all__ = ['KesslerGame', 'TrainerEnvironment', 'KesslerController', 'Scenario', 'Score', 'GraphicsType',
+           'KesslerGraphics']
 __version__ = '1.3.0'

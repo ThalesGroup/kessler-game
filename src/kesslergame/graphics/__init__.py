@@ -4,5 +4,6 @@
 # this source code package.
 
 from .graphics_handler import GraphicsType, GraphicsHandler
+from .graphics_base import KesslerGraphics
 
-__all__ = ['GraphicsType', 'GraphicsHandler']
+__all__ = ['GraphicsType', 'GraphicsHandler', 'KesslerGraphics']

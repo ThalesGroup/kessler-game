@@ -4,16 +4,19 @@
 # this source code package.
 
 import socket
+import numpy as np
 from typing import List
 
 from ..ship import Ship
 from ..asteroid import Asteroid
 from ..bullet import Bullet
 from ..score import Score
+from ..scenario import Scenario
+from .graphics_base import KesslerGraphics
 
-class GraphicsUE:
-    def __init__(self, map_size, ship_count, team_count):
 
+class GraphicsUE(KesslerGraphics):
+    def __init__(self):
         # Create udp senders/receivers
         udp_host = 'localhost'
         udp_port = 12345
@@ -21,6 +24,11 @@ class GraphicsUE:
         self.udp_recvr = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
         self.udp_recvr.bind(('localhost', 12346))
         self.udp_addr = (udp_host, udp_port)
+
+    def start(self, scenario: Scenario):
+        self.map_size = scenario.map_size
+        ship_count = len(scenario.ships())
+        team_count = len(np.unique([ship.team for ship in scenario.ships()]))
 
         # TODO Launch game
 
@@ -33,33 +41,33 @@ class GraphicsUE:
         print('Graphics ready. Starting simulation')
 
         start_str = '::start::'
-        start_str += 'map:' + str(map_size[0]) + ',' + str(map_size[1]) + ';'
-        start_str += 'ships:' + str(ship_count)  + ';'
+        start_str += 'map:' + str(self.map_size[0]) + ',' + str(self.map_size[1]) + ';'
+        start_str += 'ships:' + str(ship_count) + ';'
         start_str += 'teams:' + str(team_count)
         self.udp_sock.sendto(start_str.encode('utf-8'), self.udp_addr)
 
     def update(self, score: Score, ships: List[Ship], asteroids: List[Asteroid], bullets: List[Bullet]):
         update_str = '::frame::'
         for ship in ships:
-            update_str += 's(' + str(int(ship.position[0])) + \
+            update_str += 's(' + str(int(self.map_size[0]-ship.position[0])) + \
                           ',' + str(int(ship.position[1])) + \
-                          ',' + str(int(ship.heading)) + \
+                          ',' + str(int(180-ship.heading)) + \
                           ',' + str(int(ship.radius)) + \
                           ',' + str(int(ship.alive)) + \
                           ',' + str(float(ship.respawn_time_left)) + \
                           ');'
         for ast in asteroids:
-            update_str += 'a(' + str(int(ast.position[0])) + \
+            update_str += 'a(' + str(int(self.map_size[0]-ast.position[0])) + \
                           ',' + str(int(ast.position[1])) + \
-                          ',' + str(int(ast.angle)) + \
+                          ',' + str(int(180-ast.angle)) + \
                           ',' + str(int(ast.radius)) + \
                           ',' + str(int(0.00)) + \
                           ',' + str(int(0.00)) + \
                           ');'
         for bullet in bullets:
-            update_str += 'b(' + str(int(bullet.position[0])) + \
+            update_str += 'b(' + str(int(self.map_size[0]-bullet.position[0])) + \
                           ',' + str(int(bullet.position[1])) + \
-                          ',' + str(int(bullet.heading)) + \
+                          ',' + str(int(180-bullet.heading)) + \
                           ',' + str(int(bullet.length)) + \
                           ',' + str(int(0.00)) + \
                           ',' + str(int(0.00)) + \

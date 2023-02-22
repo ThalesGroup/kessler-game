@@ -1,2 +1,2 @@
 include requirements.txt
-recursive-include src/kesslergame/graphics/images/*.png
+include src/kesslergame/graphics/images/*.png
