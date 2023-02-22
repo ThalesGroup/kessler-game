@@ -1,5 +1,10 @@
 # Changelog
 
+## [1.3.1] - 22 February 2023
+
+- Fixed bug in 1.3.0 where sprites used in Tkinter graphics would not be packaged into release wheel
+- Added `KesslerGraphics` class to allow for the creation of custom graphics display interfaces
+
 ## [1.3.0] - 5 January 2023
 
 - Project name refactor for PyPI. Breaking change for imports, now named `kesslergame` instead of `kessler_game`.
