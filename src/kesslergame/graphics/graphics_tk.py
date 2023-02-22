@@ -15,13 +15,13 @@ class GraphicsTK(KesslerGraphics):
         # UI settings
         # lives, accuracy, asteroids hit, shots taken, bullets left
         # default_ui = {'ships': True, 'lives_remaining': True, 'accuracy': True, 'asteroids_hit': True}
-        self.show_ships = UI_settings.get('ships', False)
-        self.show_lives = UI_settings.get('lives_remaining', False)
-        self.show_accuracy = UI_settings.get('accuracy', False)
-        self.show_asteroids_hit = UI_settings.get('asteroids_hit', False)
+        self.show_ships = UI_settings.get('ships', True)
+        self.show_lives = UI_settings.get('lives_remaining', True)
+        self.show_accuracy = UI_settings.get('accuracy', True)
+        self.show_asteroids_hit = UI_settings.get('asteroids_hit', True)
         self.show_shots_fired = UI_settings.get('shots_fired', False)
         self.show_bullets_remaining = UI_settings.get('bullets_remaining', False)
-        self.show_controller_name = UI_settings.get('controller_name', False)
+        self.show_controller_name = UI_settings.get('controller_name', True)
 
     def start(self, scenario):
         self.game_width = scenario.map_size[0]
