@@ -23,7 +23,7 @@ my_test_scenario = Scenario(name='Test Scenario',
 
 game_settings = {'perf_tracker': True,
                  'graphics_type': GraphicsType.Tkinter,
-                 'realtime_multiplier': 1,
+                 'realtime_multiplier': 0,
                  'graphics_obj': None}
 game = KesslerGame(settings=game_settings)  # Use this to visualize the game scenario
 # game = TrainerEnvironment(settings=game_settings)  # Use this for max-speed, no-graphics simulation
@@ -37,3 +37,4 @@ print('Asteroids hit: ' + str([team.asteroids_hit for team in score.teams]))
 print('Deaths: ' + str([team.deaths for team in score.teams]))
 print('Accuracy: ' + str([team.accuracy for team in score.teams]))
 print('Mean eval time: ' + str([team.mean_eval_time for team in score.teams]))
+print('Evaluated frames: ' + str([controller.eval_frames for controller in score.final_controllers]))
