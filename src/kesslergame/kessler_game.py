@@ -79,8 +79,8 @@ class KesslerGame:
         # Initialize graphics display
         graphics = GraphicsHandler(type=self.graphics_type, scenario=scenario, UI_settings=self.UI_settings, graphics_obj=self.graphics_obj)
 
-        if self.perf_tracker:
-            perf_list = []
+        # Initialize list of dictionary for performance tracking (will remain empty if perf_tracker is false
+        perf_list = []
 
         ######################
         # MAIN SCENARIO LOOP #
@@ -289,7 +289,7 @@ class KesslerGame:
         score.finalize(sim_time, stop_reason)
 
         # Return the score and stop condition
-        return score, perf_dict
+        return score, perf_list
 
 
 class TrainerEnvironment(KesslerGame):
