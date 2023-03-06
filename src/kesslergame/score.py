@@ -47,6 +47,7 @@ class Score:
                         team.eval_times.append(controller_perf[idx])
             team.asteroids_hit, team.bullets_hit, team.shots_fired, team.bullets_remaining, team.deaths, team.lives_remaining = (ast_hit, bul_hit, shots, bullets, deaths, lives)
 
-    def finalize(self, sim_time, stop_reason):
+    def finalize(self, sim_time, stop_reason, ships):
         self.sim_time = sim_time
         self.stop_reason = stop_reason
+        self.final_controllers = [ship.controller for ship in ships]

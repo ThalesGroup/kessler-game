@@ -286,7 +286,7 @@ class KesslerGame:
         graphics.close()
 
         # Finalize score class before returning
-        score.finalize(sim_time, stop_reason)
+        score.finalize(sim_time, stop_reason, ships)
 
         # Return the score and stop condition
         return score, perf_list
