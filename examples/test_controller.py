@@ -15,7 +15,7 @@ class TestController(KesslerController):
         """
 
         thrust = 0
-        turn_rate = 50
+        turn_rate = 90
         fire = True
 
         return thrust, turn_rate, fire
