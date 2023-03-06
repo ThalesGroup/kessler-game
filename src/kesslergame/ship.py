@@ -4,6 +4,7 @@
 # this source code package.
 
 import math
+import warnings
 import numpy as np
 from typing import Dict, Any, List
 
@@ -151,6 +152,11 @@ class Ship:
         else:
             self.speed -= drag_amount * np.sign(self.speed)
 
+        # Bounds check the thrust
+        if self.thrust < self.thrust_range[0] or self.thrust > self.thrust_range[1]:
+            self.thrust = min(max(self.thrust_range[0], self.thrust), self.thrust_range[1])
+            warnings.warn('Ship ' + str(self.id) + ' thrust command outside of allowable range', RuntimeWarning)
+
         # Apply thrust
         self.speed += self.thrust * delta_time
 
@@ -159,6 +165,11 @@ class Ship:
             self.speed = self.max_speed
         elif self.speed < -self.max_speed:
             self.speed = -self.max_speed
+
+        # Bounds check the turn rate
+        if self.turn_rate < self.turn_rate_range[0] or self.turn_rate > self.turn_rate_range[1]:
+            self.turn_rate = min(max(self.turn_rate_range[0], self.turn_rate), self.turn_rate_range[1])
+            warnings.warn('Ship ' + str(self.id) + ' turn rate command outside of allowable range', RuntimeWarning)
 
         # Update the angle based on turning rate
         self.heading += self.turn_rate * delta_time

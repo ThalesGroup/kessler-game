@@ -22,7 +22,7 @@ my_test_scenario = Scenario(name='Test Scenario',
                             stop_if_no_ammo=False)
 
 game_settings = {'perf_tracker': True,
-                 'graphics_type': GraphicsType.Custom,
+                 'graphics_type': GraphicsType.Tkinter,
                  'realtime_multiplier': 1,
                  'graphics_obj': None}
 game = KesslerGame(settings=game_settings)  # Use this to visualize the game scenario
