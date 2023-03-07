@@ -1,5 +1,11 @@
 # Changelog
 
+## [1.3.2] - 22 February 2023
+
+- Fixed bug where controller thrust and turn rate commands were not clamped to allowable range before being applied.
+- Fixed bug where perferormance metrics were not returned after using `KesslerGame.run()`
+- Added finalized controller references to `Score` object returned from `KesslerGame.run()`. Allows user to access saved characteristics of controller after simulation.
+
 ## [1.3.1] - 22 February 2023
 
 - Fixed bug in 1.3.0 where sprites used in Tkinter graphics would not be packaged into release wheel
