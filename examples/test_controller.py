@@ -23,3 +23,9 @@ class TestController(KesslerController):
     @property
     def name(self) -> str:
         return "Test Controller"
+
+
+    def explanation(self):
+        exp = "Say this phrase of stuff about things"
+        return exp
+

@@ -24,6 +24,13 @@ class KesslerController:
         raise NotImplementedError('Your derived KesslerController must include an actions method for control input.')
 
 
+    def explanation(self):
+        """
+        Method for passing explanation strings from the AI system to the game for tts
+
+        """
+        raise NotImplementedError("Your derived KesslerController must include an explanation method for passing explanation strings to the game.")
+
     # Property to store the ID for the ship this controller is attached to during a scenario
     @property
     def ship_id(self):
