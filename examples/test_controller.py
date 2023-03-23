@@ -4,15 +4,19 @@
 # this source code package.
 
 from src.kesslergame import KesslerController
+from src.kesslergame.explanation import TTSController
 from typing import Dict, Tuple
 
 
-class TestController(KesslerController):
+class TestController(TTSController):
+    def __init__(self):
+        self.my_heading = None
 
     def actions(self, ship_state: Dict, game_state: Dict) -> Tuple[float, float, bool]:
         """
         Method processed each time step by this controller.
         """
+        self.my_heading = round(ship_state['heading'])
 
         thrust = 0
         turn_rate = 50
@@ -24,8 +28,7 @@ class TestController(KesslerController):
     def name(self) -> str:
         return "Test Controller"
 
-
-    def explanation(self):
-        exp = "Say this phrase of stuff about things"
+    @property
+    def explanation(self) -> str:
+        exp = "My heading is "+ str(self.my_heading) + " degrees"
         return exp
-
