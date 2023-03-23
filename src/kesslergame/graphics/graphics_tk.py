@@ -15,6 +15,7 @@ class GraphicsTK(KesslerGraphics):
         # UI settings
         # lives, accuracy, asteroids hit, shots taken, bullets left
         # default_ui = {'ships': True, 'lives_remaining': True, 'accuracy': True, 'asteroids_hit': True}
+        UI_settings = {} if UI_settings is None else UI_settings
         self.show_ships = UI_settings.get('ships', True)
         self.show_lives = UI_settings.get('lives_remaining', True)
         self.show_accuracy = UI_settings.get('accuracy', True)
