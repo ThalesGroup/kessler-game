@@ -1,5 +1,13 @@
 # Changelog
 
+## [1.3.3] - 13 April 2023
+
+- Fixed bug with `out_of_bullets` stop condition not covering all cases
+- Fixed bug in `GraphicsTK` when `ui_settings` are `None`
+- Added gamepad functionality for human players. To do so import `GamepadController` from `src.kesslergame.
+  controller_gamepad` and use when passing to game object just like `KesslerController`. Requires a Windows 
+  compatible controller such as a wired X360 controller.
+
 ## [1.3.2] - 22 February 2023
 
 - Fixed bug where controller thrust and turn rate commands were not clamped to allowable range before being applied.
