@@ -1,5 +1,10 @@
 # Changelog
 
+## [1.3.4] - 16 April 2023
+
+- Fixed bug in relative imports of `GamepadController` class
+- Updated `__init__.py` in `src` with `GamepadController`
+
 ## [1.3.3] - 13 April 2023
 
 - Fixed bug with `out_of_bullets` stop condition not covering all cases

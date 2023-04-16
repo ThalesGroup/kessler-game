@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 
-from src.kesslergame.controller import KesslerController
+from .controller import KesslerController
 from typing import Dict, Tuple
 from inputs import get_gamepad
 import math

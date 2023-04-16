@@ -6,11 +6,12 @@
 from .ship import Ship
 from .kessler_game import KesslerGame, TrainerEnvironment
 from .controller import KesslerController
+from .controller_gamepad import GamepadController
 from .scenario import Scenario
 from .score import Score
 from .graphics import GraphicsType, KesslerGraphics
 
 
 __all__ = ['KesslerGame', 'TrainerEnvironment', 'KesslerController', 'Scenario', 'Score', 'GraphicsType',
-           'KesslerGraphics']
-__version__ = '1.3.3'
+           'KesslerGraphics', 'GamepadController']
+__version__ = '1.3.4'
