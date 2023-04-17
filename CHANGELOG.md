@@ -1,5 +1,9 @@
 # Changelog
 
+## [1.3.5] - 17 April 2023
+
+- Fixed bug in ship-ship collisions where deaths were not properly counted for both ships.
+
 ## [1.3.4] - 16 April 2023
 
 - Fixed bug in relative imports of `GamepadController` class
