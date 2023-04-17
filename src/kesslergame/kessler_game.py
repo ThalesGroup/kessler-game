@@ -220,7 +220,8 @@ class KesslerGame:
                     if (ship1 is not ship2) and (not ship2.is_respawning) and (not ship1.is_respawning):
                         dist = np.sqrt(sum([(pos1 - pos2) ** 2 for pos1, pos2 in zip(ship1.position, ship2.position)]))
                         if dist < ship1.radius + ship2.radius:
-                            ship1.destruct(map_size=scenario.map_size) # Only destroy one ship. Other ship gets destructed in its loop
+                            ship1.destruct(map_size=scenario.map_size)
+                            ship2.destruct(map_size=scenario.map_size)
             # Cull ships that are not alive
             liveships = [ship for ship in liveships if ship.alive]
 

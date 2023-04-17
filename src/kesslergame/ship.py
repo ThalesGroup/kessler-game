@@ -195,12 +195,11 @@ class Ship:
         """
         self.lives -= 1
         self.deaths +=1
-        if self.lives > 0:
-            # spawn_position = [map_size[0] / 2,
-            #                   map_size[1] / 2]
-            spawn_position = self.position
-            spawn_heading = self.heading
-            self.respawn(spawn_position, spawn_heading)
+        # spawn_position = [map_size[0] / 2,
+        #                   map_size[1] / 2]
+        spawn_position = self.position
+        spawn_heading = self.heading
+        self.respawn(spawn_position, spawn_heading)
 
     def respawn(self, position: List[float], heading: float = 90.0) -> None:
         """
