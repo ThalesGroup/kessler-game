@@ -5,26 +5,44 @@ from typing import Dict, Tuple
 from inputs import get_gamepad
 import math
 import threading
+import time
 
 
 class GamepadController(KesslerController):
 
     def __init__(self):
         self.gamepad = XboxController()
+        # tracker to determine if human paused game
+        self.paused = False
+        self.time_last_paused = 0.0
+        # can only toggle pausing every 0.5 seconds
+        self.pause_time_buffer = 0.5
 
     def actions(self, ship_state: Dict, game_state: Dict) -> Tuple[float, float, bool]:
         """
         Read in the current gamepad state, and create the appropriate actions
         """
 
+        self.pause_handler()
+
+        # deadzones (both left and right using same currently)
+        joystick_deadzone = 0.05
+        trigger_deadzone = 0.05
+
         # Set thrust control
-        thrust = self.gamepad.LeftJoystickY * 480.0
+        if abs(self.gamepad.LeftJoystickY) > joystick_deadzone:
+            thrust = self.gamepad.LeftJoystickY * 480.0
+        else:
+            thrust = 0
 
         # Set turn control
-        turn_rate = -1 * self.gamepad.RightJoystickX * 180.0
+        if abs(self.gamepad.RightJoystickX) > joystick_deadzone:
+            turn_rate = -1 * self.gamepad.RightJoystickX * 180.0
+        else:
+            turn_rate = 0
 
         # Setfire control
-        if self.gamepad.RightTrigger > 0:
+        if self.gamepad.RightTrigger > trigger_deadzone:
             fire = True
         else:
             fire = False
@@ -38,6 +56,16 @@ class GamepadController(KesslerController):
     def explanation(self):
         exp = None
         return exp
+
+    def pause_handler(self):
+
+        break_pause = False
+        if time.perf_counter() - self.time_last_paused > self.pause_time_buffer and self.gamepad.Back == 1:
+            pause_time = time.perf_counter()
+            while break_pause is False:
+                if time.perf_counter() - pause_time > self.pause_time_buffer and self.gamepad.Back == 1:
+                    break_pause = True
+            self.time_last_paused = time.perf_counter()
 
 class XboxController(object):
     """
