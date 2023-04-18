@@ -1,5 +1,10 @@
 # Changelog
 
+## [1.3.6] - 18 April 2023
+
+- Added pause functionality for gamepad controller
+- Added small dead zones to joystick and trigger inputs from gamepad controller for better human playability
+
 ## [1.3.5] - 17 April 2023
 
 - Fixed bug in ship-ship collisions where deaths were not properly counted for both ships.
