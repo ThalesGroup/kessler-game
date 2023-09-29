@@ -13,7 +13,7 @@ from collections import OrderedDict
 from .scenario import Scenario
 from .score import Score
 from .controller import KesslerController
-from .collisions import circle_line_collision
+from .collisions import circle_line_collision, inside_blast_radius
 from .graphics import GraphicsType, GraphicsHandler
 
 
@@ -137,13 +137,17 @@ class KesslerGame:
             # Update each Asteroid, Bullet, and Ship
             for bullet in bullets:
                 bullet.update(self.time_step)
+            for mine in mines:
+                mine.update(self.time_step)
             for asteroid in asteroids:
                 asteroid.update(self.time_step)
             for ship in liveships:
                 if ship.alive:
-                    new_bullet = ship.update(self.time_step)
+                    new_bullet, new_mine = ship.update(self.time_step)
                     if new_bullet is not None:
                         bullets.append(new_bullet)
+                    if new_mine is not None:
+                        mines.append(new_mine)
 
             # Cull any bullets past the map edge
             bullets = [bullet
@@ -213,6 +217,17 @@ class KesslerGame:
             # Cull bullets and asteroids that are marked for removal
             bullets = [bullet for idx, bullet in enumerate(bullets) if idx not in bullet_remove_idxs]
             asteroids = [asteroid for idx, asteroid in enumerate(asteroids) if idx not in asteroid_remove_idxs]
+
+            # --- Check mine-asteroid effects ---
+            mine_remove_idxs = []
+            asteroid_remove_idxs = []
+            for idx_mine, mine in enumerate(mines):
+                if mine.detonate:
+                    for idx_ast, asteroid in enumerate(asteroids):
+                        dist = np.sqrt((asteroid.position[0] - mine.position[0]) ** 2 + (asteroid.position[1] - mine.position[1]) ** 2)
+                        if dist <= mine.blast_radius:
+                            asteroids.extend(asteroid.destruct(impactor = mine))
+
 
             # --- Check ship-ship collisions ---
             for ship1 in liveships:

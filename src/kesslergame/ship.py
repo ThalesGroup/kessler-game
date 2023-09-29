@@ -9,6 +9,7 @@ import numpy as np
 from typing import Dict, Any, List
 
 from .bullet import Bullet
+from .mines import Mine
 
 
 class Ship:
@@ -18,7 +19,8 @@ class Ship:
                  lives: int = 3,
                  team: int = 1,
                  team_name: str = None,
-                 bullets_remaining: int = -1):
+                 bullets_remaining: int = -1,
+                 mines_remaining: int = 0):
         """
         Instantiate a ship with default parameters and infinite bullets if not specified
         """
@@ -43,6 +45,7 @@ class Ship:
         self.fire = False
         self.thrust = 0
         self.turn_rate = 0
+        self.drop_mine = False
 
         # Physical model constants/params
         self.thrust_range = (-480.0, 480.0)  # m/s^2
@@ -58,11 +61,15 @@ class Ship:
         self._fire_limiter = 0
         self._fire_time = 1 / 10  # seconds
 
-        # Track bullet statistics
+        # Track bullet/mine statistics
+        self.mines_remaining = mines_remaining
         self.bullets_remaining = bullets_remaining
         self.bullets_shot = 0
+        self.mines_dropped = 0
         self.bullets_hit = 0    # Number of bullets that hit an asteroid
+        self.mines_hit = 0      # Number of asteroids hit by mines
         self.asteroids_hit = 0  # Number of asteroids hit (including ship collision)
+
 
     @property
     def state(self) -> Dict[str, Any]:
@@ -83,6 +90,7 @@ class Ship:
     def ownstate(self) -> Dict[str, Any]:
         return {**self.state,
                 "bullets_remaining": self.bullets_remaining,
+                "mines_remaining": self.mines_remaining,
                 "can_fire": True if self.can_fire else False,
                 "fire_rate": self.fire_rate,
                 "thrust_range": self.thrust_range,
@@ -132,6 +140,11 @@ class Ship:
             new_bullet = self.fire_bullet()
         else:
             new_bullet = None
+
+        if self.drop_mine:
+            new_mine = self.deploy_mine
+        else:
+            new_mine = None
 
         # Decrement respawn timer (if necessary)
         if self._respawning <= 0:
@@ -187,7 +200,7 @@ class Ship:
         # Update the position based off the velocities
         self.position = [pos + v * delta_time for pos, v in zip(self.position, self.velocity)]
 
-        return new_bullet
+        return new_bullet, new_mine
 
     def destruct(self, map_size):
         """
@@ -213,6 +226,19 @@ class Ship:
         self.position = position
         self.speed = 0
         self.heading = heading
+
+    def deploy_mine(self):
+        if self.mines_remaining != 0:
+            self._respawning = 0
+
+            if self.mines_remaining > 0:
+                self.mines_remaining -= 1
+            self.mines_dropped += 1
+            mine_x = self.position[0]
+            mine_y = self.position[1]
+            return Mine([mine_x, mine_y], owner=self)
+        else:
+            return None
 
     def fire_bullet(self):
         if self.bullets_remaining != 0 and not self._fire_limiter:
