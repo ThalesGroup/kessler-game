@@ -6,7 +6,7 @@
 from typing import Tuple, Dict, List, Any
 import random
 import numpy as np
-from .mines import Mine
+from .mines import Mine, calculate_blast_force
 
 
 class Asteroid:
@@ -82,12 +82,17 @@ class Asteroid:
         self.position = [pos + v*delta_time for pos, v in zip(self.position, self.velocity)]
         self.angle += delta_time * self.turnrate
 
-    def destruct(self, impactor):
+    def destruct(self, impactor, dist, delta_time: float = 1/30):
         """ Spawn child asteroids"""
 
         if self.size != 1:
             if isinstance(impactor, Mine):
-                pass
+                F = calculate_blast_force(dist=dist, impactor, self)
+                a = F/self.mass
+                ax = a*(self.position[0] - impactor.position[0])/dist
+                ay = a*(self.position[1] - impactor.position[1])/dist
+                vfx = self.vx + ax*delta_time
+                vfy = self.vy + ax*delta_time
             else:
                 # Calculating new velocity vector of asteroid children based on bullet-asteroid collision/momentum
                 # Currently collisions are considered perfectly inelastic i.e. the bullet is absorbed by the asteroid
@@ -100,22 +105,23 @@ class Asteroid:
 
                 vfx = (1/(impactor.mass + self.mass))*(impactor.mass*impactor_vx + self.mass*self.vx)
                 vfy = (1/(impactor.mass + self.mass))*(impactor.mass*impactor_vy + self.mass*self.vy)
-                # Calculate speed of resultant asteroid(s) based on velocity vector
-                v = np.sqrt(vfx**2 + vfy**2)
-                # Calculate angle of center asteroid for split (degrees)
-                theta = np.arctan2(vfy, vfx)*180/np.pi
-                # Split angle is the angle off of the new velocity vector for the two asteroids to the sides, the center child
-                # asteroid continues on the new velocity path
-                split_angle = 15
-                angles = [theta+split_angle, theta, theta-split_angle]
 
-                for angle in angles:
-                    while angle < 0:
-                        angle += 360
-                    while angle > 360:
-                        angle -= 360
+            # Calculate speed of resultant asteroid(s) based on velocity vector
+            v = np.sqrt(vfx**2 + vfy**2)
+            # Calculate angle of center asteroid for split (degrees)
+            theta = np.arctan2(vfy, vfx)*180/np.pi
+            # Split angle is the angle off of the new velocity vector for the two asteroids to the sides, the center child
+            # asteroid continues on the new velocity path
+            split_angle = 15
+            angles = [theta+split_angle, theta, theta-split_angle]
 
-                return [Asteroid(position=self.position, size=self.size-1, speed=v, angle=angle) for angle in angles]
+            for angle in angles:
+                while angle < 0:
+                    angle += 360
+                while angle > 360:
+                    angle -= 360
+
+            return [Asteroid(position=self.position, size=self.size-1, speed=v, angle=angle) for angle in angles]
 
                 # Old method of doing random splits
                 # return [Asteroid(position=self.position, size=self.size-1) for _ in range(self.num_children)]
