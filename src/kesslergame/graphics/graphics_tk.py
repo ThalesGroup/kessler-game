@@ -56,7 +56,7 @@ class GraphicsTK(KesslerGraphics):
         self.ship_images = [(Image.open(os.path.join(script_dir, image))).resize((ship_radius, ship_radius)) for image in self.images]
         self.team_images = [ImageTk.PhotoImage(img) for img in self.ship_images]
 
-    def update(self, score, ships, asteroids, bullets):
+    def update(self, score, ships, asteroids, bullets, mines):
         # reset canvas
         self.canvas.delete("all")
 
@@ -95,12 +95,20 @@ class GraphicsTK(KesslerGraphics):
                                     bullet.tail[0], self.height - bullet.tail[1],
                                     fill="red")
 
+        # plot mines
+        for mine in mines:
+            self.canvas.create_oval(mine.position[0] - mine.radius, self.height - (mine.position[1] + mine.radius),
+                                    mine.position[0] + mine.radius, self.height - (mine.position[1] - mine.radius),
+                                    fill="yellow")
+
         # plot asteroids
         # create_oval(x0,y0,x1,y1) where (x0,y0) is the top left corner of the object and (x1,y1) is the bottom right
         for asteroid in asteroids:
             self.canvas.create_oval(asteroid.position[0]-asteroid.radius, self.height - (asteroid.position[1] + asteroid.radius),
                                     asteroid.position[0] + asteroid.radius, self.height - (asteroid.position[1] - asteroid.radius),
                                     fill="grey")
+
+
 
         self.update_score(score, ships)
         self.window.update()

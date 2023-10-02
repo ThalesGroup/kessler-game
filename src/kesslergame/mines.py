@@ -12,10 +12,12 @@ class Mine:
         self.owner = owner
         # self.speed = 0  # m/s
         self.fuse_time = 3
+        self.countdown_timer = self.fuse_time
         self.detonate = False
-        self.length = 12
         self.mass = 25  # mass units - kg?
         self.position = starting_position
+        self.radius = 12
+        self.length = self.radius
         # self.heading = starting_heading
         # self.rad_heading = np.pi*starting_heading/180
         # self.tail = [self.position[0] - self.length * np.cos(self.rad_heading),
@@ -23,16 +25,16 @@ class Mine:
         # self.vx = self.speed*np.cos(self.rad_heading)
         # self.vy = self.speed*np.sin(self.rad_heading)
         # self.velocity = [self.vx, self.vy]
-        self.blast_radius = 75
-        self.blast_pressure = 20000
+        self.blast_radius = 150
+        self.blast_pressure = 2000
         self.detonate = False
 
     def update(self, delta_time=1/30):
         # Update the position:
         # self.position = [pos + v * delta_time for pos, v in zip(self.position, self.velocity)]
         # self.tail = [pos + v * delta_time for pos, v in zip(self.tail, self.velocity)]
-        self.fuse_time -= delta_time
-        if self.fuse_time <= 0.0:
+        self.countdown_timer -= delta_time
+        if self.countdown_timer <= 1e-15:
             self.detonate = True
 
     # def detonate(self):
@@ -47,10 +49,11 @@ class Mine:
         return {
             "position": tuple(self.position),
             "mass": float(self.mass),
-            "detonation_time": float(self.fuse_time)
+            "fuse_time": float(self.fuse_time),
+            "remaining_time": float(self.countdown_timer)
         }
 
-def calculate_blast_force(dist, mine, asteroid):
-    # calculates the blast force based on the blast radius, blast pressure, and a linear decrease in intensity from the mine location to the blast radius
-    # also takes into account asteroid diameter to resolve total acceleration based on size/mass
-    return (-dist/mine.blast_radius + 1) * mine.blast_pressure * 2 * asteroid.radius
+    def calculate_blast_force(self, dist, obj):
+        # calculates the blast force based on the blast radius, blast pressure, and a linear decrease in intensity from the mine location to the blast radius
+        # also takes into account asteroid diameter to resolve total acceleration based on size/mass
+        return (-dist/self.blast_radius + 1) * self.blast_pressure * 2 * obj.radius

@@ -130,7 +130,7 @@ class Ship:
     def shoot(self):
         self.fire = True
 
-    def update(self, delta_time: float = 1 / 30) -> Bullet:
+    def update(self, delta_time: float = 1 / 30) -> tuple[Bullet, Mine]:
         """
         Update our position and other particulars.
         """
@@ -142,7 +142,7 @@ class Ship:
             new_bullet = None
 
         if self.drop_mine:
-            new_mine = self.deploy_mine
+            new_mine = self.deploy_mine()
         else:
             new_mine = None
 

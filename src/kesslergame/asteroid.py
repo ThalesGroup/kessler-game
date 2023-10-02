@@ -6,7 +6,7 @@
 from typing import Tuple, Dict, List, Any
 import random
 import numpy as np
-from .mines import Mine, calculate_blast_force
+from .mines import Mine
 
 
 class Asteroid:
@@ -82,17 +82,18 @@ class Asteroid:
         self.position = [pos + v*delta_time for pos, v in zip(self.position, self.velocity)]
         self.angle += delta_time * self.turnrate
 
-    def destruct(self, impactor, dist, delta_time: float = 1/30):
+    def destruct(self, impactor):
         """ Spawn child asteroids"""
 
         if self.size != 1:
             if isinstance(impactor, Mine):
-                F = calculate_blast_force(dist=dist, impactor, self)
+                print("Mine asteroid destruct call correct")
+                dist = np.sqrt((impactor.position[0] - self.position[0])**2 + (impactor.position[1] - self.position[1])**2)
+                F = impactor.calculate_blast_force(dist=dist, obj=self)
                 a = F/self.mass
-                ax = a*(self.position[0] - impactor.position[0])/dist
-                ay = a*(self.position[1] - impactor.position[1])/dist
-                vfx = self.vx + ax*delta_time
-                vfy = self.vy + ax*delta_time
+                # calculate "impulse" based on acc
+                vfx = self.vx + a*(self.position[0] - impactor.position[0])/dist
+                vfy = self.vy + a*(self.position[1] - impactor.position[1])/dist
             else:
                 # Calculating new velocity vector of asteroid children based on bullet-asteroid collision/momentum
                 # Currently collisions are considered perfectly inelastic i.e. the bullet is absorbed by the asteroid

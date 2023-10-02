@@ -13,7 +13,7 @@ from collections import OrderedDict
 from .scenario import Scenario
 from .score import Score
 from .controller import KesslerController
-from .collisions import circle_line_collision, inside_blast_radius
+from .collisions import circle_line_collision
 from .graphics import GraphicsType, GraphicsHandler
 
 
@@ -61,6 +61,7 @@ class KesslerGame:
         asteroids = scenario.asteroids()
         ships = scenario.ships()
         bullets = []
+        mines = []
 
         # Initialize Scoring class
         score = Score(scenario)
@@ -100,6 +101,7 @@ class KesslerGame:
                 'asteroids': [asteroid.state for asteroid in asteroids],
                 'ships': [ship.state for ship in liveships],
                 'bullets': [bullet.state for bullet in bullets],
+                'mines': [mine.state for mine in mines],
                 'map_size': scenario.map_size,
                 'time': sim_time,
                 'time_step': step
@@ -120,7 +122,7 @@ class KesslerGame:
                     # Evaluate each controller letting control be applied
                     if controllers[idx].ship_id != ship.id:
                         raise RuntimeError("Controller and ship ID do not match")
-                    ship.thrust, ship.turn_rate, ship.fire = controllers[idx].actions(ship.ownstate, game_state)
+                    ship.thrust, ship.turn_rate, ship.fire, ship.drop_mine = controllers[idx].actions(ship.ownstate, game_state)
 
                 # Update controller evaluation time if performance tracking
                 if self.perf_tracker:
@@ -200,24 +202,32 @@ class KesslerGame:
             asteroids = [asteroid for idx, asteroid in enumerate(asteroids) if idx not in asteroid_remove_idxs]
 
             # --- Check mine-asteroid effects ---
-            mine_remove_idxs = []
-            asteroid_remove_idxs = []
-            for idx_mine, mine in enumerate(mines):
-                if mine.detonate:
-                    for idx_ast, asteroid in enumerate(asteroids):
-                        dist = np.sqrt((asteroid.position[0] - mine.position[0]) ** 2 + (asteroid.position[1] - mine.position[1]) ** 2)
-                        if dist <= mine.blast_radius:
-                            mine.owner.asteroids_hit += 1
-                            mine.owner.mines_hit += 1
-                            mine.destruct()
-                            if idx_mine not in mine_remove_idxs:
-                                mine_remove_idxs.append(idx_mine)
+            if mines:
+                print(mines)
+                mine_remove_idxs = []
+                asteroid_remove_idxs = []
+                new_asteroids = []
+                for idx_mine, mine in enumerate(mines):
+                    print(mine.countdown_timer)
+                    if mine.detonate:
+                        for idx_ast, asteroid in enumerate(asteroids):
+                            dist = np.sqrt((asteroid.position[0] - mine.position[0]) ** 2 + (asteroid.position[1] - mine.position[1]) ** 2)
+                            if dist <= mine.blast_radius:
+                                mine.owner.asteroids_hit += 1
+                                mine.owner.mines_hit += 1
+                                # mine.destruct()
 
-                            asteroids.extend(asteroid.destruct(impactor = mine, dist=dist, delta_time=self.time_step))
-                            asteroid_remove_idxs.append(idx_ast)
 
-            mines = [mine for idx, mine in enumerate(mines) if idx not in mine_remove_idxs]
-            asteroids = [asteroid for idx, asteroid in enumerate(asteroids) if idx not in asteroid_remove_idxs]
+                                new_asteroids.extend(asteroid.destruct(impactor=mine))
+                                asteroid_remove_idxs.append(idx_ast)
+                        if idx_mine not in mine_remove_idxs:
+                            mine_remove_idxs.append(idx_mine)
+                        mine.destruct()
+                print(mine_remove_idxs)
+                mines = [mine for idx, mine in enumerate(mines) if idx not in mine_remove_idxs]
+                asteroids = [asteroid for idx, asteroid in enumerate(asteroids) if idx not in asteroid_remove_idxs]
+                asteroids.extend(new_asteroids)
+
 
             # --- Check asteroid-ship collisions ---
             ship_remove_idxs = []
@@ -269,7 +279,7 @@ class KesslerGame:
 
 
             # --- UPDATE GRAPHICS --------------------------------------------------------------------------------------
-            graphics.update(score, ships, asteroids, bullets)
+            graphics.update(score, ships, asteroids, bullets, mines)
 
             # Update performance tracker with graphics timing
             if self.perf_tracker:

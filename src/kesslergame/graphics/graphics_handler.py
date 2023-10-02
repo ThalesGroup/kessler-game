@@ -48,12 +48,12 @@ class GraphicsHandler:
         if self.type != GraphicsType.NoGraphics:
             self.graphics.start(scenario)
 
-    def update(self, score, ships, asteroids, bullets):
+    def update(self, score, ships, asteroids, bullets, mines):
         """
         Update the graphics draw with new simulation data each simulation time-step
         """
         if self.type != GraphicsType.NoGraphics:
-            self.graphics.update(score, ships, asteroids, bullets)
+            self.graphics.update(score, ships, asteroids, bullets, mines)
 
     def close(self):
         """
