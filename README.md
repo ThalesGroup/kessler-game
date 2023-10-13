@@ -9,7 +9,7 @@ but cannot shoot each other.
 
 Kessler can be built as python extension for install using pip, or used as a local package by copying the
 `src/kessler_game` directory to your project. Wheels are provided in
-[releases](https://github.com/ThalesGroup/kessler-game/releases) for install using
+[releases](https://github.com/ThalesGroup/kessler-game/releases) for install using:
 ``` 
 pip install <path to kessler_game-#.#.#-py3-none-any.whl>
 ```
