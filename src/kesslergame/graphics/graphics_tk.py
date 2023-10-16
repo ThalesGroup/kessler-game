@@ -57,6 +57,9 @@ class GraphicsTK(KesslerGraphics):
         self.ship_sprites = [ImageTk.PhotoImage(img) for img in self.ship_images]
         self.ship_icons = [ImageTk.PhotoImage((Image.open(os.path.join(script_dir, image))).resize((ship_radius, ship_radius))) for image in self.image_paths]
 
+        self.detoantion_time = 0.3
+        self.detonation_timers = []
+
     def update(self, score, ships, asteroids, bullets, mines):
 
         # Delete everything from canvas so we can re-plot
@@ -66,8 +69,8 @@ class GraphicsTK(KesslerGraphics):
         self.plot_shields(ships)
         self.plot_ships(ships)
         self.plot_bullets(bullets)
-        self.plot_mines(mines)
         self.plot_asteroids(asteroids)
+        self.plot_mines(mines)
 
         # Update score box
         self.update_score(score, ships)
@@ -212,7 +215,7 @@ class GraphicsTK(KesslerGraphics):
 
     def plot_mines(self, mines):
         """
-        Plots and animates each mine object on the game screen
+        Plots and animates each mine object on the game screen and their detonations
         """
         for mine in mines:
             self.game_canvas.create_oval(mine.position[0] - mine.radius,
@@ -220,4 +223,23 @@ class GraphicsTK(KesslerGraphics):
                                          mine.position[0] + mine.radius,
                                          self.game_height - (mine.position[1] - mine.radius),
                                          fill="yellow")
+
+            light_fill = "red" if mine.countdown_timer - int(mine.countdown_timer) > 0.5 else "orange"
+            self.game_canvas.create_oval(mine.position[0] - mine.radius*0.3,
+                                         self.game_height - (mine.position[1] + mine.radius*0.3),
+                                         mine.position[0] + mine.radius*0.3,
+                                         self.game_height - (mine.position[1] - mine.radius*0.3),
+                                         fill=light_fill)
+
+            # Detonations
+            if mine.countdown_timer < mine.detonation_time:
+                explosion_radius = mine.blast_radius * (1 - mine.countdown_timer / mine.detonation_time)**2
+                self.game_canvas.create_oval(mine.position[0] - explosion_radius,
+                                             self.game_height - (mine.position[1] + explosion_radius),
+                                             mine.position[0] + explosion_radius,
+                                             self.game_height - (mine.position[1] - explosion_radius),
+                                             # fill="#fa441b",
+                                             fill="", outline="white", width=10)
+
+
 

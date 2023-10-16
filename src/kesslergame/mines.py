@@ -9,37 +9,26 @@ import numpy as np
 
 class Mine:
     def __init__(self, starting_position: List[float], owner):
-        self.owner = owner
-        # self.speed = 0  # m/s
         self.fuse_time = 3
-        self.countdown_timer = self.fuse_time
-        self.detonate = False
+        self.detonation_time = 0.25
         self.mass = 25  # mass units - kg?
-        self.position = starting_position
         self.radius = 12
-        self.length = self.radius
-        # self.heading = starting_heading
-        # self.rad_heading = np.pi*starting_heading/180
-        # self.tail = [self.position[0] - self.length * np.cos(self.rad_heading),
-        #              self.position[1] - self.length * np.sin(self.rad_heading)]
-        # self.vx = self.speed*np.cos(self.rad_heading)
-        # self.vy = self.speed*np.sin(self.rad_heading)
-        # self.velocity = [self.vx, self.vy]
         self.blast_radius = 150
         self.blast_pressure = 2000
-        self.detonate = False
+
+        self.owner = owner
+        self.countdown_timer = self.fuse_time
+        self.detonating = False
+        self.position = starting_position
 
     def update(self, delta_time=1/30):
-        # Update the position:
-        # self.position = [pos + v * delta_time for pos, v in zip(self.position, self.velocity)]
-        # self.tail = [pos + v * delta_time for pos, v in zip(self.tail, self.velocity)]
         self.countdown_timer -= delta_time
         if self.countdown_timer <= 1e-15:
-            self.detonate = True
+            self.detonate()
 
-    # def detonate(self):
-    #     # perform any detonation stuff here
-    #     pass
+    def detonate(self):
+        # perform any detonation stuff here
+        self.detonating = True
 
     def destruct(self):
         ...
@@ -54,6 +43,8 @@ class Mine:
         }
 
     def calculate_blast_force(self, dist, obj):
-        # calculates the blast force based on the blast radius, blast pressure, and a linear decrease in intensity from the mine location to the blast radius
-        # also takes into account asteroid diameter to resolve total acceleration based on size/mass
+        """
+        Calculates the blast force based on the blast radius, blast pressure, and a linear decrease in intensity from the mine location to the blast radius
+        Also takes into account asteroid diameter to resolve total acceleration based on size/mass
+        """
         return (-dist/self.blast_radius + 1) * self.blast_pressure * 2 * obj.radius

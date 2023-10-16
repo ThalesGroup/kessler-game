@@ -87,7 +87,6 @@ class Asteroid:
 
         if self.size != 1:
             if isinstance(impactor, Mine):
-                print("Mine asteroid destruct call correct")
                 dist = np.sqrt((impactor.position[0] - self.position[0])**2 + (impactor.position[1] - self.position[1])**2)
                 F = impactor.calculate_blast_force(dist=dist, obj=self)
                 a = F/self.mass
