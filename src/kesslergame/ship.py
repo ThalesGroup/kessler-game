@@ -60,6 +60,8 @@ class Ship:
         self._respawn_time = 3  # seconds
         self._fire_limiter = 0
         self._fire_time = 1 / 10  # seconds
+        self._mine_limiter = 0
+        self._mine_deploy_time = 1 # seconds
 
         # Track bullet/mine statistics
         self.mines_remaining = mines_remaining
@@ -120,12 +122,24 @@ class Ship:
         return (not self._fire_limiter) and self.bullets_remaining != 0
 
     @property
+    def can_deploy_mine(self) -> bool:
+        return (not self._mine_limiter) and self.mines_remaining != 0
+
+    @property
     def fire_rate(self) -> float:
         return 1 / self._fire_time
 
     @property
+    def mine_deploy_rate(self) -> float:
+        return 1 / self._mine_deploy_time
+
+    @property
     def fire_wait_time(self) -> float:
         return self._fire_limiter
+
+    @property
+    def mine_wait_time(self) -> float:
+        return self._mine_limiter
 
     def shoot(self):
         self.fire = True
@@ -157,6 +171,12 @@ class Ship:
             self._fire_limiter = 0.0
         else:
             self._fire_limiter -= delta_time
+
+        # Decrement mine deployment limit timer (if necessary)
+        if self._mine_limiter <= 0.0:
+            self._mine_limiter = 0.0
+        else:
+            self._mine_limiter -= delta_time
 
         # Apply drag. Fully stop the ship if it would cross zero speed in this time (prevents oscillation)
         drag_amount = self.drag * delta_time
@@ -228,8 +248,12 @@ class Ship:
         self.heading = heading
 
     def deploy_mine(self):
-        if self.mines_remaining != 0:
+        # if self.mines_remaining != 0 and not self._mine_limiter:
+        if self.can_deploy_mine:
+
+            # Remove respawn invincibility. Mine deployment limiter
             self._respawning = 0
+            self._mine_limiter = self._mine_deploy_time
 
             if self.mines_remaining > 0:
                 self.mines_remaining -= 1
@@ -241,7 +265,8 @@ class Ship:
             return None
 
     def fire_bullet(self):
-        if self.bullets_remaining != 0 and not self._fire_limiter:
+        # if self.bullets_remaining != 0 and not self._fire_limiter:
+        if self.can_fire:
 
             # Remove respawn invincibility. Trigger fire limiter
             self._respawning = 0
