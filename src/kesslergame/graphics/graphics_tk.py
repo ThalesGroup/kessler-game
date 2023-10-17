@@ -26,7 +26,7 @@ class GraphicsTK(KesslerGraphics):
 
     def start(self, scenario):
         self.game_width = scenario.map_size[0]
-        self.height = scenario.map_size[1]
+        self.game_height = scenario.map_size[1]
         self.max_time = scenario.time_limit
         self.score_width = 385
         self.window_width = self.game_width + self.score_width
@@ -38,71 +38,44 @@ class GraphicsTK(KesslerGraphics):
         screen_width = self.window.winfo_screenwidth()
         screen_height = self.window.winfo_screenheight()
         center_x = int(screen_width / 2 - self.window_width / 2)
-        center_y = int(screen_height / 2 - self.height / 2)
-        self.window.geometry(f'{self.window_width}x{self.height}+{center_x}+{center_y}')
+        center_y = int(screen_height / 2 - self.game_height / 2)
+        self.window.geometry(f'{self.window_width}x{self.game_height}+{center_x}+{center_y}')
 
         # create canvas for object and image display
-        self.canvas = Canvas(self.window, width=self.window_width, height=self.height, bg="black")
-        self.canvas.pack()
+        self.game_canvas = Canvas(self.window, width=self.window_width, height=self.game_height, bg="black")
+        self.game_canvas.pack()
         self.window.update()
 
-        # grab and open images
+        # Grab and open sprite images in python
         script_dir = os.path.dirname(__file__)
-        self.images = ["images/playerShip1_green.png",
-                       "images/playerShip1_orange.png",
-                       "images/playerShip2_orange.png",
-                       "images/playerShip3_orange.png"]
-        self.num_images = len(self.images)
-        self.ship_images = [(Image.open(os.path.join(script_dir, image))).resize((ship_radius, ship_radius)) for image in self.images]
-        self.team_images = [ImageTk.PhotoImage(img) for img in self.ship_images]
+        self.image_paths = ["images/playerShip1_green.png",
+                            "images/playerShip1_orange.png",
+                            "images/playerShip2_orange.png",
+                            "images/playerShip3_orange.png"]
+        self.num_images = len(self.image_paths)
+        self.ship_images = [(Image.open(os.path.join(script_dir, image))).resize((ship_radius, ship_radius)) for image in self.image_paths]
+        self.ship_sprites = [ImageTk.PhotoImage(img) for img in self.ship_images]
+        self.ship_icons = [ImageTk.PhotoImage((Image.open(os.path.join(script_dir, image))).resize((ship_radius, ship_radius))) for image in self.image_paths]
 
-    def update(self, score, ships, asteroids, bullets):
-        # reset canvas
-        self.canvas.delete("all")
+        self.detoantion_time = 0.3
+        self.detonation_timers = []
 
-        # initialize image list
-        current_images = []
+    def update(self, score, ships, asteroids, bullets, mines):
 
-        # plot ships
-        for ship in ships:
-            current_images.append(ImageTk.PhotoImage(self.ship_images[(ship.team-1) % self.num_images].rotate(180-(-ship.heading - 90))))
-            if ship.alive:
+        # Delete everything from canvas so we can re-plot
+        self.game_canvas.delete("all")
 
-                # use respawn time to determine color of ring, ring shows ship radius
-                temp_time = ship.respawn_time_left
-                if temp_time > 1:
-                    temp_time = 1
-                elif temp_time < 0:
-                    temp_time = 0
+        # Plot shields, bullets, ships, and asteroids
+        self.plot_shields(ships)
+        self.plot_ships(ships)
+        self.plot_bullets(bullets)
+        self.plot_asteroids(asteroids)
+        self.plot_mines(mines)
 
-                r = int(120 + (temp_time * (255 - 120)))
-                g = int(200 + (temp_time * (0 - 200)))
-                b = int(255 + (temp_time * (0 - 255)))
-                color = "#%02x%02x%02x" % (r, g, b)
-
-                # plot ring
-                self.canvas.create_oval(ship.position[0] - ship.radius, self.height - (ship.position[1] + ship.radius),
-                                        ship.position[0] + ship.radius, self.height - (ship.position[1] - ship.radius),
-                                        fill="black", outline=color)
-
-                # plot image and ship number text
-                self.canvas.create_image(ship.position[0], self.height - ship.position[1], image=current_images[ship.id-1])
-                self.canvas.create_text(ship.position[0] + ship.radius, self.height - (ship.position[1] + ship.radius), text=str(ship.id), fill='white')
-
-        # plot bullets
-        for bullet in bullets:
-            self.canvas.create_line(bullet.position[0], self.height - bullet.position[1],
-                                    bullet.tail[0], self.height - bullet.tail[1],
-                                    fill="red")
-
-        # plot asteroids
-        # create_oval(x0,y0,x1,y1) where (x0,y0) is the top left corner of the object and (x1,y1) is the bottom right
-        for asteroid in asteroids:
-            self.canvas.create_oval(asteroid.position[0]-asteroid.radius, self.height - (asteroid.position[1] + asteroid.radius),
-                                    asteroid.position[0] + asteroid.radius, self.height - (asteroid.position[1] - asteroid.radius),
-                                    fill="grey")
-
+        # Update score box
         self.update_score(score, ships)
+
+        # Push updates to graphics refresh
         self.window.update()
 
     def close(self):
@@ -115,13 +88,13 @@ class GraphicsTK(KesslerGraphics):
         y_offset = 5
 
         # outline and center line
-        self.canvas.create_rectangle(self.game_width, 0, self.window_width, self.height, outline="white", fill="black",)
-        self.canvas.create_line(self.window_width - self.score_width / 2, 0,
-                                self.window_width - self.score_width / 2, self.height, fill="white")
+        self.game_canvas.create_rectangle(self.game_width, 0, self.window_width, self.game_height, outline="white", fill="black",)
+        self.game_canvas.create_line(self.window_width - self.score_width / 2, 0,
+                                self.window_width - self.score_width / 2, self.game_height, fill="white")
 
         # show simulation time
         time_text = "Time: " + f'{score.sim_time:.2f}' + " / " + str(self.max_time) + " sec"
-        self.canvas.create_text(10, 10, text=time_text, fill="white", font=("Courier New", 10), anchor=NW)
+        self.game_canvas.create_text(10, 10, text=time_text, fill="white", font=("Courier New", 10), anchor=NW)
 
         # index for loop: allows teams to be displayed in order regardless of team num skipping or strings for team name
         team_num = 0
@@ -154,7 +127,7 @@ class GraphicsTK(KesslerGraphics):
                 output_location_y = output_location_y + (17 * max_lines) + y_offset
 
                 # line separating team rows
-                self.canvas.create_line(self.game_width, output_location_y - 10, self.window_width, output_location_y - 10, fill="white")
+                self.game_canvas.create_line(self.game_width, output_location_y - 10, self.window_width, output_location_y - 10, fill="white")
                 max_lines = score_board.count("\n")
             else:
                 output_location_x = self.window_width + x_offset - self.score_width / 2
@@ -164,11 +137,11 @@ class GraphicsTK(KesslerGraphics):
                     max_lines = score_board.count("\n")
 
             # display of team information
-            self.canvas.create_text(output_location_x, output_location_y,
+            self.game_canvas.create_text(output_location_x, output_location_y,
                                     text=score_board, fill="white", font=("Courier New", 10), anchor=NW, )
 
-            self.canvas.create_image(output_location_x + 120, output_location_y + 15,
-                                     image=self.team_images[(team.team_id-1) % self.num_images])
+            self.game_canvas.create_image(output_location_x + 120, output_location_y + 15,
+                                     image=self.ship_icons[(team.team_id-1) % self.num_images])
             team_num += 1
 
     def format_ui(self, team):
@@ -186,3 +159,87 @@ class GraphicsTK(KesslerGraphics):
             team_info += "Bullets Left: " + str(team.bullets_remaining) + "\n"
 
         return team_info
+
+    def plot_ships(self, ships):
+        """
+        Plots each ship on the game screen using cached sprites and rotating them
+        """
+        for idx, ship in enumerate(ships):
+            if ship.alive:
+                # plot ship image and id text next to it
+                self.ship_sprites[idx] = ImageTk.PhotoImage(self.ship_images[idx].rotate(180 - (-ship.heading - 90)))
+                self.game_canvas.create_image(ship.position[0], self.game_height - ship.position[1],
+                                              image=self.ship_sprites[idx])
+                self.game_canvas.create_text(ship.position[0] + ship.radius,
+                                             self.game_height - (ship.position[1] + ship.radius), text=str(ship.id),
+                                             fill="white")
+
+    def plot_shields(self, ships):
+        """
+        Plots each ship's shield ring
+        """
+        for ship in ships:
+            if ship.alive:
+                # Color shield based on respawn time remaining
+                respawn_scaler = max(min(ship.respawn_time_left, 1), 0)
+                r = int(120 + (respawn_scaler * (255 - 120)))
+                g = int(200 + (respawn_scaler * (0 - 200)))
+                b = int(255 + (respawn_scaler * (0 - 255)))
+                color = "#%02x%02x%02x" % (r, g, b)
+                # Plot shield ring
+                self.game_canvas.create_oval(ship.position[0] - ship.radius,
+                                             self.game_height - (ship.position[1] + ship.radius),
+                                             ship.position[0] + ship.radius,
+                                             self.game_height - (ship.position[1] - ship.radius),
+                                             fill="black", outline=color)
+
+    def plot_bullets(self, bullets):
+        """
+        Plots each bullet object on the game screen
+        """
+        for bullet in bullets:
+            self.game_canvas.create_line(bullet.position[0], self.game_height - bullet.position[1],
+                                         bullet.tail[0], self.game_height - bullet.tail[1],
+                                         fill="#EE2737", width=3)
+
+    def plot_asteroids(self, asteroids):
+        """
+        Plots each asteroid object on the game screen
+        """
+        for asteroid in asteroids:
+            self.game_canvas.create_oval(asteroid.position[0] - asteroid.radius,
+                                         self.game_height - (asteroid.position[1] + asteroid.radius),
+                                         asteroid.position[0] + asteroid.radius,
+                                         self.game_height - (asteroid.position[1] - asteroid.radius),
+                                         fill="grey")
+
+    def plot_mines(self, mines):
+        """
+        Plots and animates each mine object on the game screen and their detonations
+        """
+        for mine in mines:
+            self.game_canvas.create_oval(mine.position[0] - mine.radius,
+                                         self.game_height - (mine.position[1] + mine.radius),
+                                         mine.position[0] + mine.radius,
+                                         self.game_height - (mine.position[1] - mine.radius),
+                                         fill="yellow")
+
+            light_fill = "red" if mine.countdown_timer - int(mine.countdown_timer) > 0.5 else "orange"
+            self.game_canvas.create_oval(mine.position[0] - mine.radius*0.3,
+                                         self.game_height - (mine.position[1] + mine.radius*0.3),
+                                         mine.position[0] + mine.radius*0.3,
+                                         self.game_height - (mine.position[1] - mine.radius*0.3),
+                                         fill=light_fill)
+
+            # Detonations
+            if mine.countdown_timer < mine.detonation_time:
+                explosion_radius = mine.blast_radius * (1 - mine.countdown_timer / mine.detonation_time)**2
+                self.game_canvas.create_oval(mine.position[0] - explosion_radius,
+                                             self.game_height - (mine.position[1] + explosion_radius),
+                                             mine.position[0] + explosion_radius,
+                                             self.game_height - (mine.position[1] - explosion_radius),
+                                             # fill="#fa441b",
+                                             fill="", outline="white", width=10)
+
+
+

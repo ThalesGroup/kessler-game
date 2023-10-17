@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-# Copyright © 2022 Thales. All Rights Reserved.
+# Copyright © 2023 Thales. All Rights Reserved.
 # NOTICE: This file is subject to the license agreement defined in file 'LICENSE', which is part of
 # this source code package.
 
@@ -14,4 +14,4 @@ from .graphics import GraphicsType, KesslerGraphics
 
 __all__ = ['KesslerGame', 'TrainerEnvironment', 'KesslerController', 'Scenario', 'Score', 'GraphicsType',
            'KesslerGraphics', 'GamepadController']
-__version__ = '1.3.6'
+__version__ = '2.0.0'

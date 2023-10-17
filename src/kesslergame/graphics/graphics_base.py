@@ -13,7 +13,7 @@ class KesslerGraphics:
     def start(self, scenario):
         raise NotImplementedError('Your derived KesslerController must include a start() method.')
 
-    def update(self, score, ships, asteroids, bullets):
+    def update(self, score, ships, asteroids, bullets, mines):
         raise NotImplementedError('Your derived KesslerController must include an update() method.')
 
     def close(self):

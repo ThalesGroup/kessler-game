@@ -61,6 +61,7 @@ class KesslerGame:
         asteroids = scenario.asteroids()
         ships = scenario.ships()
         bullets = []
+        mines = []
 
         # Initialize Scoring class
         score = Score(scenario)
@@ -100,6 +101,7 @@ class KesslerGame:
                 'asteroids': [asteroid.state for asteroid in asteroids],
                 'ships': [ship.state for ship in liveships],
                 'bullets': [bullet.state for bullet in bullets],
+                'mines': [mine.state for mine in mines],
                 'map_size': scenario.map_size,
                 'time': sim_time,
                 'time_step': step
@@ -120,7 +122,7 @@ class KesslerGame:
                     # Evaluate each controller letting control be applied
                     if controllers[idx].ship_id != ship.id:
                         raise RuntimeError("Controller and ship ID do not match")
-                    ship.thrust, ship.turn_rate, ship.fire = controllers[idx].actions(ship.ownstate, game_state)
+                    ship.thrust, ship.turn_rate, ship.fire, ship.drop_mine = controllers[idx].actions(ship.ownstate, game_state)
 
                 # Update controller evaluation time if performance tracking
                 if self.perf_tracker:
@@ -137,13 +139,17 @@ class KesslerGame:
             # Update each Asteroid, Bullet, and Ship
             for bullet in bullets:
                 bullet.update(self.time_step)
+            for mine in mines:
+                mine.update(self.time_step)
             for asteroid in asteroids:
                 asteroid.update(self.time_step)
             for ship in liveships:
                 if ship.alive:
-                    new_bullet = ship.update(self.time_step)
+                    new_bullet, new_mine = ship.update(self.time_step)
                     if new_bullet is not None:
                         bullets.append(new_bullet)
+                    if new_mine is not None:
+                        mines.append(new_mine)
 
             # Cull any bullets past the map edge
             bullets = [bullet
@@ -172,26 +178,7 @@ class KesslerGame:
                 prev = time.perf_counter()
 
             # --- CHECK FOR COLLISIONS ---------------------------------------------------------------------------------
-            # --- Check asteroid-ship collisions ---
-            ship_remove_idxs = []
-            asteroid_remove_idxs = []
-            for idx_ship, ship in enumerate(liveships):
-                if not ship.is_respawning:
-                    for idx_ast, asteroid in enumerate(asteroids):
-                        dist = np.sqrt(sum([(pos1 - pos2) ** 2 for pos1, pos2 in zip(ship.position, asteroid.position)]))
-                        # If collision occurs
-                        if dist < (ship.radius + asteroid.radius):
-                            # Ship destruct function. Add one to asteroids_hit
-                            ship.asteroids_hit += 1
-                            ship.destruct(map_size=scenario.map_size)
-                            # Asteroid destruct function and mark for removal
-                            asteroids.extend(asteroid.destruct(impactor=ship))
-                            asteroid_remove_idxs.append(idx_ast)
-                            # Stop checking this ship's collisions
-                            break
-            # Cull ships if not alive and asteroids that are marked for removal
-            liveships = [ship for ship in liveships if ship.alive]
-            asteroids = [asteroid for idx, asteroid in enumerate(asteroids) if idx not in asteroid_remove_idxs]
+
 
             # --- Check asteroid-bullet collisions ---
             bullet_remove_idxs = []
@@ -212,6 +199,55 @@ class KesslerGame:
                         break
             # Cull bullets and asteroids that are marked for removal
             bullets = [bullet for idx, bullet in enumerate(bullets) if idx not in bullet_remove_idxs]
+            asteroids = [asteroid for idx, asteroid in enumerate(asteroids) if idx not in asteroid_remove_idxs]
+
+            # --- Check mine-asteroid and mine-ship effects ---
+            mine_remove_idxs = []
+            asteroid_remove_idxs = []
+            new_asteroids = []
+            for idx_mine, mine in enumerate(mines):
+                if mine.detonating:
+                    for idx_ast, asteroid in enumerate(asteroids):
+                        dist = np.sqrt((asteroid.position[0] - mine.position[0]) ** 2 + (asteroid.position[1] - mine.position[1]) ** 2)
+                        if dist <= mine.blast_radius + asteroid.radius:
+                            mine.owner.asteroids_hit += 1
+                            mine.owner.mines_hit += 1
+
+                            new_asteroids.extend(asteroid.destruct(impactor=mine))
+                            asteroid_remove_idxs.append(idx_ast)
+                    for ship in liveships:
+                        dist = np.sqrt((ship.position[0] - mine.position[0]) ** 2 + (ship.position[1] - mine.position[1]) ** 2)
+                        if dist <= mine.blast_radius + ship.radius:
+                            # Ship destruct function. Add one to asteroids_hit
+                            ship.destruct(map_size=scenario.map_size)
+                            # Stop checking this ship's collisions
+                            break
+                    if idx_mine not in mine_remove_idxs:
+                        mine_remove_idxs.append(idx_mine)
+                    mine.destruct()
+            mines = [mine for idx, mine in enumerate(mines) if idx not in mine_remove_idxs]
+            asteroids = [asteroid for idx, asteroid in enumerate(asteroids) if idx not in asteroid_remove_idxs]
+            asteroids.extend(new_asteroids)
+
+
+            # --- Check asteroid-ship collisions ---
+            asteroid_remove_idxs = []
+            for idx_ship, ship in enumerate(liveships):
+                if not ship.is_respawning:
+                    for idx_ast, asteroid in enumerate(asteroids):
+                        dist = np.sqrt(sum([(pos1 - pos2) ** 2 for pos1, pos2 in zip(ship.position, asteroid.position)]))
+                        # If collision occurs
+                        if dist < (ship.radius + asteroid.radius):
+                            # Ship destruct function. Add one to asteroids_hit
+                            ship.asteroids_hit += 1
+                            ship.destruct(map_size=scenario.map_size)
+                            # Asteroid destruct function and mark for removal
+                            asteroids.extend(asteroid.destruct(impactor=ship))
+                            asteroid_remove_idxs.append(idx_ast)
+                            # Stop checking this ship's collisions
+                            break
+            # Cull ships if not alive and asteroids that are marked for removal
+            liveships = [ship for ship in liveships if ship.alive]
             asteroids = [asteroid for idx, asteroid in enumerate(asteroids) if idx not in asteroid_remove_idxs]
 
             # --- Check ship-ship collisions ---
@@ -243,7 +279,7 @@ class KesslerGame:
 
 
             # --- UPDATE GRAPHICS --------------------------------------------------------------------------------------
-            graphics.update(score, ships, asteroids, bullets)
+            graphics.update(score, ships, asteroids, bullets, mines)
 
             # Update performance tracker with graphics timing
             if self.perf_tracker:
