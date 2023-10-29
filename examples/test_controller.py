@@ -9,24 +9,39 @@ from typing import Dict, Tuple
 
 class TestController(KesslerController):
     def __init__(self):
-        self.eval_frames = 0
+        """
+        Any variables or initialization desired for the controller can be set up here
+        """
+        ...
 
     def actions(self, ship_state: Dict, game_state: Dict) -> Tuple[float, float, bool, bool]:
         """
-        Method processed each time step by this controller.
+        Method processed each time step by this controller to determine what control actions to take
+
+        Arguments:
+            ship_state (dict): contains state information for your own ship
+            game_state (dict): contains state information for all objects in the game
+
+        Returns:
+            float: thrust control value
+            float: turn-rate control value
+            bool: fire control value. Shoots if true
+            bool: mine deployment control value. Lays mine if true
         """
 
         thrust = 0
-        turn_rate = 90
-        fire = True
+        turn_rate = 0
+        fire = False
         drop_mine = False
-        dropped_mine = False
-        if game_state["time"] >= 1.0 and not len(game_state["mines"]) > 0:
-            drop_mine = True
-        self.eval_frames +=1
 
         return thrust, turn_rate, fire, drop_mine
 
     @property
     def name(self) -> str:
+        """
+        Simple property used for naming controllers such that it can be displayed in the graphics engine
+
+        Returns:
+            str: name of this controller
+        """
         return "Test Controller"
