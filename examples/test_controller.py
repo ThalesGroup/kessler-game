@@ -3,8 +3,9 @@
 # NOTICE: This file is subject to the license agreement defined in file 'LICENSE', which is part of
 # this source code package.
 
-from src.kesslergame import KesslerController
+from src.kesslergame import KesslerController # In Eclipse, the name of the library is kesslergame, not src.kesslergame
 from typing import Dict, Tuple
+# import skfuzzy as fuzz
 
 
 class TestController(KesslerController):
@@ -12,7 +13,8 @@ class TestController(KesslerController):
         """
         Any variables or initialization desired for the controller can be set up here
         """
-        ...
+        self.eval_frames = 0
+
 
     def actions(self, ship_state: Dict, game_state: Dict) -> Tuple[float, float, bool, bool]:
         """
@@ -30,8 +32,9 @@ class TestController(KesslerController):
         """
 
         thrust = 0
-        turn_rate = 0
-        fire = False
+        turn_rate = 180
+        fire = True
+        self.eval_frames +=1
         drop_mine = False
 
         return thrust, turn_rate, fire, drop_mine
