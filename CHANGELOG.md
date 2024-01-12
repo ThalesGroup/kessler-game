@@ -1,5 +1,22 @@
 # Changelog
 
+## [2.0.1] - 12 January 2024
+
+- Changed `game_state` dictionary information to include an explicit `delta_time` entry representing the difference 
+  in simulation time from one frame to the next as well as renaming `time_step` to a more accurate `sim_frame` which 
+  represents the frame number that the sim is currently on. 
+  - I.e. the default frequency is 30 Hz, and `delta_time` is constant so in this case has a value of 1/30.
+  - `sim_frame` will be 0 on the first frame of the sim and then increment to 1, 2,..., etc. until the sim reaches 
+    termination criteria
+
+## [2.0.0] - 17 October 2023
+
+- Added mine objects that can be placed by ships. Mines cannot move once placed, detonate after a fixed amount of 
+  time, inflict a "hit" on any object within the blast radius (asteroids and ships), and impart momentum on 
+  asteroids based on blast strength which is a function of the distance of the asteroid from the mine placement 
+  point. The blast momentum imparted is a linearly decreasing amount with the maximum at the mine location and goes 
+  to 0 at the edge of the blast radius.
+
 ## [1.3.6] - 18 April 2023
 
 - Added pause functionality for gamepad controller

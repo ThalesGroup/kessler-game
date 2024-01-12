@@ -104,7 +104,8 @@ class KesslerGame:
                 'mines': [mine.state for mine in mines],
                 'map_size': scenario.map_size,
                 'time': sim_time,
-                'time_step': step
+                'delta_time': self.time_step,
+                'sim_frame': step
             }
 
             # Initialize controller time recording in performance tracker
