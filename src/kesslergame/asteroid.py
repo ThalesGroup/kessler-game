@@ -5,7 +5,6 @@
 
 from typing import Tuple, Dict, List, Any
 import random
-import numpy as np
 import math
 from .mines import Mine
 

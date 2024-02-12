@@ -3,7 +3,6 @@
 # NOTICE: This file is subject to the license agreement defined in file 'LICENSE', which is part of
 # this source code package.
 
-import numpy as np
 import math
 
 def circle_line_collision(line_A, line_B, center, radius):
