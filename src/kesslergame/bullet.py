@@ -15,7 +15,7 @@ class Bullet:
         self.mass = 1  # mass units - kg?
         self.position = starting_position
         self.heading = starting_heading
-        self.rad_heading = math.pi*starting_heading/180
+        self.rad_heading = math.radians(starting_heading)
         self.tail = [self.position[0] - self.length * math.cos(self.rad_heading),
                      self.position[1] - self.length * math.sin(self.rad_heading)]
         self.vx = self.speed*math.cos(self.rad_heading)

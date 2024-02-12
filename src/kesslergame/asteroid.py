@@ -111,7 +111,7 @@ class Asteroid:
             # Calculate speed of resultant asteroid(s) based on velocity vector
             v = math.sqrt(vfx*vfx + vfy*vfy)
             # Calculate angle of center asteroid for split (degrees)
-            theta = math.atan2(vfy, vfx)*180/math.pi
+            theta = math.degrees(math.atan2(vfy, vfx))
             # Split angle is the angle off of the new velocity vector for the two asteroids to the sides, the center child
             # asteroid continues on the new velocity path
             split_angle = 15
