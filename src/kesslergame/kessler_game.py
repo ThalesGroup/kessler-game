@@ -164,15 +164,12 @@ class KesslerGame:
             for ship in liveships:
                 for idx, pos in enumerate(ship.position):
                     bound = scenario.map_size[idx]
-                    offset = bound - pos
-                    if offset < 0 or offset > bound:
-                        ship.position[idx] += bound * np.sign(offset)
+                    ship.position[idx] = pos % bound
+
             for asteroid in asteroids:
                 for idx, pos in enumerate(asteroid.position):
                     bound = scenario.map_size[idx]
-                    offset = bound - pos
-                    if offset < 0 or offset > bound:
-                        asteroid.position[idx] += bound * np.sign(offset)
+                    asteroid.position[idx] = pos % bound
 
             # Update performance tracker with
             if self.perf_tracker:
