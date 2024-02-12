@@ -87,7 +87,9 @@ class Asteroid:
 
         if self.size != 1:
             if isinstance(impactor, Mine):
-                dist = math.sqrt((impactor.position[0] - self.position[0])**2 + (impactor.position[1] - self.position[1])**2)
+                delta_x = impactor.position[0] - self.position[0]
+                delta_y = impactor.position[1] - self.position[1]
+                dist = math.sqrt(delta_x*delta_x + delta_y*delta_y)
                 F = impactor.calculate_blast_force(dist=dist, obj=self)
                 a = F/self.mass
                 # calculate "impulse" based on acc
@@ -107,7 +109,7 @@ class Asteroid:
                 vfy = (1/(impactor.mass + self.mass))*(impactor.mass*impactor_vy + self.mass*self.vy)
 
             # Calculate speed of resultant asteroid(s) based on velocity vector
-            v = math.sqrt(vfx**2 + vfy**2)
+            v = math.sqrt(vfx*vfx + vfy*vfy)
             # Calculate angle of center asteroid for split (degrees)
             theta = math.atan2(vfy, vfx)*180/math.pi
             # Split angle is the angle off of the new velocity vector for the two asteroids to the sides, the center child
