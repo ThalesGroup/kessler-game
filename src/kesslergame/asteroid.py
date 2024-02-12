@@ -6,6 +6,7 @@
 from typing import Tuple, Dict, List, Any
 import random
 import numpy as np
+import math
 from .mines import Mine
 
 
@@ -44,7 +45,7 @@ class Asteroid:
         # Set collision radius based on size # TODO May need to change once size can be visualized
         self.radius = self.size * 8
 
-        self.mass = 0.25*np.pi*self.radius**2
+        self.mass = 0.25*math.pi*self.radius**2
 
         # Use optional angle and speed arguments otherwise generate random angle and speed
         starting_angle = angle if angle is not None else random.random()*360.0
@@ -56,8 +57,8 @@ class Asteroid:
         #     starting_speed * math.cos(math.radians(starting_angle))
         # ]
 
-        self.vx = starting_speed*np.cos(np.radians(starting_angle))
-        self.vy = starting_speed*np.sin(np.radians(starting_angle))
+        self.vx = starting_speed*math.cos(math.radians(starting_angle))
+        self.vy = starting_speed*math.sin(math.radians(starting_angle))
         self.velocity = [self.vx, self.vy]
 
         # Set position as specified
@@ -87,7 +88,7 @@ class Asteroid:
 
         if self.size != 1:
             if isinstance(impactor, Mine):
-                dist = np.sqrt((impactor.position[0] - self.position[0])**2 + (impactor.position[1] - self.position[1])**2)
+                dist = math.sqrt((impactor.position[0] - self.position[0])**2 + (impactor.position[1] - self.position[1])**2)
                 F = impactor.calculate_blast_force(dist=dist, obj=self)
                 a = F/self.mass
                 # calculate "impulse" based on acc
@@ -107,9 +108,9 @@ class Asteroid:
                 vfy = (1/(impactor.mass + self.mass))*(impactor.mass*impactor_vy + self.mass*self.vy)
 
             # Calculate speed of resultant asteroid(s) based on velocity vector
-            v = np.sqrt(vfx**2 + vfy**2)
+            v = math.sqrt(vfx**2 + vfy**2)
             # Calculate angle of center asteroid for split (degrees)
-            theta = np.arctan2(vfy, vfx)*180/np.pi
+            theta = math.atan2(vfy, vfx)*180/math.pi
             # Split angle is the angle off of the new velocity vector for the two asteroids to the sides, the center child
             # asteroid continues on the new velocity path
             split_angle = 15

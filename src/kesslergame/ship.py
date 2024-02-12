@@ -278,8 +278,8 @@ class Ship:
             self.bullets_shot += 1
 
             # Return the bullet object that was fired
-            bullet_x = self.position[0] + self.radius * np.cos(np.radians(self.heading))
-            bullet_y = self.position[1] + self.radius * np.sin(np.radians(self.heading))
+            bullet_x = self.position[0] + self.radius * math.cos(math.radians(self.heading))
+            bullet_y = self.position[1] + self.radius * math.sin(math.radians(self.heading))
             return Bullet([bullet_x, bullet_y], self.heading, owner=self)
 
         # Return nothing if we can't fire a bullet right now

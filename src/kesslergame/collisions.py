@@ -25,7 +25,7 @@ def circle_line_collision(line_A, line_B, center, radius):
     # Heron's formula to calculate area of triangle and resultant height (distance from circle center to line segment)
     s = 0.5 * (a + b + c)
 
-    cen_dist = 2 / c * np.sqrt(s * (s-a) * (s-b) * (s-c))
+    cen_dist = 2 / c * math.sqrt(s * (s-a) * (s-b) * (s-c))
 
     # If circle distance to line segment is less than circle radius, they are colliding
     if cen_dist < radius:

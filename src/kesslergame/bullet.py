@@ -5,6 +5,7 @@
 
 from typing import List, Tuple, Dict, Any
 import numpy as np
+import math
 
 
 class Bullet:
@@ -15,11 +16,11 @@ class Bullet:
         self.mass = 1  # mass units - kg?
         self.position = starting_position
         self.heading = starting_heading
-        self.rad_heading = np.pi*starting_heading/180
-        self.tail = [self.position[0] - self.length * np.cos(self.rad_heading),
-                     self.position[1] - self.length * np.sin(self.rad_heading)]
-        self.vx = self.speed*np.cos(self.rad_heading)
-        self.vy = self.speed*np.sin(self.rad_heading)
+        self.rad_heading = math.pi*starting_heading/180
+        self.tail = [self.position[0] - self.length * math.cos(self.rad_heading),
+                     self.position[1] - self.length * math.sin(self.rad_heading)]
+        self.vx = self.speed*math.cos(self.rad_heading)
+        self.vy = self.speed*math.sin(self.rad_heading)
         self.velocity = [self.vx, self.vy]
 
     def update(self, delta_time=1/30):
