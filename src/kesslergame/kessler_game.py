@@ -208,16 +208,16 @@ class KesslerGame:
             for idx_mine, mine in enumerate(mines):
                 if mine.detonating:
                     for idx_ast, asteroid in enumerate(asteroids):
-                        dist = math.sqrt((asteroid.position[0] - mine.position[0]) ** 2 + (asteroid.position[1] - mine.position[1]) ** 2)
-                        if dist <= mine.blast_radius + asteroid.radius:
+                        dist_squared = (asteroid.position[0] - mine.position[0]) ** 2 + (asteroid.position[1] - mine.position[1]) ** 2
+                        if dist_squared <= (mine.blast_radius + asteroid.radius) ** 2:
                             mine.owner.asteroids_hit += 1
                             mine.owner.mines_hit += 1
 
                             new_asteroids.extend(asteroid.destruct(impactor=mine))
                             asteroid_remove_idxs.add(idx_ast)
                     for ship in liveships:
-                        dist = math.sqrt((ship.position[0] - mine.position[0]) ** 2 + (ship.position[1] - mine.position[1]) ** 2)
-                        if dist <= mine.blast_radius + ship.radius:
+                        dist_squared = (ship.position[0] - mine.position[0]) ** 2 + (ship.position[1] - mine.position[1]) ** 2
+                        if dist_squared <= (mine.blast_radius + ship.radius) ** 2:
                             # Ship destruct function. Add one to asteroids_hit
                             ship.destruct(map_size=scenario.map_size)
                             # Stop checking this ship's collisions
@@ -237,9 +237,9 @@ class KesslerGame:
             for idx_ship, ship in enumerate(liveships):
                 if not ship.is_respawning:
                     for idx_ast, asteroid in enumerate(asteroids):
-                        dist = math.sqrt(sum([(pos1 - pos2) ** 2 for pos1, pos2 in zip(ship.position, asteroid.position)]))
+                        dist_squared = sum([(pos1 - pos2) ** 2 for pos1, pos2 in zip(ship.position, asteroid.position)])
                         # If collision occurs
-                        if dist < (ship.radius + asteroid.radius):
+                        if dist_squared < (ship.radius + asteroid.radius) ** 2:
                             # Ship destruct function. Add one to asteroids_hit
                             ship.asteroids_hit += 1
                             ship.destruct(map_size=scenario.map_size)
@@ -257,8 +257,8 @@ class KesslerGame:
             for ship1 in liveships:
                 for ship2 in liveships:
                     if (ship1 is not ship2) and (not ship2.is_respawning) and (not ship1.is_respawning):
-                        dist = math.sqrt(sum([(pos1 - pos2) ** 2 for pos1, pos2 in zip(ship1.position, ship2.position)]))
-                        if dist < ship1.radius + ship2.radius:
+                        dist_squared = sum([(pos1 - pos2) ** 2 for pos1, pos2 in zip(ship1.position, ship2.position)])
+                        if dist_squared < (ship1.radius + ship2.radius) ** 2:
                             ship1.destruct(map_size=scenario.map_size)
                             ship2.destruct(map_size=scenario.map_size)
             # Cull ships that are not alive
