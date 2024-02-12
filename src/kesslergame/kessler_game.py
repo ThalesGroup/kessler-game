@@ -215,7 +215,7 @@ class KesslerGame:
                             mine.owner.mines_hit += 1
 
                             new_asteroids.extend(asteroid.destruct(impactor=mine))
-                            asteroid_remove_idxs.append(idx_ast)
+                            asteroid_remove_idxs.add(idx_ast)
                     for ship in liveships:
                         dist = math.sqrt((ship.position[0] - mine.position[0]) ** 2 + (ship.position[1] - mine.position[1]) ** 2)
                         if dist <= mine.blast_radius + ship.radius:
