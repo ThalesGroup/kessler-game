@@ -93,8 +93,24 @@ class Asteroid:
                 F = impactor.calculate_blast_force(dist=dist, obj=self)
                 a = F/self.mass
                 # calculate "impulse" based on acc
-                vfx = self.vx + a*(self.position[0] - impactor.position[0])/dist
-                vfy = self.vy + a*(self.position[1] - impactor.position[1])/dist
+                if dist != 0.0:
+                    vfx = self.vx + a*(self.position[0] - impactor.position[0])/dist
+                    vfy = self.vy + a*(self.position[1] - impactor.position[1])/dist
+
+                    # Calculate speed of resultant asteroid(s) based on velocity vector
+                    v = math.sqrt(vfx*vfx + vfy*vfy)
+                    # Split angle is the angle off of the new velocity vector for the two asteroids to the sides, the center child
+                    # asteroid continues on the new velocity path
+                    split_angle = 15
+                else:
+                    vfx = self.vx
+                    vfy = self.vy
+                    # Calculate speed of resultant asteroid(s) based on velocity vector
+                    # This v calculation matches the speed you would get in the nonzero dist case, if you take the limit as dist -> 0
+                    v = math.sqrt(self.vx*self.vx + self.vy*self.vy) + a
+                    # Split angle is the angle off of the new velocity vector for the two asteroids to the sides, the center child
+                    # asteroid continues on the new velocity path
+                    split_angle = 120
             else:
                 # Calculating new velocity vector of asteroid children based on bullet-asteroid collision/momentum
                 # Currently collisions are considered perfectly inelastic i.e. the bullet is absorbed by the asteroid
@@ -108,14 +124,14 @@ class Asteroid:
                 vfx = (1/(impactor.mass + self.mass))*(impactor.mass*impactor_vx + self.mass*self.vx)
                 vfy = (1/(impactor.mass + self.mass))*(impactor.mass*impactor_vy + self.mass*self.vy)
 
-            # Calculate speed of resultant asteroid(s) based on velocity vector
-            v = math.sqrt(vfx*vfx + vfy*vfy)
+                # Calculate speed of resultant asteroid(s) based on velocity vector
+                v = math.sqrt(vfx*vfx + vfy*vfy)
+                # Split angle is the angle off of the new velocity vector for the two asteroids to the sides, the center child
+                # asteroid continues on the new velocity path
+                split_angle = 15
             # Calculate angle of center asteroid for split (degrees)
             theta = math.degrees(math.atan2(vfy, vfx))
-            # Split angle is the angle off of the new velocity vector for the two asteroids to the sides, the center child
-            # asteroid continues on the new velocity path
-            split_angle = 15
-            angles = [theta+split_angle, theta, theta-split_angle]
+            angles = [theta + split_angle, theta, theta - split_angle]
 
             for angle in angles:
                 while angle < 0:
