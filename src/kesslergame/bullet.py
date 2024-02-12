@@ -16,10 +16,12 @@ class Bullet:
         self.position = starting_position
         self.heading = starting_heading
         self.rad_heading = math.radians(starting_heading)
-        self.tail = [self.position[0] - self.length * math.cos(self.rad_heading),
-                     self.position[1] - self.length * math.sin(self.rad_heading)]
-        self.vx = self.speed*math.cos(self.rad_heading)
-        self.vy = self.speed*math.sin(self.rad_heading)
+        cos_heading = math.cos(self.rad_heading)
+        sin_heading = math.sin(self.rad_heading)
+        self.tail = [self.position[0] - self.length*cos_heading,
+                     self.position[1] - self.length*sin_heading]
+        self.vx = self.speed*cos_heading
+        self.vy = self.speed*sin_heading
         self.velocity = [self.vx, self.vy]
 
     def update(self, delta_time=1/30):
