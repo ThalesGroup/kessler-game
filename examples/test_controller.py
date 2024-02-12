@@ -29,10 +29,10 @@ class TestController(KesslerController):
             bool: mine deployment control value. Lays mine if true
         """
 
-        thrust = 150
-        turn_rate = 10
+        thrust = 0
+        turn_rate = 0
         fire = False
-        drop_mine = True
+        drop_mine = False
 
         return thrust, turn_rate, fire, drop_mine
 
