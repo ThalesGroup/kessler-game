@@ -197,12 +197,14 @@ class KesslerGame:
                         # Stop checking this bullet
                         break
             # Cull bullets and asteroids that are marked for removal
-            bullets = [bullet for idx, bullet in enumerate(bullets) if idx not in bullet_remove_idxs]
-            asteroids = [asteroid for idx, asteroid in enumerate(asteroids) if idx not in asteroid_remove_idxs]
+            if bullet_remove_idxs:
+                bullets = [bullet for idx, bullet in enumerate(bullets) if idx not in bullet_remove_idxs]
+            if asteroid_remove_idxs:
+                asteroids = [asteroid for idx, asteroid in enumerate(asteroids) if idx not in asteroid_remove_idxs]
 
             # --- Check mine-asteroid and mine-ship effects ---
             mine_remove_idxs = []
-            asteroid_remove_idxs = []
+            asteroid_remove_idxs = set()
             new_asteroids = []
             for idx_mine, mine in enumerate(mines):
                 if mine.detonating:
@@ -224,8 +226,10 @@ class KesslerGame:
                     if idx_mine not in mine_remove_idxs:
                         mine_remove_idxs.append(idx_mine)
                     mine.destruct()
-            mines = [mine for idx, mine in enumerate(mines) if idx not in mine_remove_idxs]
-            asteroids = [asteroid for idx, asteroid in enumerate(asteroids) if idx not in asteroid_remove_idxs]
+            if mine_remove_idxs:
+                mines = [mine for idx, mine in enumerate(mines) if idx not in mine_remove_idxs]
+            if asteroid_remove_idxs:
+                asteroids = [asteroid for idx, asteroid in enumerate(asteroids) if idx not in asteroid_remove_idxs]
             asteroids.extend(new_asteroids)
 
 
@@ -247,7 +251,8 @@ class KesslerGame:
                             break
             # Cull ships if not alive and asteroids that are marked for removal
             liveships = [ship for ship in liveships if ship.alive]
-            asteroids = [asteroid for idx, asteroid in enumerate(asteroids) if idx not in asteroid_remove_idxs]
+            if asteroid_remove_idxs:
+                asteroids = [asteroid for idx, asteroid in enumerate(asteroids) if idx not in asteroid_remove_idxs]
 
             # --- Check ship-ship collisions ---
             for ship1 in liveships:
