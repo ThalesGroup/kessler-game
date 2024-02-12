@@ -91,8 +91,8 @@ class Asteroid:
                 F = impactor.calculate_blast_force(dist=dist, obj=self)
                 a = F/self.mass
                 # calculate "impulse" based on acc
-                vfx = self.vx + a*(self.position[0] - impactor.position[0])/dist
-                vfy = self.vy + a*(self.position[1] - impactor.position[1])/dist
+                vfx = self.vx + a*(self.position[0] - impactor.position[0])/(dist + 0.000001)
+                vfy = self.vy + a*(self.position[1] - impactor.position[1])/(dist + 0.000001)
             else:
                 # Calculating new velocity vector of asteroid children based on bullet-asteroid collision/momentum
                 # Currently collisions are considered perfectly inelastic i.e. the bullet is absorbed by the asteroid
