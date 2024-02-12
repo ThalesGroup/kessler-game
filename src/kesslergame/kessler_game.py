@@ -5,7 +5,6 @@
 
 import time
 
-import numpy as np
 import math
 from typing import Dict, Any, List
 from enum import Enum

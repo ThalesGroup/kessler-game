@@ -105,6 +105,7 @@ class Asteroid:
                 else:
                     vfx = self.vx
                     vfy = self.vy
+                    
                     # Calculate speed of resultant asteroid(s) based on velocity vector
                     # This v calculation matches the speed you would get in the nonzero dist case, if you take the limit as dist -> 0
                     v = math.sqrt(self.vx*self.vx + self.vy*self.vy) + a
