@@ -183,6 +183,8 @@ class KesslerGame:
             asteroid_remove_idxs = []
             for idx_bul, bullet in enumerate(bullets):
                 for idx_ast, asteroid in enumerate(asteroids):
+                    if idx_ast in asteroid_remove_idxs:
+                        continue
                     # If collision occurs
                     if circle_line_collision(bullet.position, bullet.tail, asteroid.position, asteroid.radius):
                         # Increment hit values on ship that fired bullet then destruct bullet and mark for removal
