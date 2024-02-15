@@ -180,7 +180,7 @@ class KesslerGame:
 
             # --- Check asteroid-bullet collisions ---
             bullet_remove_idxs = []
-            asteroid_remove_idxs = []
+            asteroid_remove_idxs = set() # Keep track of deleted asteroids, and cull all at once at the end
             for idx_bul, bullet in enumerate(bullets):
                 for idx_ast, asteroid in enumerate(asteroids):
                     if idx_ast in asteroid_remove_idxs:
@@ -194,22 +194,21 @@ class KesslerGame:
                         bullet_remove_idxs.append(idx_bul)
                         # Asteroid destruct function and mark for removal
                         asteroids.extend(asteroid.destruct(impactor=bullet))
-                        asteroid_remove_idxs.append(idx_ast)
+                        asteroid_remove_idxs.add(idx_ast)
                         # Stop checking this bullet
                         break
             # Cull bullets and asteroids that are marked for removal
             if bullet_remove_idxs:
                 bullets = [bullet for idx, bullet in enumerate(bullets) if idx not in bullet_remove_idxs]
-            if asteroid_remove_idxs:
-                asteroids = [asteroid for idx, asteroid in enumerate(asteroids) if idx not in asteroid_remove_idxs]
 
             # --- Check mine-asteroid and mine-ship effects ---
             mine_remove_idxs = []
-            asteroid_remove_idxs = set()
             new_asteroids = []
             for idx_mine, mine in enumerate(mines):
                 if mine.detonating:
                     for idx_ast, asteroid in enumerate(asteroids):
+                        if idx_ast in asteroid_remove_idxs:
+                            continue
                         dist_squared = (asteroid.position[0] - mine.position[0]) ** 2 + (asteroid.position[1] - mine.position[1]) ** 2
                         if dist_squared <= (mine.blast_radius + asteroid.radius) ** 2:
                             mine.owner.asteroids_hit += 1
@@ -229,16 +228,15 @@ class KesslerGame:
                     mine.destruct()
             if mine_remove_idxs:
                 mines = [mine for idx, mine in enumerate(mines) if idx not in mine_remove_idxs]
-            if asteroid_remove_idxs:
-                asteroids = [asteroid for idx, asteroid in enumerate(asteroids) if idx not in asteroid_remove_idxs]
             asteroids.extend(new_asteroids)
 
 
             # --- Check asteroid-ship collisions ---
-            asteroid_remove_idxs = []
             for idx_ship, ship in enumerate(liveships):
                 if not ship.is_respawning:
                     for idx_ast, asteroid in enumerate(asteroids):
+                        if idx_ast in asteroid_remove_idxs:
+                            continue
                         dist_squared = sum([(pos1 - pos2) ** 2 for pos1, pos2 in zip(ship.position, asteroid.position)])
                         # If collision occurs
                         if dist_squared < (ship.radius + asteroid.radius) ** 2:
@@ -247,7 +245,7 @@ class KesslerGame:
                             ship.destruct(map_size=scenario.map_size)
                             # Asteroid destruct function and mark for removal
                             asteroids.extend(asteroid.destruct(impactor=ship))
-                            asteroid_remove_idxs.append(idx_ast)
+                            asteroid_remove_idxs.add(idx_ast)
                             # Stop checking this ship's collisions
                             break
             # Cull ships if not alive and asteroids that are marked for removal
