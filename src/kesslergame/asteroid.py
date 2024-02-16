@@ -134,12 +134,6 @@ class Asteroid:
             theta = math.degrees(math.atan2(vfy, vfx))
             angles = [theta + split_angle, theta, theta - split_angle]
 
-            for angle in angles:
-                while angle < 0:
-                    angle += 360
-                while angle > 360:
-                    angle -= 360
-
             return [Asteroid(position=self.position, size=self.size-1, speed=v, angle=angle) for angle in angles]
 
                 # Old method of doing random splits
