@@ -254,9 +254,9 @@ class KesslerGame:
                 asteroids = [asteroid for idx, asteroid in enumerate(asteroids) if idx not in asteroid_remove_idxs]
 
             # --- Check ship-ship collisions ---
-            for ship1 in liveships:
-                for ship2 in liveships:
-                    if (ship1 is not ship2) and (not ship2.is_respawning) and (not ship1.is_respawning):
+            for i, ship1 in enumerate(liveships):
+                for ship2 in liveships[i + 1:]:
+                    if not ship2.is_respawning and not ship1.is_respawning:
                         dist_squared = sum([(pos1 - pos2) ** 2 for pos1, pos2 in zip(ship1.position, ship2.position)])
                         if dist_squared < (ship1.radius + ship2.radius) ** 2:
                             ship1.destruct(map_size=scenario.map_size)
