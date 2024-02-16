@@ -257,7 +257,7 @@ class KesslerGame:
             for i, ship1 in enumerate(liveships):
                 for ship2 in liveships[i + 1:]:
                     if not ship2.is_respawning and not ship1.is_respawning:
-                        dist_squared = sum([(pos1 - pos2) ** 2 for pos1, pos2 in zip(ship1.position, ship2.position)])
+                        dist_squared = sum((pos1 - pos2) ** 2 for pos1, pos2 in zip(ship1.position, ship2.position))
                         if dist_squared < (ship1.radius + ship2.radius) ** 2:
                             ship1.destruct(map_size=scenario.map_size)
                             ship2.destruct(map_size=scenario.map_size)
