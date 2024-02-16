@@ -207,11 +207,8 @@ class Ship:
         # Update the angle based on turning rate
         self.heading += self.turn_rate * delta_time
 
-        # Keep the angle within (-180, 180)
-        while self.heading > 360:
-            self.heading -= 360.0
-        while self.heading < 0:
-            self.heading += 360.0
+        # Keep the angle within (0, 360)
+        self.heading %= 360
 
         # Use speed magnitude to get velocity vector
         self.velocity = [math.cos(math.radians(self.heading)) * self.speed,
