@@ -242,6 +242,7 @@ class Ship:
         # Set location and physical parameters
         self.position = position
         self.speed = 0
+        self.velocity = [0, 0]
         self.heading = heading
 
     def deploy_mine(self):
