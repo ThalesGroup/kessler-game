@@ -32,9 +32,9 @@ class Ship:
 
         # State info
         self.id = ship_id
-        self.speed = 0
+        self.speed = 0.0
         self.position = position
-        self.velocity = [0, 0]
+        self.velocity = [0.0, 0.0]
         self.heading = angle
         self.lives = lives
         self.deaths = 0
@@ -181,7 +181,7 @@ class Ship:
         # Apply drag. Fully stop the ship if it would cross zero speed in this time (prevents oscillation)
         drag_amount = self.drag * delta_time
         if drag_amount > abs(self.speed):
-            self.speed = 0
+            self.speed = 0.0
         else:
             self.speed -= drag_amount * np.sign(self.speed)
 
@@ -241,8 +241,8 @@ class Ship:
 
         # Set location and physical parameters
         self.position = position
-        self.speed = 0
-        self.velocity = [0, 0]
+        self.speed = 0.0
+        self.velocity = [0.0, 0.0]
         self.heading = heading
 
     def deploy_mine(self):
