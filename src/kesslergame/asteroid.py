@@ -94,8 +94,10 @@ class Asteroid:
                 a = F/self.mass
                 # calculate "impulse" based on acc
                 if dist != 0.0:
-                    vfx = self.vx + a*(self.position[0] - impactor.position[0])/dist
-                    vfy = self.vy + a*(self.position[1] - impactor.position[1])/dist
+                    cos_theta = (self.position[0] - impactor.position[0])/dist
+                    sin_theta = (self.position[1] - impactor.position[1])/dist
+                    vfx = self.vx + a*cos_theta
+                    vfy = self.vy + a*sin_theta
 
                     # Calculate speed of resultant asteroid(s) based on velocity vector
                     v = math.sqrt(vfx*vfx + vfy*vfy)
