@@ -108,7 +108,7 @@ class Asteroid:
                     
                     # Calculate speed of resultant asteroid(s) based on velocity vector
                     # This v calculation matches the speed you would get in the nonzero dist case, if you take the limit as dist -> 0
-                    v = math.sqrt(self.vx*self.vx + self.vy*self.vy) + a
+                    v = math.sqrt(vfx*vfx + vfy*vfy) + a
                     # Split angle is the angle off of the new velocity vector for the two asteroids to the sides, the center child
                     # asteroid continues on the new velocity path
                     split_angle = 120
