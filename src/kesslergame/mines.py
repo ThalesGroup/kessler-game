@@ -4,7 +4,6 @@
 # this source code package.
 
 from typing import List, Tuple, Dict, Any
-import numpy as np
 
 
 class Mine:

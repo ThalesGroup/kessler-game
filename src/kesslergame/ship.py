@@ -32,9 +32,9 @@ class Ship:
 
         # State info
         self.id = ship_id
-        self.speed = 0
+        self.speed = 0.0
         self.position = position
-        self.velocity = [0, 0]
+        self.velocity = [0.0, 0.0]
         self.heading = angle
         self.lives = lives
         self.deaths = 0
@@ -181,7 +181,7 @@ class Ship:
         # Apply drag. Fully stop the ship if it would cross zero speed in this time (prevents oscillation)
         drag_amount = self.drag * delta_time
         if drag_amount > abs(self.speed):
-            self.speed = 0
+            self.speed = 0.0
         else:
             self.speed -= drag_amount * np.sign(self.speed)
 
@@ -207,11 +207,8 @@ class Ship:
         # Update the angle based on turning rate
         self.heading += self.turn_rate * delta_time
 
-        # Keep the angle within (-180, 180)
-        while self.heading > 360:
-            self.heading -= 360.0
-        while self.heading < 0:
-            self.heading += 360.0
+        # Keep the angle within (0, 360)
+        self.heading %= 360
 
         # Use speed magnitude to get velocity vector
         self.velocity = [math.cos(math.radians(self.heading)) * self.speed,
@@ -244,7 +241,8 @@ class Ship:
 
         # Set location and physical parameters
         self.position = position
-        self.speed = 0
+        self.speed = 0.0
+        self.velocity = [0.0, 0.0]
         self.heading = heading
 
     def deploy_mine(self):
@@ -278,8 +276,8 @@ class Ship:
             self.bullets_shot += 1
 
             # Return the bullet object that was fired
-            bullet_x = self.position[0] + self.radius * np.cos(np.radians(self.heading))
-            bullet_y = self.position[1] + self.radius * np.sin(np.radians(self.heading))
+            bullet_x = self.position[0] + self.radius * math.cos(math.radians(self.heading))
+            bullet_y = self.position[1] + self.radius * math.sin(math.radians(self.heading))
             return Bullet([bullet_x, bullet_y], self.heading, owner=self)
 
         # Return nothing if we can't fire a bullet right now

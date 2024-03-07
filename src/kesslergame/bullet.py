@@ -4,7 +4,7 @@
 # this source code package.
 
 from typing import List, Tuple, Dict, Any
-import numpy as np
+import math
 
 
 class Bullet:
@@ -15,11 +15,13 @@ class Bullet:
         self.mass = 1  # mass units - kg?
         self.position = starting_position
         self.heading = starting_heading
-        self.rad_heading = np.pi*starting_heading/180
-        self.tail = [self.position[0] - self.length * np.cos(self.rad_heading),
-                     self.position[1] - self.length * np.sin(self.rad_heading)]
-        self.vx = self.speed*np.cos(self.rad_heading)
-        self.vy = self.speed*np.sin(self.rad_heading)
+        self.rad_heading = math.radians(starting_heading)
+        cos_heading = math.cos(self.rad_heading)
+        sin_heading = math.sin(self.rad_heading)
+        self.tail = [self.position[0] - self.length*cos_heading,
+                     self.position[1] - self.length*sin_heading]
+        self.vx = self.speed*cos_heading
+        self.vy = self.speed*sin_heading
         self.velocity = [self.vx, self.vy]
 
     def update(self, delta_time=1/30):

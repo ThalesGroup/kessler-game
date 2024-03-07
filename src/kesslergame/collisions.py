@@ -3,7 +3,6 @@
 # NOTICE: This file is subject to the license agreement defined in file 'LICENSE', which is part of
 # this source code package.
 
-import numpy as np
 import math
 
 def circle_line_collision(line_A, line_B, center, radius):
@@ -17,15 +16,14 @@ def circle_line_collision(line_A, line_B, center, radius):
         return False
 
     # calculate side lengths of triangle formed from the line segment and circle center point
-    # round to 4 decimal places to prevent floating point error sqrt(-0) later
-    a = round(math.dist(line_A, center), 4)
-    b = round(math.dist(line_B, center), 4)
-    c = round(math.dist(line_A, line_B), 4)
+    a = math.dist(line_A, center)
+    b = math.dist(line_B, center)
+    c = math.dist(line_A, line_B)
 
     # Heron's formula to calculate area of triangle and resultant height (distance from circle center to line segment)
     s = 0.5 * (a + b + c)
 
-    cen_dist = 2 / c * np.sqrt(s * (s-a) * (s-b) * (s-c))
+    cen_dist = 2 / c * math.sqrt(max(0.0, s * (s-a) * (s-b) * (s-c)))
 
     # If circle distance to line segment is less than circle radius, they are colliding
     if cen_dist < radius:
