@@ -1,5 +1,16 @@
 # Changelog
 
+## [2.1.0] - 7 March 2024
+
+- Multiple changes to enhance/optimize calculations
+  - Reduction in calls to transcendental functions in math/numpy
+  - Reduced numpy calls for non-vector/less inefficient implementations
+  - Refined collision checks
+  - Changed destruct order to asteroids before ships
+- Added `time_limit` to game state info passed to controller
+- Fixed bug in mine detonation where coincidence with asteroids/ships caused undesired destruct behavior
+  - Changed such that if coincident with asteroid with 0 speed, momentum is imparted and split angles are uniform
+
 ## [2.0.1] - 12 January 2024
 
 - Changed `game_state` dictionary information to include an explicit `delta_time` entry representing the difference 
