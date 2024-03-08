@@ -6,7 +6,7 @@
 import time
 
 import math
-from typing import Dict, Any, List
+from typing import Dict, Any, List, Tuple, TypedDict, Optional
 from enum import Enum
 from collections import OrderedDict
 
@@ -15,6 +15,10 @@ from .score import Score
 from .controller import KesslerController
 from .collisions import circle_line_collision
 from .graphics import GraphicsType, GraphicsHandler
+from .mines import Mine
+from .asteroid import Asteroid
+from .ship import Ship
+from .bullet import Bullet
 
 
 class StopReason(Enum):
@@ -25,8 +29,18 @@ class StopReason(Enum):
     out_of_bullets = 4
 
 
+class PerfDict(TypedDict):
+    controller_times: List[float]
+    total_controller_time: float
+    physics_update: float
+    collisions_check: float
+    score_update: float
+    graphics_draw: float
+    total_frame_time: float
+
+
 class KesslerGame:
-    def __init__(self, settings: Dict[str, Any] = None):
+    def __init__(self, settings: Optional[Dict[str, Any]] = None) -> None:
 
         if settings is None:
             settings = {}
@@ -49,7 +63,7 @@ class KesslerGame:
                                 'asteroids_hit': True, 'shots_fired': True, 'bullets_remaining': True,
                                 'controller_name': True}
         
-    def run(self, scenario: Scenario, controllers: List[KesslerController]) -> (Score, OrderedDict):
+    def run(self, scenario: Scenario, controllers: List[KesslerController]) -> Tuple[Score, OrderedDict]:
         """
         Run an entire scenario from start to finish and return score and stop reason
         """
@@ -58,10 +72,10 @@ class KesslerGame:
         # INITIALIZATION #
         ##################
         # Initialize objects lists from scenario
-        asteroids = scenario.asteroids()
-        ships = scenario.ships()
-        bullets = []
-        mines = []
+        asteroids: List[Asteroid] = scenario.asteroids()
+        ships: List[Ship] = scenario.ships()
+        bullets: List[Bullet] = []
+        mines: List[Mine] = []
 
         # Initialize Scoring class
         score = Score(scenario)
@@ -90,7 +104,7 @@ class KesslerGame:
 
             # Get perf time at the start of time step evaluation and initialize performance tracker
             step_start = time.perf_counter()
-            perf_dict = OrderedDict()
+            perf_dict: PerfDict = OrderedDict()
 
             # --- CALL CONTROLLER FOR EACH SHIP ------------------------------------------------------------------------
             # Get all live ships
@@ -341,7 +355,7 @@ class KesslerGame:
 
 
 class TrainerEnvironment(KesslerGame):
-    def __init__(self, settings: Dict[str, Any] = None):
+    def __init__(self, settings: Dict[str, Any] = None) -> None:
         """
         Instantiates a KesslerGame object with settings to optimize training time
         """

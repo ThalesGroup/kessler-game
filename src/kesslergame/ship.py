@@ -6,10 +6,11 @@
 import math
 import warnings
 import numpy as np
-from typing import Dict, Any, List
+from typing import Dict, Any, List, Optional
 
 from .bullet import Bullet
 from .mines import Mine
+from .controller import KesslerController
 
 
 class Ship:
@@ -26,7 +27,7 @@ class Ship:
         """
 
         # Control information
-        self.controller = None
+        self.controller: Optional[KesslerController] = None
         self.thrust = 0.0     # speed defaults to minimum
         self.turn_rate = 0.0
 
@@ -102,7 +103,7 @@ class Ship:
         }
 
     @property
-    def alive(self):
+    def alive(self) -> bool:
         return True if self.lives > 0 else False
 
     @property
@@ -141,7 +142,7 @@ class Ship:
     def mine_wait_time(self) -> float:
         return self._mine_limiter
 
-    def shoot(self):
+    def shoot(self) -> None:
         self.fire = True
 
     def update(self, delta_time: float = 1 / 30) -> tuple[Bullet, Mine]:
