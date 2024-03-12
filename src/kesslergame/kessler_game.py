@@ -223,10 +223,8 @@ class KesslerGame:
                         dy = ship.position[1] - mine.position[1]
                         radius_sum = mine.blast_radius + ship.radius
                         if dx * dx + dy * dy <= radius_sum * radius_sum:
-                            # Ship destruct function. Add one to asteroids_hit
+                            # Ship destruct function.
                             ship.destruct(map_size=scenario.map_size)
-                            # Stop checking this ship's collisions
-                            break
                     if idx_mine not in mine_remove_idxs:
                         mine_remove_idxs.append(idx_mine)
                     mine.destruct()
