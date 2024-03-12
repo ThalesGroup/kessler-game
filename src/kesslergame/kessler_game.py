@@ -219,12 +219,13 @@ class KesslerGame:
                             new_asteroids.extend(asteroid.destruct(impactor=mine))
                             asteroid_remove_idxs.add(idx_ast)
                     for ship in liveships:
-                        dx = ship.position[0] - mine.position[0]
-                        dy = ship.position[1] - mine.position[1]
-                        radius_sum = mine.blast_radius + ship.radius
-                        if dx * dx + dy * dy <= radius_sum * radius_sum:
-                            # Ship destruct function.
-                            ship.destruct(map_size=scenario.map_size)
+                        if not ship.is_respawning:
+                            dx = ship.position[0] - mine.position[0]
+                            dy = ship.position[1] - mine.position[1]
+                            radius_sum = mine.blast_radius + ship.radius
+                            if dx * dx + dy * dy <= radius_sum * radius_sum:
+                                # Ship destruct function.
+                                ship.destruct(map_size=scenario.map_size)
                     if idx_mine not in mine_remove_idxs:
                         mine_remove_idxs.append(idx_mine)
                     mine.destruct()
