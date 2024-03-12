@@ -1,5 +1,11 @@
 # Changelog
 
+## [2.1.1] - 12 March 2024
+
+- Fixed bug with only a single ship getting mine blast damage within the blast radius
+- Fixed error in mine cooldown
+- Added invincibility for mines during respawn
+
 ## [2.1.0] - 7 March 2024
 
 - Multiple changes to enhance/optimize calculations
