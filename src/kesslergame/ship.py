@@ -58,10 +58,10 @@ class Ship:
         # Manage respawns/firing via timers
         self._respawning = 0
         self._respawn_time = 3  # seconds
-        self._fire_limiter = 0
+        self._fire_limiter = 0.0 # seconds
         self._fire_time = 1 / 10  # seconds
-        self._mine_limiter = 0
-        self._mine_deploy_time = 1 # seconds
+        self._mine_limiter = 0.0 # second
+        self._mine_deploy_time = 1.0 # seconds
 
         # Track bullet/mine statistics
         self.mines_remaining = mines_remaining
@@ -93,8 +93,10 @@ class Ship:
         return {**self.state,
                 "bullets_remaining": self.bullets_remaining,
                 "mines_remaining": self.mines_remaining,
-                "can_fire": True if self.can_fire else False,
+                "can_fire": self.can_fire,
                 "fire_rate": self.fire_rate,
+                "can_deploy_mine": self.can_deploy_mine,
+                "mine_deploy_rate": self.mine_deploy_rate,
                 "thrust_range": self.thrust_range,
                 "turn_rate_range": self.turn_rate_range,
                 "max_speed": self.max_speed,
@@ -167,16 +169,16 @@ class Ship:
             self._respawning -= delta_time
 
         # Decrement fire limit timer (if necessary)
-        if self._fire_limiter <= 0.0:
-            self._fire_limiter = 0.0
-        else:
+        if self._fire_limiter != 0.0:
             self._fire_limiter -= delta_time
+            if self._fire_limiter <= 0.00000000001:
+                self._fire_limiter = 0.0
 
         # Decrement mine deployment limit timer (if necessary)
-        if self._mine_limiter <= 0.0:
-            self._mine_limiter = 0.0
-        else:
+        if self._mine_limiter != 0.0:
             self._mine_limiter -= delta_time
+            if self._mine_limiter <= 0.00000000001:
+                self._mine_limiter = 0.0
 
         # Apply drag. Fully stop the ship if it would cross zero speed in this time (prevents oscillation)
         drag_amount = self.drag * delta_time
