@@ -3,7 +3,7 @@
 # NOTICE: This file is subject to the license agreement defined in file 'LICENSE', which is part of
 # this source code package.
 
-from typing import List
+from typing import List, Optional
 
 import numpy as np
 
@@ -31,7 +31,7 @@ class Score:
                 if team.team_id == ship.team:
                     team.total_bullets += scenario.bullet_limit
 
-    def update(self, ships: List[Ship], sim_time, controller_perf: List[float] = None):
+    def update(self, ships: List[Ship], sim_time, controller_perf: Optional[List[float]] = None) -> None:
         self.sim_time = sim_time
         for team in self.teams:
             ast_hit, bul_hit, shots, bullets, deaths, lives = (0, 0, 0, 0, 0, 0)

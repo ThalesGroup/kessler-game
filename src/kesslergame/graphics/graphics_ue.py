@@ -10,13 +10,14 @@ from typing import List
 from ..ship import Ship
 from ..asteroid import Asteroid
 from ..bullet import Bullet
+from ..mines import Mine
 from ..score import Score
 from ..scenario import Scenario
 from .graphics_base import KesslerGraphics
 
 
 class GraphicsUE(KesslerGraphics):
-    def __init__(self):
+    def __init__(self) -> None:
         # Create udp senders/receivers
         udp_host = 'localhost'
         udp_port = 12345
@@ -25,7 +26,7 @@ class GraphicsUE(KesslerGraphics):
         self.udp_recvr.bind(('localhost', 12346))
         self.udp_addr = (udp_host, udp_port)
 
-    def start(self, scenario: Scenario):
+    def start(self, scenario: Scenario) -> None:
         self.map_size = scenario.map_size
         ship_count = len(scenario.ships())
         team_count = len(np.unique([ship.team for ship in scenario.ships()]))
@@ -46,7 +47,7 @@ class GraphicsUE(KesslerGraphics):
         start_str += 'teams:' + str(team_count)
         self.udp_sock.sendto(start_str.encode('utf-8'), self.udp_addr)
 
-    def update(self, score: Score, ships: List[Ship], asteroids: List[Asteroid], bullets: List[Bullet]):
+    def update(self, score: Score, ships: List[Ship], asteroids: List[Asteroid], bullets: List[Bullet], mines: List[Mine]) -> None:
         update_parts = ['::frame::']
 
         for ship in ships:

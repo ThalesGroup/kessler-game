@@ -4,7 +4,7 @@
 # this source code package.
 
 import math
-from typing import List, Tuple, Dict, Any
+from typing import List, Tuple, Dict, Any, Optional
 import random
 
 from .ship import Ship
@@ -12,9 +12,9 @@ from .asteroid import Asteroid
 
 
 class Scenario:
-    def __init__(self, name: str = "Unnamed", num_asteroids: int = 0, asteroid_states: List[Dict[str, Any]] = None,
-                 ship_states: List[Dict[str, Any]] = None, map_size: Tuple[int, int] = None, seed: int = None,
-                 time_limit: float = float("inf"), ammo_limit_multiplier: float = 0.0, stop_if_no_ammo: bool = False):
+    def __init__(self, name: str = "Unnamed", num_asteroids: int = 0, asteroid_states: Optional[List[Dict[str, Any]]] = None,
+                 ship_states: Optional[List[Dict[str, Any]]] = None, map_size: Optional[Tuple[int, int]] = None, seed: Optional[int] = None,
+                 time_limit: float = float("inf"), ammo_limit_multiplier: float = 0.0, stop_if_no_ammo: bool = False) -> None:
         """
         Specify the starting state of the environment, including map dimensions and optional features
 
@@ -116,7 +116,7 @@ class Scenario:
             return -1
 
     @staticmethod
-    def count_asteroids(asteroid_size) -> float:
+    def count_asteroids(asteroid_size) -> int:
         # Counting based off of each asteroid making 3 children when destroyed
         return sum([3 ** (size - 1) for size in range(1, asteroid_size + 1)])
 

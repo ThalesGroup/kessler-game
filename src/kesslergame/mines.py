@@ -7,7 +7,7 @@ from typing import List, Tuple, Dict, Any
 
 
 class Mine:
-    def __init__(self, starting_position: List[float], owner):
+    def __init__(self, starting_position: List[float], owner) -> None:
         self.fuse_time = 3
         self.detonation_time = 0.25
         self.mass = 25  # mass units - kg?

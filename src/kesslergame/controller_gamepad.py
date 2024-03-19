@@ -2,7 +2,7 @@
 
 from .controller import KesslerController
 from typing import Dict, Tuple
-from inputs import get_gamepad
+from inputs import get_gamepad  # type: ignore[import-untyped]
 import math
 import threading
 import time

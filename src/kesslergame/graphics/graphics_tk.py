@@ -4,14 +4,14 @@
 # this source code package.
 
 import os
-from tkinter import *
-from PIL import Image, ImageTk
+from tkinter import Tk, Canvas, NW
+from PIL import Image, ImageTk  # type: ignore[import-untyped]
 
 from .graphics_base import KesslerGraphics
 
 
 class GraphicsTK(KesslerGraphics):
-    def __init__(self, UI_settings):
+    def __init__(self, UI_settings) -> None:
         # UI settings
         # lives, accuracy, asteroids hit, shots taken, bullets left
         # default_ui = {'ships': True, 'lives_remaining': True, 'accuracy': True, 'asteroids_hit': True}
@@ -24,7 +24,7 @@ class GraphicsTK(KesslerGraphics):
         self.show_bullets_remaining = UI_settings.get('bullets_remaining', False)
         self.show_controller_name = UI_settings.get('controller_name', True)
 
-    def start(self, scenario):
+    def start(self, scenario) -> None:
         self.game_width = scenario.map_size[0]
         self.game_height = scenario.map_size[1]
         self.max_time = scenario.time_limit
@@ -58,9 +58,9 @@ class GraphicsTK(KesslerGraphics):
         self.ship_icons = [ImageTk.PhotoImage((Image.open(os.path.join(script_dir, image))).resize((ship_radius, ship_radius))) for image in self.image_paths]
 
         self.detoantion_time = 0.3
-        self.detonation_timers = []
+        #self.detonation_timers = []
 
-    def update(self, score, ships, asteroids, bullets, mines):
+    def update(self, score, ships, asteroids, bullets, mines) -> None:
 
         # Delete everything from canvas so we can re-plot
         self.game_canvas.delete("all")
@@ -78,10 +78,10 @@ class GraphicsTK(KesslerGraphics):
         # Push updates to graphics refresh
         self.window.update()
 
-    def close(self):
+    def close(self) -> None:
         self.window.destroy()
 
-    def update_score(self, score, ships):
+    def update_score(self, score, ships) -> None:
 
         # offsets to deal with cleanliness and window borders covering data
         x_offset = 5
@@ -144,7 +144,7 @@ class GraphicsTK(KesslerGraphics):
                                      image=self.ship_icons[(team.team_id-1) % self.num_images])
             team_num += 1
 
-    def format_ui(self, team):
+    def format_ui(self, team) -> str:
         # lives, accuracy, asteroids hit, shots taken, bullets left
         team_info = "_________\n"
         if self.show_lives:
@@ -160,7 +160,7 @@ class GraphicsTK(KesslerGraphics):
 
         return team_info
 
-    def plot_ships(self, ships):
+    def plot_ships(self, ships) -> None:
         """
         Plots each ship on the game screen using cached sprites and rotating them
         """
@@ -174,7 +174,7 @@ class GraphicsTK(KesslerGraphics):
                                              self.game_height - (ship.position[1] + ship.radius), text=str(ship.id),
                                              fill="white")
 
-    def plot_shields(self, ships):
+    def plot_shields(self, ships) -> None:
         """
         Plots each ship's shield ring
         """
@@ -193,7 +193,7 @@ class GraphicsTK(KesslerGraphics):
                                              self.game_height - (ship.position[1] - ship.radius),
                                              fill="black", outline=color)
 
-    def plot_bullets(self, bullets):
+    def plot_bullets(self, bullets) -> None:
         """
         Plots each bullet object on the game screen
         """
@@ -202,7 +202,7 @@ class GraphicsTK(KesslerGraphics):
                                          bullet.tail[0], self.game_height - bullet.tail[1],
                                          fill="#EE2737", width=3)
 
-    def plot_asteroids(self, asteroids):
+    def plot_asteroids(self, asteroids) -> None:
         """
         Plots each asteroid object on the game screen
         """
@@ -213,7 +213,7 @@ class GraphicsTK(KesslerGraphics):
                                          self.game_height - (asteroid.position[1] - asteroid.radius),
                                          fill="grey")
 
-    def plot_mines(self, mines):
+    def plot_mines(self, mines) -> None:
         """
         Plots and animates each mine object on the game screen and their detonations
         """
@@ -240,6 +240,3 @@ class GraphicsTK(KesslerGraphics):
                                              self.game_height - (mine.position[1] - explosion_radius),
                                              # fill="#fa441b",
                                              fill="", outline="white", width=10)
-
-
-

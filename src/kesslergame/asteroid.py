@@ -3,7 +3,7 @@
 # NOTICE: This file is subject to the license agreement defined in file 'LICENSE', which is part of
 # this source code package.
 
-from typing import Tuple, Dict, List, Any
+from typing import Tuple, Dict, List, Any, Optional
 import random
 import math
 from .mines import Mine
@@ -12,10 +12,10 @@ from .mines import Mine
 class Asteroid:
     """ Sprite that represents an asteroid. """
     def __init__(self,
-                 position: Tuple[float, float] = None,
-                 speed: float = None,
-                 angle: float = None,
-                 size: float = None):
+                 position: Tuple[float, float],
+                 speed: Optional[float] = None,
+                 angle: Optional[float] = None,
+                 size: Optional[int] = None) -> None:
         """
         Constructor for Asteroid Sprite
 
@@ -30,7 +30,7 @@ class Asteroid:
             if 1 <= size <= 4:
                 self.size = size
             else:
-                raise ValueError("AsteroidSize can only be between 1 and 4")
+                raise ValueError("Asteroid size can only be between 1 and 4")
         else:
             self.size = 4
 
@@ -42,9 +42,9 @@ class Asteroid:
         self.num_children = 3
 
         # Set collision radius based on size # TODO May need to change once size can be visualized
-        self.radius = self.size * 8
+        self.radius = self.size * 8.0
 
-        self.mass = 0.25*math.pi*self.radius**2
+        self.mass = 0.25*math.pi*self.radius*self.radius
 
         # Use optional angle and speed arguments otherwise generate random angle and speed
         starting_angle = angle if angle is not None else random.random()*360.0
@@ -58,31 +58,31 @@ class Asteroid:
 
         self.vx = starting_speed*math.cos(math.radians(starting_angle))
         self.vy = starting_speed*math.sin(math.radians(starting_angle))
-        self.velocity = [self.vx, self.vy]
+        self.velocity = (self.vx, self.vy)
 
         # Set position as specified
         self.position = position
 
         # Random rotations for use in display or future use with complex hit box
-        self.angle = random.randint(0, 360)
-        self.turnrate = random.randint(0, 200) - 100
+        self.angle: float = random.uniform(0.0, 360.0)
+        self.turnrate: float = random.uniform(-100, 100)
 
     @property
     def state(self) -> Dict[str, Any]:
         return {
-            "position": tuple(self.position),
-            "velocity": tuple(self.velocity),
-            "size": int(self.size),
-            "mass": float(self.mass),
-            "radius": float(self.radius)
+            "position": self.position,
+            "velocity": self.velocity,
+            "size": self.size,
+            "mass": self.mass,
+            "radius": self.radius
         }
 
-    def update(self, delta_time: float = 1/30):
+    def update(self, delta_time: float = 1/30) -> None:
         """ Move the asteroid based on velocity"""
-        self.position = [pos + v*delta_time for pos, v in zip(self.position, self.velocity)]
+        self.position = (self.position[0] + self.velocity[0] * delta_time, self.position[1] + self.velocity[1] * delta_time)
         self.angle += delta_time * self.turnrate
 
-    def destruct(self, impactor):
+    def destruct(self, impactor) -> list['Asteroid']:
         """ Spawn child asteroids"""
 
         if self.size != 1:
@@ -103,7 +103,7 @@ class Asteroid:
                     v = math.sqrt(vfx*vfx + vfy*vfy)
                     # Split angle is the angle off of the new velocity vector for the two asteroids to the sides, the center child
                     # asteroid continues on the new velocity path
-                    split_angle = 15
+                    split_angle = 15.0
                 else:
                     vfx = self.vx
                     vfy = self.vy
@@ -113,7 +113,7 @@ class Asteroid:
                     v = math.sqrt(vfx*vfx + vfy*vfy + a*a)
                     # Split angle is the angle off of the new velocity vector for the two asteroids to the sides, the center child
                     # asteroid continues on the new velocity path
-                    split_angle = 120
+                    split_angle = 120.0
             else:
                 # Calculating new velocity vector of asteroid children based on bullet-asteroid collision/momentum
                 # Currently collisions are considered perfectly inelastic i.e. the bullet is absorbed by the asteroid
@@ -131,7 +131,7 @@ class Asteroid:
                 v = math.sqrt(vfx*vfx + vfy*vfy)
                 # Split angle is the angle off of the new velocity vector for the two asteroids to the sides, the center child
                 # asteroid continues on the new velocity path
-                split_angle = 15
+                split_angle = 15.0
             # Calculate angle of center asteroid for split (degrees)
             theta = math.degrees(math.atan2(vfy, vfx))
             angles = [theta + split_angle, theta, theta - split_angle]

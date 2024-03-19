@@ -29,7 +29,7 @@ class StopReason(Enum):
     out_of_bullets = 4
 
 
-class PerfDict(TypedDict):
+class PerfDict(TypedDict, total=False):
     controller_times: List[float]
     total_controller_time: float
     physics_update: float
@@ -63,7 +63,7 @@ class KesslerGame:
                                 'asteroids_hit': True, 'shots_fired': True, 'bullets_remaining': True,
                                 'controller_name': True}
         
-    def run(self, scenario: Scenario, controllers: List[KesslerController]) -> Tuple[Score, OrderedDict]:
+    def run(self, scenario: Scenario, controllers: List[KesslerController]) -> Tuple[Score, List[PerfDict]]:
         """
         Run an entire scenario from start to finish and return score and stop reason
         """
@@ -95,7 +95,7 @@ class KesslerGame:
         graphics = GraphicsHandler(type=self.graphics_type, scenario=scenario, UI_settings=self.UI_settings, graphics_obj=self.graphics_obj)
 
         # Initialize list of dictionary for performance tracking (will remain empty if perf_tracker is false
-        perf_list = []
+        perf_list: List[PerfDict] = []
 
         ######################
         # MAIN SCENARIO LOOP #
@@ -104,7 +104,7 @@ class KesslerGame:
 
             # Get perf time at the start of time step evaluation and initialize performance tracker
             step_start = time.perf_counter()
-            perf_dict: PerfDict = OrderedDict()
+            perf_dict: PerfDict = {}
 
             # --- CALL CONTROLLER FOR EACH SHIP ------------------------------------------------------------------------
             # Get all live ships
@@ -176,14 +176,10 @@ class KesslerGame:
 
             # Wrap ships and asteroids to other side of map
             for ship in liveships:
-                for idx, pos in enumerate(ship.position):
-                    bound = scenario.map_size[idx]
-                    ship.position[idx] = pos % bound
+                ship.position = (ship.position[0] % scenario.map_size[0], ship.position[1] % scenario.map_size[1])
 
             for asteroid in asteroids:
-                for idx, pos in enumerate(asteroid.position):
-                    bound = scenario.map_size[idx]
-                    asteroid.position[idx] = pos % bound
+                asteroid.position = (asteroid.position[0] % scenario.map_size[0], asteroid.position[1] % scenario.map_size[1])
 
             # Update performance tracker with
             if self.perf_tracker:
@@ -354,7 +350,7 @@ class KesslerGame:
 
 
 class TrainerEnvironment(KesslerGame):
-    def __init__(self, settings: Dict[str, Any] = None) -> None:
+    def __init__(self, settings: Optional[Dict[str, Any]] = None) -> None:
         """
         Instantiates a KesslerGame object with settings to optimize training time
         """
