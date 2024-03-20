@@ -19,6 +19,7 @@ from .mines import Mine
 from .asteroid import Asteroid
 from .ship import Ship
 from .bullet import Bullet
+from .graphics import KesslerGraphics
 
 
 class StopReason(Enum):
@@ -45,14 +46,14 @@ class KesslerGame:
         if settings is None:
             settings = {}
         # Game settings
-        self.frequency = settings.get("frequency", 30.0)
-        self.time_step = 1 / settings.get("frequency", 30.0)
-        self.perf_tracker = settings.get("perf_tracker", True)
-        self.prints_on = settings.get("prints_on", True)
-        self.graphics_type = settings.get("graphics_type", GraphicsType.Tkinter)
-        self.graphics_obj = settings.get("graphics_obj", None)
-        self.realtime_multiplier = settings.get("realtime_multiplier", 0 if self.graphics_type==GraphicsType.NoGraphics else 1)
-        self.time_limit = settings.get("time_limit", None)
+        self.frequency: float = settings.get("frequency", 30.0)
+        self.time_step: float = 1 / settings.get("frequency", 30.0)
+        self.perf_tracker: bool = settings.get("perf_tracker", True)
+        self.prints_on: bool = settings.get("prints_on", True)
+        self.graphics_type: GraphicsType = settings.get("graphics_type", GraphicsType.Tkinter)
+        self.graphics_obj: Optional[KesslerGraphics] = settings.get("graphics_obj", None)
+        self.realtime_multiplier: float = settings.get("realtime_multiplier", 0 if self.graphics_type==GraphicsType.NoGraphics else 1)
+        self.time_limit: float = settings.get("time_limit", None)
 
         # UI settings
         default_ui = {'ships': True, 'lives_remaining': True, 'accuracy': True,
@@ -132,8 +133,8 @@ class KesslerGame:
             for idx, ship in enumerate(ships):
                 if ship.alive:
                     # Reset controls on ship to defaults
-                    ship.thrust = 0
-                    ship.turn_rate = 0
+                    ship.thrust = 0.0
+                    ship.turn_rate = 0.0
                     ship.fire = False
                     # Evaluate each controller letting control be applied
                     if controllers[idx].ship_id != ship.id:

@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 
 from .controller import KesslerController
-from typing import Dict, NoReturn, Tuple, Any
+from typing import Dict, NoReturn, Tuple, Any, Final
 from inputs import get_gamepad  # type: ignore[import-untyped]
 import math
 import threading
@@ -33,13 +33,13 @@ class GamepadController(KesslerController):
         if abs(self.gamepad.LeftJoystickY) > joystick_deadzone:
             thrust = self.gamepad.LeftJoystickY * 480.0
         else:
-            thrust = 0
+            thrust = 0.0
 
         # Set turn control
         if abs(self.gamepad.RightJoystickX) > joystick_deadzone:
-            turn_rate = -1 * self.gamepad.RightJoystickX * 180.0
+            turn_rate = -1.0 * self.gamepad.RightJoystickX * 180.0
         else:
-            turn_rate = 0
+            turn_rate = 0.0
 
         # Setfire control
         if self.gamepad.RightTrigger > trigger_deadzone:
@@ -61,7 +61,7 @@ class GamepadController(KesslerController):
         return "Gamepad Controller"
 
     def explanation(self) -> None:
-        exp = None
+        exp: None = None
         return exp
 
     def pause_handler(self) -> None:
@@ -81,8 +81,8 @@ class XboxController(object):
     MIT License
     """
 
-    MAX_TRIG_VAL = math.pow(2, 8)
-    MAX_JOY_VAL = math.pow(2, 15)
+    MAX_TRIG_VAL: Final[float] = 2.0**8
+    MAX_JOY_VAL: Final[float] = 2.0**15
 
     def __init__(self) -> None:
 

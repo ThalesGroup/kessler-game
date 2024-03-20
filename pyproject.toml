@@ -5,10 +5,13 @@
 
 # Minimum requirements for the build system to execute.
 [build-system]
-requires = ["setuptools>=42.0", "wheel"]
+requires = ["setuptools>=42.0", "wheel", "mypy"]
 build-backend = "setuptools.build_meta"
 
 [tool.pytest.ini_options]
 testpaths = [
     "test",
 ]
+
+[tool.mypy]
+ignore_missing_imports = true
