@@ -13,6 +13,7 @@ if TYPE_CHECKING:
 
 
 class Bullet:
+    __slots__ = ('owner', 'speed', 'length', 'mass', 'position', 'heading', 'rad_heading', 'tail', 'vx', 'vy', 'velocity')
     def __init__(self, starting_position: Tuple[float, float], starting_heading: float, owner: 'Ship') -> None:
         self.owner = owner
         self.speed = 800.0  # m/s

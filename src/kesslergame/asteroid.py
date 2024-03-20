@@ -14,6 +14,7 @@ from .mines import Mine
 
 class Asteroid:
     """ Sprite that represents an asteroid. """
+    __slots__ = ('size', 'max_speed', 'num_children', 'radius', 'mass', 'vx', 'vy', 'velocity', 'position', 'angle', 'turnrate')
     def __init__(self,
                  position: Tuple[float, float],
                  speed: Optional[float] = None,

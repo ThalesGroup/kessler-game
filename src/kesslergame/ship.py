@@ -14,6 +14,15 @@ from .controller import KesslerController
 
 
 class Ship:
+    __slots__ = (
+        'controller', 'thrust', 'turn_rate', 'id', 'speed', 'position',
+        'velocity', 'heading', 'lives', 'deaths', 'team', 'team_name',
+        'fire', 'drop_mine', 'thrust_range', 'turn_rate_range', 'max_speed',
+        'drag', 'radius', 'mass', '_respawning', '_respawn_time', '_fire_limiter',
+        '_fire_time', '_mine_limiter', '_mine_deploy_time', 'mines_remaining',
+        'bullets_remaining', 'bullets_shot', 'mines_dropped', 'bullets_hit',
+        'mines_hit', 'asteroids_hit'
+    )
     def __init__(self, ship_id: int,
                  position: Tuple[float, float],
                  angle: float = 90.0,

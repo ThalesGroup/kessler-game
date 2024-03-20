@@ -11,6 +11,7 @@ if TYPE_CHECKING:
 
 
 class Mine:
+    __slots__ = ('fuse_time', 'detonation_time', 'mass', 'radius', 'blast_radius', 'blast_pressure', 'owner', 'countdown_timer', 'detonating', 'position')
     def __init__(self, starting_position: List[float], owner: 'Ship') -> None:
         self.fuse_time = 3.0
         self.detonation_time = 0.25
