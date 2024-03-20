@@ -7,7 +7,9 @@ import os
 import matplotlib.markers
 import matplotlib.pyplot as plt
 import matplotlib.image as mpimg
-from matplotlib.pyplot import Figure, Axes
+from matplotlib.figure import Figure
+from matplotlib.axes import Axes
+
 import scipy.ndimage as ndimage  # type: ignore[import-untyped]
 
 from typing import List, Optional
@@ -18,6 +20,7 @@ from ..asteroid import Asteroid
 from ..bullet import Bullet
 from ..mines import Mine
 from ..score import Score
+from ..scenario import Scenario
 
 
 class GraphicsPLT(KesslerGraphics):
@@ -34,7 +37,7 @@ class GraphicsPLT(KesslerGraphics):
         self.ship_images = [mpimg.imread(os.path.join(script_dir, image)) for image in self.images]
         self.bullets_line = 0
 
-    def start(self, scenario) -> None:
+    def start(self, scenario: Scenario) -> None:
         # Environment data
         self.map_size = scenario.map_size
 
@@ -64,7 +67,7 @@ class GraphicsPLT(KesslerGraphics):
         self.fig.canvas.draw()
         self.fig.canvas.flush_events()
 
-    def plot_markers(self, ships, bullets, asteroids) -> None:
+    def plot_markers(self, ships: List[Ship], bullets: List[Bullet], asteroids: List[Asteroid]) -> None:
 
         # marker = matplotlib.markers.MarkerStyle(marker='<')
         assert self.ax is not None
@@ -94,10 +97,10 @@ class GraphicsPLT(KesslerGraphics):
         y_asteroids2 = []
         y_asteroids3 = []
         y_asteroids4 = []
-        radius1 = 0
-        radius2 = 0
-        radius3 = 0
-        radius4 = 0
+        radius1 = 0.0
+        radius2 = 0.0
+        radius3 = 0.0
+        radius4 = 0.0
         # plot asteroids
         for asteroid in asteroids:
             if asteroid.size == 1:
@@ -135,5 +138,5 @@ class GraphicsPLT(KesslerGraphics):
         y_bullets = [bullet.position[1] for bullet in bullets]
         self.ax.scatter(x_bullets, y_bullets, color='r', marker='*', s=1)
 
-    def close(self):
+    def close(self) -> None:
         plt.close(self.fig)

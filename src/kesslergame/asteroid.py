@@ -7,6 +7,8 @@ from typing import Tuple, Dict, List, Any, Optional
 import random
 import math
 from .mines import Mine
+from .bullet import Bullet
+from .ship import Ship
 
 
 class Asteroid:
@@ -82,7 +84,7 @@ class Asteroid:
         self.position = (self.position[0] + self.velocity[0] * delta_time, self.position[1] + self.velocity[1] * delta_time)
         self.angle += delta_time * self.turnrate
 
-    def destruct(self, impactor) -> list['Asteroid']:
+    def destruct(self, impactor: Bullet | Mine | Ship) -> list['Asteroid']:
         """ Spawn child asteroids"""
 
         if self.size != 1:

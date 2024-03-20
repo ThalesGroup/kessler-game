@@ -83,11 +83,11 @@ class Scenario:
                               "valid custom starting states for the environment"))
 
     @property
-    def name(self):
+    def name(self) -> None | str:
         return self._name
 
     @name.setter
-    def name(self, name: str):
+    def name(self, name: str) -> None:
         # Raises error if the name cannot be converted to string
         self._name = str(name)
 
@@ -116,7 +116,7 @@ class Scenario:
             return -1
 
     @staticmethod
-    def count_asteroids(asteroid_size) -> int:
+    def count_asteroids(asteroid_size: int) -> int:
         # Counting based off of each asteroid making 3 children when destroyed
         return sum([3 ** (size - 1) for size in range(1, asteroid_size + 1)])
 

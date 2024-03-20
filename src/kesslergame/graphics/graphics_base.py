@@ -17,8 +17,7 @@ from ..scenario import Scenario
 
 
 class KesslerGraphics:
-
-    def start(self, scenario) -> None:
+    def start(self, scenario: Scenario) -> None:
         raise NotImplementedError('Your derived KesslerController must include a start() method.')
 
     def update(self, score: Score, ships: List[Ship], asteroids: List[Asteroid], bullets: List[Bullet], mines: List[Mine]) -> None:

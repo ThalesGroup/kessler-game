@@ -11,12 +11,13 @@ from .ship import Ship
 from .asteroid import Asteroid
 from .scenario import Scenario
 from .team import Team
+from .kessler_game import StopReason
 
 
 class Score:
-    def __init__(self, scenario: Scenario):
-        self.sim_time = 0
-        self.stop_reason = None
+    def __init__(self, scenario: Scenario) -> None:
+        self.sim_time: float = 0.0
+        self.stop_reason: Optional[StopReason] = None
 
 
         # Initialize team classes to score team-specific scores
@@ -31,7 +32,7 @@ class Score:
                 if team.team_id == ship.team:
                     team.total_bullets += scenario.bullet_limit
 
-    def update(self, ships: List[Ship], sim_time, controller_perf: Optional[List[float]] = None) -> None:
+    def update(self, ships: List[Ship], sim_time: float, controller_perf: Optional[List[float]] = None) -> None:
         self.sim_time = sim_time
         for team in self.teams:
             ast_hit, bul_hit, shots, bullets, deaths, lives = (0, 0, 0, 0, 0, 0)
@@ -47,7 +48,7 @@ class Score:
                         team.eval_times.append(controller_perf[idx])
             team.asteroids_hit, team.bullets_hit, team.shots_fired, team.bullets_remaining, team.deaths, team.lives_remaining = (ast_hit, bul_hit, shots, bullets, deaths, lives)
 
-    def finalize(self, sim_time, stop_reason, ships):
+    def finalize(self, sim_time: float, stop_reason: StopReason, ships: List[Ship]) -> None:
         self.sim_time = sim_time
         self.stop_reason = stop_reason
         self.final_controllers = [ship.controller for ship in ships]

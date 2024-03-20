@@ -3,7 +3,7 @@
 # NOTICE: This file is subject to the license agreement defined in file 'LICENSE', which is part of
 # this source code package.
 
-from typing import Dict, Tuple
+from typing import Dict, Tuple, Any
 import time
 
 from .ship import Ship
@@ -16,7 +16,7 @@ class KesslerController:
     game_state dictionary. This action method then sets the thrust, turn_rate, and fire commands on the ship object.
     """
 
-    def actions(self, ship_state: Dict, game_state: Dict) -> Tuple[float, float, bool, bool]:
+    def actions(self, ship_state: Dict[str, Any], game_state: Dict[str, Any]) -> Tuple[float, float, bool, bool]:
         """
         Method processed each time step by this controller.
         """
@@ -26,11 +26,11 @@ class KesslerController:
 
     # Property to store the ID for the ship this controller is attached to during a scenario
     @property
-    def ship_id(self):
+    def ship_id(self) -> int:
         return self._ship_id if self._ship_id else 0
 
     @ship_id.setter
-    def ship_id(self, value):
+    def ship_id(self, value: int) -> None:
         self._ship_id = value
 
     @property

@@ -7,20 +7,20 @@ import numpy as np
 
 
 class Team:
-    def __init__(self, id, name):
+    def __init__(self, id: int, name: str) -> None:
         self.team_id = id
         self.team_name = name
 
-        self.total_bullets = 0
-        self.total_asteroids = 0
+        self.total_bullets: int = 0
+        self.total_asteroids: int = 0
 
-        self.asteroids_hit = 0
-        self.bullets_hit = 0
-        self.shots_fired = 0
-        self.bullets_remaining = 0
-        self.deaths = 0
-        self.eval_times = []
-        self.lives_remaining = 0
+        self.asteroids_hit: int = 0
+        self.bullets_hit: int = 0
+        self.shots_fired: int = 0
+        self.bullets_remaining: int = 0
+        self.deaths: int = 0
+        self.eval_times: list[float] = []
+        self.lives_remaining: int = 0
 
     @property
     def accuracy(self) -> float:
@@ -40,11 +40,11 @@ class Team:
 
     @property
     def mean_eval_time(self) -> float:
-        return np.mean(self.eval_times)
+        return float(np.mean(self.eval_times))
 
     @property
     def median_eval_time(self) -> float:
-        return np.median(self.eval_times)
+        return float(np.median(self.eval_times))
 
     @property
     def min_eval_time(self) -> float:

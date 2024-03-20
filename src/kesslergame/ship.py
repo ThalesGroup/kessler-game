@@ -223,7 +223,7 @@ class Ship:
 
         return new_bullet, new_mine
 
-    def destruct(self, map_size) -> None:
+    def destruct(self, map_size: tuple[float, float]) -> None:
         """
         Called by the game when a ship collides with something and dies. Handles life decrementing and triggers respawn
         """
@@ -283,7 +283,7 @@ class Ship:
             rad_heading = math.radians(self.heading)
             bullet_x = self.position[0] + self.radius * math.cos(rad_heading)
             bullet_y = self.position[1] + self.radius * math.sin(rad_heading)
-            return Bullet([bullet_x, bullet_y], self.heading, owner=self)
+            return Bullet((bullet_x, bullet_y), self.heading, owner=self)
 
         # Return nothing if we can't fire a bullet right now
         return None

@@ -101,5 +101,5 @@ class GraphicsUE(KesslerGraphics):
 
         self.udp_sock.sendto(update_str.encode('utf-8'), self.udp_addr)
 
-    def close(self):
+    def close(self) -> None:
         self.udp_sock.close()

@@ -82,8 +82,8 @@ class KesslerGame:
 
         # Initialize environment parameters
         stop_reason = StopReason.not_stopped
-        sim_time = 0
-        step = 0
+        sim_time: float = 0.0
+        step: int = 0
         time_limit = scenario.time_limit if scenario.time_limit else self.time_limit
 
         # Assign controllers to each ship
