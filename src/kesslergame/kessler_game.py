@@ -258,8 +258,8 @@ class KesslerGame:
                         dx = ship.position[0] - asteroid.position[0]
                         dy = ship.position[1] - asteroid.position[1]
                         radius_sum = ship.radius + asteroid.radius
-                        # If collision occurs
-                        if dx * dx + dy * dy <= radius_sum * radius_sum:
+                        # Most of the time no collision occurs, so use early exit to optimize collision check
+                        if abs(dx) <= radius_sum and abs(dy) <= radius_sum and dx * dx + dy * dy <= radius_sum * radius_sum:
                             # Asteroid destruct function and mark for removal
                             asteroids.extend(asteroid.destruct(impactor=ship))
                             asteroid_remove_idxs.add(idx_ast)
@@ -281,7 +281,8 @@ class KesslerGame:
                         dx = ship1.position[0] - ship2.position[0]
                         dy = ship1.position[1] - ship2.position[1]
                         radius_sum = ship1.radius + ship2.radius
-                        if dx * dx + dy * dy <= radius_sum * radius_sum:
+                        # Most of the time no collision occurs, so use early exit to optimize collision check
+                        if abs(dx) <= radius_sum and abs(dy) <= radius_sum and dx * dx + dy * dy <= radius_sum * radius_sum:
                             ship1.destruct(map_size=scenario.map_size)
                             ship2.destruct(map_size=scenario.map_size)
             # Cull ships that are not alive
