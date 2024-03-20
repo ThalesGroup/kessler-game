@@ -3,7 +3,6 @@
 # NOTICE: This file is subject to the license agreement defined in file 'LICENSE', which is part of
 # this source code package.
 
-import math
 from typing import List, Tuple, Dict, Any, Optional
 import random
 

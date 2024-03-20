@@ -28,7 +28,7 @@ class Ship:
 
         # Control information
         self.controller: Optional[KesslerController] = None
-        self.thrust: float = 0.0     # speed defaults to minimum
+        self.thrust: float = 0.0  # speed defaults to minimum
         self.turn_rate: float = 0.0
 
         # State info
