@@ -40,16 +40,28 @@ class Team:
 
     @property
     def mean_eval_time(self) -> float:
-        return float(np.mean(self.eval_times))
+        if self.eval_times:
+            return float(np.mean(self.eval_times))
+        else:
+            return 0.0
 
     @property
     def median_eval_time(self) -> float:
-        return float(np.median(self.eval_times))
+        if self.eval_times:
+            return float(np.median(self.eval_times))
+        else:
+            return 0.0
 
     @property
     def min_eval_time(self) -> float:
-        return min(self.eval_times)
+        if self.eval_times:
+            return min(self.eval_times)
+        else:
+            return 0.0
 
     @property
     def max_eval_time(self) -> float:
-        return max(self.eval_times)
+        if self.eval_times:
+            return max(self.eval_times)
+        else:
+            return 0.0
