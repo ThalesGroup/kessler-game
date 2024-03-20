@@ -24,7 +24,7 @@ class Team:
 
     @property
     def accuracy(self) -> float:
-        return self.bullets_hit / self.shots_fired if self.shots_fired else 0
+        return self.bullets_hit / self.shots_fired if self.shots_fired else 0.0
 
     @property
     def fraction_total_asteroids_hit(self) -> float:
