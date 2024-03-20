@@ -3,10 +3,11 @@
 # NOTICE: This file is subject to the license agreement defined in file 'LICENSE', which is part of
 # this source code package.
 
-from typing import Dict, Tuple, Any
+from typing import Dict, Tuple, Any, TYPE_CHECKING
 import time
 
-from .ship import Ship
+if TYPE_CHECKING:
+    from .ship import Ship
 
 
 class KesslerController:

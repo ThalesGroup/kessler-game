@@ -3,13 +3,14 @@
 # NOTICE: This file is subject to the license agreement defined in file 'LICENSE', which is part of
 # this source code package.
 
-from typing import Tuple, Dict, List, Any, Optional
+from typing import Tuple, Dict, List, Any, Optional, TYPE_CHECKING, Union
 import random
 import math
-from .mines import Mine
-from .bullet import Bullet
-from .ship import Ship
 
+if TYPE_CHECKING:
+    from .ship import Ship
+    from .bullet import Bullet
+from .mines import Mine
 
 class Asteroid:
     """ Sprite that represents an asteroid. """
@@ -84,7 +85,7 @@ class Asteroid:
         self.position = (self.position[0] + self.velocity[0] * delta_time, self.position[1] + self.velocity[1] * delta_time)
         self.angle += delta_time * self.turnrate
 
-    def destruct(self, impactor: Bullet | Mine | Ship) -> list['Asteroid']:
+    def destruct(self, impactor: Union['Bullet', 'Mine', 'Ship']) -> list['Asteroid']:
         """ Spawn child asteroids"""
 
         if self.size != 1:

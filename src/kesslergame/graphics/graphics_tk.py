@@ -38,7 +38,7 @@ class GraphicsTK(KesslerGraphics):
         self.max_time = scenario.time_limit
         self.score_width = 385
         self.window_width = self.game_width + self.score_width
-        ship_radius = scenario.ships()[0].radius * 2 - 5
+        ship_radius: int = int(scenario.ships()[0].radius * 2 - 5)
 
         # create and center main window
         self.window = Tk()

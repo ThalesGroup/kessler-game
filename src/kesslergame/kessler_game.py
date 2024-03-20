@@ -53,7 +53,7 @@ class KesslerGame:
         self.graphics_type: GraphicsType = settings.get("graphics_type", GraphicsType.Tkinter)
         self.graphics_obj: Optional[KesslerGraphics] = settings.get("graphics_obj", None)
         self.realtime_multiplier: float = settings.get("realtime_multiplier", 0 if self.graphics_type==GraphicsType.NoGraphics else 1)
-        self.time_limit: float = settings.get("time_limit", None)
+        self.time_limit: float = settings.get("time_limit", float("inf"))
 
         # UI settings
         default_ui = {'ships': True, 'lives_remaining': True, 'accuracy': True,
@@ -363,6 +363,6 @@ class TrainerEnvironment(KesslerGame):
             'prints_on': settings.get("prints_on", False),
             'graphics_type': GraphicsType.NoGraphics,
             'realtime_multiplier': 0,
-            'time_limit': settings.get("time_limit", None)
+            'time_limit': settings.get("time_limit", float("inf"))
         }
         super().__init__(trainer_settings)

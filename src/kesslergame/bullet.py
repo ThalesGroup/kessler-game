@@ -6,11 +6,14 @@
 from typing import List, Tuple, Dict, Any
 import math
 
-from .ship import Ship
+from typing import TYPE_CHECKING
+
+if TYPE_CHECKING:
+    from .ship import Ship
 
 
 class Bullet:
-    def __init__(self, starting_position: Tuple[float, float], starting_heading: float, owner: Ship) -> None:
+    def __init__(self, starting_position: Tuple[float, float], starting_heading: float, owner: 'Ship') -> None:
         self.owner = owner
         self.speed = 800.0  # m/s
         self.length = 12.0

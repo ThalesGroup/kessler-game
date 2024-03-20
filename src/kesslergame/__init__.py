@@ -13,5 +13,5 @@ from .graphics import GraphicsType, KesslerGraphics
 
 
 __all__ = ['KesslerGame', 'TrainerEnvironment', 'KesslerController', 'Scenario', 'Score', 'GraphicsType',
-           'KesslerGraphics', 'GamepadController']
+           'KesslerGraphics', 'GamepadController', 'Ship']
 __version__ = '2.1.1'

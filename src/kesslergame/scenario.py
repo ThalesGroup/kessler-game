@@ -31,7 +31,7 @@ class Scenario:
         :param stop_if_no_ammo: Optional flag for stopping the scenario if all ships run out of ammo
         """
         # Protected variable for managing the name, through getter/setter interface
-        self._name = None
+        self._name: Optional[str] = None
 
         # Store name as string using setter
         self.name = name

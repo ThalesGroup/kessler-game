@@ -3,14 +3,15 @@
 # NOTICE: This file is subject to the license agreement defined in file 'LICENSE', which is part of
 # this source code package.
 
-from typing import List, Tuple, Dict, Any
+from typing import List, Tuple, Dict, Any, TYPE_CHECKING
 
-from .ship import Ship
-from .asteroid import Asteroid
+if TYPE_CHECKING:
+    from .ship import Ship
+    from .asteroid import Asteroid
 
 
 class Mine:
-    def __init__(self, starting_position: List[float], owner: Ship) -> None:
+    def __init__(self, starting_position: List[float], owner: 'Ship') -> None:
         self.fuse_time = 3.0
         self.detonation_time = 0.25
         self.mass = 25.0  # mass units - kg?
@@ -44,7 +45,7 @@ class Mine:
             "remaining_time": float(self.countdown_timer)
         }
 
-    def calculate_blast_force(self, dist: float, obj: Asteroid) -> float:
+    def calculate_blast_force(self, dist: float, obj: 'Asteroid') -> float:
         """
         Calculates the blast force based on the blast radius, blast pressure, and a linear decrease in intensity from the mine location to the blast radius
         Also takes into account asteroid diameter to resolve total acceleration based on size/mass

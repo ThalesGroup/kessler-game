@@ -4,8 +4,7 @@
 # this source code package.
 
 from enum import Enum
-import numpy as np
-from typing import Optional, Dict, Any, List
+from typing import Optional, Dict, List
 from .graphics_base import KesslerGraphics
 from ..scenario import Scenario
 from ..ship import Ship
