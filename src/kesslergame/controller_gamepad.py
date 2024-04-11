@@ -1,8 +1,8 @@
 # -*- coding: utf-8 -*-
 
 from .controller import KesslerController
-from typing import Dict, Tuple
-from inputs import get_gamepad
+from typing import Dict, NoReturn, Tuple, Any, Final
+from inputs import get_gamepad  # type: ignore[import-untyped]
 import math
 import threading
 import time
@@ -10,7 +10,7 @@ import time
 
 class GamepadController(KesslerController):
 
-    def __init__(self):
+    def __init__(self) -> None:
         self.gamepad = XboxController()
         # tracker to determine if human paused game
         self.paused = False
@@ -18,7 +18,7 @@ class GamepadController(KesslerController):
         # can only toggle pausing every 0.5 seconds
         self.pause_time_buffer = 0.5
 
-    def actions(self, ship_state: Dict, game_state: Dict) -> Tuple[float, float, bool, bool]:
+    def actions(self, ship_state: Dict[str, Any], game_state: Dict[str, Any]) -> Tuple[float, float, bool, bool]:
         """
         Read in the current gamepad state, and create the appropriate actions
         """
@@ -33,13 +33,13 @@ class GamepadController(KesslerController):
         if abs(self.gamepad.LeftJoystickY) > joystick_deadzone:
             thrust = self.gamepad.LeftJoystickY * 480.0
         else:
-            thrust = 0
+            thrust = 0.0
 
         # Set turn control
         if abs(self.gamepad.RightJoystickX) > joystick_deadzone:
-            turn_rate = -1 * self.gamepad.RightJoystickX * 180.0
+            turn_rate = -1.0 * self.gamepad.RightJoystickX * 180.0
         else:
-            turn_rate = 0
+            turn_rate = 0.0
 
         # Setfire control
         if self.gamepad.RightTrigger > trigger_deadzone:
@@ -60,11 +60,11 @@ class GamepadController(KesslerController):
     def name(self) -> str:
         return "Gamepad Controller"
 
-    def explanation(self):
-        exp = None
+    def explanation(self) -> None:
+        exp: None = None
         return exp
 
-    def pause_handler(self):
+    def pause_handler(self) -> None:
 
         break_pause = False
         if time.perf_counter() - self.time_last_paused > self.pause_time_buffer and self.gamepad.Back == 1:
@@ -81,10 +81,10 @@ class XboxController(object):
     MIT License
     """
 
-    MAX_TRIG_VAL = math.pow(2, 8)
-    MAX_JOY_VAL = math.pow(2, 15)
+    MAX_TRIG_VAL: Final[float] = 2.0**8
+    MAX_JOY_VAL: Final[float] = 2.0**15
 
-    def __init__(self):
+    def __init__(self) -> None:
 
         self.LeftJoystickY = 0
         self.LeftJoystickX = 0
@@ -112,7 +112,7 @@ class XboxController(object):
         self._monitor_thread.start()
 
 
-    def read(self):
+    def read(self) -> list[int | Any]:
         x = self.LeftJoystickX
         y = self.LeftJoystickY
         a = self.A
@@ -121,7 +121,7 @@ class XboxController(object):
         return [x, y, a, b, rb]
 
 
-    def _monitor_controller(self):
+    def _monitor_controller(self) -> NoReturn:
         while True:
             events = get_gamepad()
             for event in events:

@@ -3,8 +3,7 @@
 # NOTICE: This file is subject to the license agreement defined in file 'LICENSE', which is part of
 # this source code package.
 
-import math
-from typing import List, Tuple, Dict, Any
+from typing import List, Tuple, Dict, Any, Optional
 import random
 
 from .ship import Ship
@@ -12,9 +11,9 @@ from .asteroid import Asteroid
 
 
 class Scenario:
-    def __init__(self, name: str = "Unnamed", num_asteroids: int = 0, asteroid_states: List[Dict[str, Any]] = None,
-                 ship_states: List[Dict[str, Any]] = None, map_size: Tuple[int, int] = None, seed: int = None,
-                 time_limit: float = float("inf"), ammo_limit_multiplier: float = 0.0, stop_if_no_ammo: bool = False):
+    def __init__(self, name: str = "Unnamed", num_asteroids: int = 0, asteroid_states: Optional[List[Dict[str, Any]]] = None,
+                 ship_states: Optional[List[Dict[str, Any]]] = None, map_size: Optional[Tuple[int, int]] = None, seed: Optional[int] = None,
+                 time_limit: float = float("inf"), ammo_limit_multiplier: float = 0.0, stop_if_no_ammo: bool = False) -> None:
         """
         Specify the starting state of the environment, including map dimensions and optional features
 
@@ -32,7 +31,7 @@ class Scenario:
         :param stop_if_no_ammo: Optional flag for stopping the scenario if all ships run out of ammo
         """
         # Protected variable for managing the name, through getter/setter interface
-        self._name = None
+        self._name: Optional[str] = None
 
         # Store name as string using setter
         self.name = name
@@ -83,11 +82,11 @@ class Scenario:
                               "valid custom starting states for the environment"))
 
     @property
-    def name(self):
+    def name(self) -> None | str:
         return self._name
 
     @name.setter
-    def name(self, name: str):
+    def name(self, name: str) -> None:
         # Raises error if the name cannot be converted to string
         self._name = str(name)
 
@@ -116,7 +115,7 @@ class Scenario:
             return -1
 
     @staticmethod
-    def count_asteroids(asteroid_size) -> float:
+    def count_asteroids(asteroid_size: int) -> int:
         # Counting based off of each asteroid making 3 children when destroyed
         return sum([3 ** (size - 1) for size in range(1, asteroid_size + 1)])
 
