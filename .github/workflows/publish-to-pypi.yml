@@ -14,8 +14,15 @@ on:
     types: [published]
 
 jobs:
-  deploy:
-    runs-on: windows-latest
+  deploy-compiled-for-windows:
+#    runs-on: windows-latest
+    runs-on: ${{ matrix.builds.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        builds: [
+          { os: "windows-latest", python_requires: ">=3.10.0" },
+        ]
     steps:
       - uses: actions/checkout@v3
       - name: Set up Python  
@@ -25,11 +32,39 @@ jobs:
       - name: Install dependencies
         run: |
           python -m pip install --upgrade pip
-          pip install setuptools wheel twine
-      - name: Build and publish to PyPI
+          python -m pip install setuptools wheel twine==4.0.1 cibuildwheel==2.9.0
+      - name: Build wheels
+        env:
+          CIBW_PROJECT_REQUIRES_PYTHON: ${{ matrix.builds.python_requires }}
+          CIBW_BUILD: "cp3*"
+        run: |
+          python -m cibuildwheel --output-dir wheelhouse
+      - name: Publish to PyPI
         env:
           TWINE_USERNAME: __token__
           TWINE_PASSWORD: ${{secrets.PYPI_API_TOKEN}}
         run: |
-          python setup.py sdist bdist_wheel
-          twine upload dist/*
+#          python setup.py sdist bdist_wheel
+#          twine upload dist/*
+          twine upload --skip-existing wheelhouse/*
+  pure-python-wheel-publish:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - name: Set up Python ${{ matrix.python-version }}
+        uses: actions/setup-python@v2
+        with:
+          python-version: 3.10
+      - name: Install deps
+        run: |
+          python -m pip install wheel==0.37.1  twine==4.0.1
+      - name: Build pure python wheel
+        env:
+          KESSLER_SKIP_COMPILE: "1"
+        run: pip wheel -w wheelhouse .
+      - name: Publish
+        env:
+          TWINE_USERNAME: __token__
+          TWINE_PASSWORD: ${{ secrets.PYPI_TOKEN }}
+        run: |
+          twine upload --skip-existing wheelhouse/*
