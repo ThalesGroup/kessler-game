@@ -1,5 +1,8 @@
 # Changelog
 
+## [2.1.2] - 12 April 2024
+- Added mypyc compilation for performance increases. Credit to Jie Fan for the code + testing
+
 ## [2.1.1] - 12 March 2024
 
 - Fixed bug with only a single ship getting mine blast damage within the blast radius
