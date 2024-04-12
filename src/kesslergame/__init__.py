@@ -10,8 +10,8 @@ from .controller_gamepad import GamepadController
 from .scenario import Scenario
 from .score import Score
 from .graphics import GraphicsType, KesslerGraphics
+from ._version import __version__
 
 
 __all__ = ['KesslerGame', 'TrainerEnvironment', 'KesslerController', 'Scenario', 'Score', 'GraphicsType',
            'KesslerGraphics', 'GamepadController', 'Ship']
-__version__ = '2.1.1'

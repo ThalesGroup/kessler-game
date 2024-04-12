@@ -11,6 +11,15 @@ with open('requirements.txt') as f:
 from setuptools import setup, find_packages
 from mypyc.build import mypycify
 
+import re
+VERSIONFILE="src/kesslergame/_version.py"
+verstrline = open(VERSIONFILE, "rt").read()
+VSRE = r"^__version__ = ['\"]([^'\"]*)['\"]"
+mo = re.search(VSRE, verstrline, re.M)
+if mo:
+    verstr = mo.group(1)
+else:
+    raise RuntimeError("Unable to find version string in %s." % (VERSIONFILE,))
 
 # List of all Python modules to compile with MyPyC
 mypyc_modules = [
@@ -38,7 +47,7 @@ mypyc_modules = [
 
 setup(
     name='KesslerGame',
-    version='2.1.2',
+    version=verstr,
     packages=find_packages(where='src', exclude=['examples', 'src.examples', '*.examples.*', 'examples.*']),
     install_requires=requirements,
     ext_modules=mypycify(mypyc_modules),
