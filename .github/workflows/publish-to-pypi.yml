@@ -37,7 +37,7 @@ jobs:
         env:
           CIBW_PROJECT_REQUIRES_PYTHON: ${{ matrix.builds.python_requires }}
           CIBW_BUILD: "cp3*"
-        run: python -m cibuildwheel --output-dir wheelhouse
+        run: python -m cibuildwheel --output-dir dist
       - name: Publish to PyPI
         env:
           TWINE_USERNAME: __token__
@@ -45,7 +45,7 @@ jobs:
         run: |
 #          python setup.py sdist bdist_wheel
 #          twine upload dist/*
-          twine upload --skip-existing wheelhouse/*
+          twine upload --skip-existing dist/*
   pure-python-wheel-publish:
     runs-on: ubuntu-latest
     steps:
@@ -60,10 +60,10 @@ jobs:
       - name: Build pure python wheel
         env:
           KESSLER_SKIP_COMPILE: "1"
-        run: pip wheel -w wheelhouse .
+        run: pip wheel -w dist .
       - name: Publish
         env:
           TWINE_USERNAME: __token__
           TWINE_PASSWORD: ${{ secrets.PYPI_TOKEN }}
         run: |
-          twine upload --skip-existing wheelhouse/*
+          twine upload --skip-existing dist/*
