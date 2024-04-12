@@ -37,8 +37,7 @@ jobs:
         env:
           CIBW_PROJECT_REQUIRES_PYTHON: ${{ matrix.builds.python_requires }}
           CIBW_BUILD: "cp3*"
-        run:
-          python -m cibuildwheel --output-dir wheelhouse
+        run: python -m cibuildwheel --output-dir wheelhouse
       - name: Publish to PyPI
         env:
           TWINE_USERNAME: __token__
