@@ -31,12 +31,12 @@ jobs:
           python-version: '3.10'
       - name: Install dependencies
         run: |
-          python -m pip install --upgrade pip
-          python -m pip install setuptools wheel twine==4.0.1 cibuildwheel==2.9.0
+          python -m pip install cibuildwheel==2.17.0 twine==5.0.0
       - name: Build wheels
         env:
           CIBW_PROJECT_REQUIRES_PYTHON: ${{ matrix.builds.python_requires }}
-          CIBW_BUILD: "cp3*"
+#          CIBW_BUILD: "cp310*"
+          CIBW_BUILD: "cp310-win_amd64"
         run: python -m cibuildwheel --output-dir dist
       - name: Publish to PyPI
         env:
@@ -56,7 +56,7 @@ jobs:
           python-version: 3.10
       - name: Install deps
         run: |
-          python -m pip install wheel==0.37.1  twine==4.0.1
+          python -m pip install wheel==0.43.0 twine==5.0.0
       - name: Build pure python wheel
         env:
           KESSLER_SKIP_COMPILE: "1"
