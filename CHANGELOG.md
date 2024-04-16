@@ -1,5 +1,9 @@
 # Changelog
 
+## [2.1.3] - 16 April 2024
+- Added `custom_sprite_path` property to `KesslerController` to automatically grab and load custom ship sprites from 
+  the `graphics/images` directory
+
 ## [2.1.2] - 12 April 2024
 - Added mypyc compilation for performance increases. Credit to Jie Fan for the code + testing
 
