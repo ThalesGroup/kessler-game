@@ -21,7 +21,7 @@ class Ship:
         'drag', 'radius', 'mass', '_respawning', '_respawn_time', '_fire_limiter',
         '_fire_time', '_mine_limiter', '_mine_deploy_time', 'mines_remaining',
         'bullets_remaining', 'bullets_shot', 'mines_dropped', 'bullets_hit',
-        'mines_hit', 'asteroids_hit'
+        'mines_hit', 'asteroids_hit', 'custom_sprite_path'
     )
     def __init__(self, ship_id: int,
                  position: Tuple[float, float],
@@ -39,6 +39,9 @@ class Ship:
         self.controller: Optional[KesslerController] = None
         self.thrust: float = 0.0  # speed defaults to minimum
         self.turn_rate: float = 0.0
+
+        # Ship custom graphics
+        self.custom_sprite_path = None
 
         # State info
         self.id: int = ship_id

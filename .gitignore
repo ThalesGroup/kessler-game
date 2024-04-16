@@ -130,3 +130,10 @@ dmypy.json
 
 # Pyre type checker
 .pyre/
+
+# Ignore custom sprites
+src/kesslergame/graphics/images/
+!src/kesslergame/graphics/images/playerShip1_green.png
+!src/kesslergame/graphics/images/playerShip1_orange.png
+!src/kesslergame/graphics/images/playerShip2_orange.png
+!src/kesslergame/graphics/images/playerShip3_orange.png
