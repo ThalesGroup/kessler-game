@@ -31,6 +31,20 @@ class GraphicsTK(KesslerGraphics):
         self.show_shots_fired = UI_settings.get('shots_fired', False)
         self.show_bullets_remaining = UI_settings.get('bullets_remaining', False)
         self.show_controller_name = UI_settings.get('controller_name', True)
+        self.script_dir = os.path.dirname(__file__)
+        self.img_dir = os.path.join(self.script_dir, "images")
+
+    def sort_list(self, order, list_to_order):
+        i = len(order)
+        sorted_list = [None] * (len(list_to_order) + (len(order)))
+        for value in list_to_order:
+            try:
+                idx = order.index(value)
+                sorted_list[idx] = value
+            except ValueError:  # value not found in the list
+                sorted_list[i] = value
+                i = i + 1
+        return [x for x in sorted_list if x != None]
 
     def start(self, scenario: Scenario) -> None:
         self.game_width = scenario.map_size[0]
@@ -55,15 +69,22 @@ class GraphicsTK(KesslerGraphics):
         self.window.update()
 
         # Grab and open sprite images in python
-        script_dir = os.path.dirname(__file__)
-        self.image_paths = ["images/playerShip1_green.png",
-                            "images/playerShip1_orange.png",
-                            "images/playerShip2_orange.png",
-                            "images/playerShip3_orange.png"]
+        default_images = ["playerShip1_green.png",
+                            "playerShip1_orange.png",
+                            "playerShip2_orange.png",
+                            "playerShip3_orange.png"]
+
+        img_list = []
+        for file in os.listdir(self.img_dir):
+            if file.endswith(".png") or file.endswith(".jpg"):
+                img_list.append(file)
+        img_list2 = self.sort_list(default_images, img_list)
+        self.image_paths = [os.path.join(self.img_dir, img) for img in img_list2]
+
         self.num_images = len(self.image_paths)
-        self.ship_images = [(Image.open(os.path.join(script_dir, image))).resize((ship_radius, ship_radius)) for image in self.image_paths]
+        self.ship_images = [(Image.open(image)).resize((ship_radius, ship_radius)) for image in self.image_paths]
         self.ship_sprites = [ImageTk.PhotoImage(img) for img in self.ship_images]
-        self.ship_icons = [ImageTk.PhotoImage((Image.open(os.path.join(script_dir, image))).resize((ship_radius, ship_radius))) for image in self.image_paths]
+        self.ship_icons = [ImageTk.PhotoImage((Image.open(image)).resize((ship_radius, ship_radius))) for image in self.image_paths]
 
         self.detoantion_time = 0.3
         #self.detonation_timers = []
@@ -148,9 +169,12 @@ class GraphicsTK(KesslerGraphics):
             # display of team information
             self.game_canvas.create_text(output_location_x, output_location_y,
                                     text=score_board, fill="white", font=("Courier New", 10), anchor=NW, )
-
+            icon_idx = team.team_id-1
+            for ship in ships:
+                if ship.custom_sprite_path and ship.team == team.team_id:
+                    icon_idx = self.image_paths.index(os.path.join(self.img_dir, ship.custom_sprite_path))
             self.game_canvas.create_image(output_location_x + 120, output_location_y + 15,
-                                     image=self.ship_icons[(team.team_id-1) % self.num_images])
+                                     image=self.ship_icons[icon_idx % self.num_images])
             team_num += 1
 
     def format_ui(self, team: Team) -> str:
@@ -173,12 +197,19 @@ class GraphicsTK(KesslerGraphics):
         """
         Plots each ship on the game screen using cached sprites and rotating them
         """
+        no_sprite_count = 0
         for idx, ship in enumerate(ships):
             if ship.alive:
                 # plot ship image and id text next to it
-                self.ship_sprites[idx] = ImageTk.PhotoImage(self.ship_images[idx].rotate(180 - (-ship.heading - 90)))
+                if ship.custom_sprite_path:
+                    sprite_idx = self.image_paths.index(os.path.join(self.img_dir,ship.custom_sprite_path))
+                else:
+                    sprite_idx = no_sprite_count
+                    no_sprite_count += 1
+
+                self.ship_sprites[sprite_idx] = ImageTk.PhotoImage(self.ship_images[sprite_idx].rotate(180 - (-ship.heading - 90)))
                 self.game_canvas.create_image(ship.position[0], self.game_height - ship.position[1],
-                                              image=self.ship_sprites[idx])
+                                              image=self.ship_sprites[sprite_idx])
                 self.game_canvas.create_text(ship.position[0] + ship.radius,
                                              self.game_height - (ship.position[1] + ship.radius), text=str(ship.id),
                                              fill="white")

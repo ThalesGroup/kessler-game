@@ -91,6 +91,8 @@ class KesslerGame:
         for controller, ship in zip(controllers, ships):
             controller.ship_id = ship.id
             ship.controller = controller
+            if hasattr(controller, "custom_sprite_path"):
+                ship.custom_sprite_path = controller.custom_sprite_path
 
         # Initialize graphics display
         graphics = GraphicsHandler(type=self.graphics_type, scenario=scenario, UI_settings=self.UI_settings, graphics_obj=self.graphics_obj)
