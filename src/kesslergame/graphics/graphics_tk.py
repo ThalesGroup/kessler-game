@@ -197,16 +197,13 @@ class GraphicsTK(KesslerGraphics):
         """
         Plots each ship on the game screen using cached sprites and rotating them
         """
-        no_sprite_count = 0
         for idx, ship in enumerate(ships):
             if ship.alive:
                 # plot ship image and id text next to it
                 if ship.custom_sprite_path:
                     sprite_idx = self.image_paths.index(os.path.join(self.img_dir,ship.custom_sprite_path))
                 else:
-                    sprite_idx = no_sprite_count
-                    no_sprite_count += 1
-
+                    sprite_idx = idx
                 self.ship_sprites[sprite_idx] = ImageTk.PhotoImage(self.ship_images[sprite_idx].rotate(180 - (-ship.heading - 90)))
                 self.game_canvas.create_image(ship.position[0], self.game_height - ship.position[1],
                                               image=self.ship_sprites[sprite_idx])
