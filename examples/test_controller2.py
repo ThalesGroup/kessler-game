@@ -7,7 +7,7 @@ from src.kesslergame import KesslerController
 from typing import Dict, Tuple
 
 
-class TestController(KesslerController):
+class TestController2(KesslerController):
     def __init__(self):
         """
         Any variables or initialization desired for the controller can be set up here
@@ -29,8 +29,8 @@ class TestController(KesslerController):
             bool: mine deployment control value. Lays mine if true
         """
 
-        thrust = 50
-        turn_rate = -90
+        thrust = 0
+        turn_rate = 90
         fire = True
         drop_mine = False
 
@@ -48,4 +48,4 @@ class TestController(KesslerController):
 
     # @property
     # def custom_sprite_path(self) -> str:
-    #     return "Neo.png"
+    #     return "OMU_v3_sprite.png"
