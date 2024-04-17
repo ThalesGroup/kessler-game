@@ -1,5 +1,9 @@
 # Changelog
 
+## [2.1.4] - 16 April 2024
+
+- Fixed issue with ship sprite indexing
+
 ## [2.1.3] - 16 April 2024
 - Added `custom_sprite_path` property to `KesslerController` to automatically grab and load custom ship sprites from 
   the `graphics/images` directory
