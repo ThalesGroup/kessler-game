@@ -36,18 +36,19 @@ class Score:
     def update(self, ships: List[Ship], sim_time: float, controller_perf: Optional[List[float]] = None) -> None:
         self.sim_time = sim_time
         for team in self.teams:
-            ast_hit, bul_hit, shots, bullets, deaths, lives = (0, 0, 0, 0, 0, 0)
+            ast_hit, bul_hit, shots, bullets, mines, deaths, lives = (0, 0, 0, 0, 0, 0, 0)
             for idx, ship in enumerate(ships):
                 if team.team_id == ship.team:
                     ast_hit += ship.asteroids_hit
                     bul_hit += ship.bullets_hit
                     shots += ship.bullets_shot
                     bullets += ship.bullets_remaining
+                    mines += ship.mines_remaining
                     deaths += ship.deaths
                     lives += ship.lives
                     if controller_perf is not None and controller_perf[idx] > 0:
                         team.eval_times.append(controller_perf[idx])
-            team.asteroids_hit, team.bullets_hit, team.shots_fired, team.bullets_remaining, team.deaths, team.lives_remaining = (ast_hit, bul_hit, shots, bullets, deaths, lives)
+            team.asteroids_hit, team.bullets_hit, team.shots_fired, team.bullets_remaining, team.mines_remaining, team.deaths, team.lives_remaining = (ast_hit, bul_hit, shots, bullets, mines, deaths, lives)
 
     def finalize(self, sim_time: float, stop_reason: 'StopReason', ships: List[Ship]) -> None:
         self.sim_time = sim_time

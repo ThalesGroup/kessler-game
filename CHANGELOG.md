@@ -1,5 +1,13 @@
 # Changelog
 
+## [2.1.5] - 18 April 2024
+
+- Added `Mines left` to TK graphics
+- Added `mines_remaining` to team and score classes to get updated
+- Added conditions for `no_ship` stop condition to wait until there aren't bullets or mines left - previously this 
+  wasn't the case and gave a slight advantage to a ship if it died first because its bullets and mines would persist 
+  and accumulate score but the ship that died second would not get the same persistence/score accumulation
+
 ## [2.1.4] - 16 April 2024
 
 - Fixed issue with ship sprite indexing
