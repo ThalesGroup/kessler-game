@@ -18,6 +18,7 @@ class Team:
         self.bullets_hit: int = 0
         self.shots_fired: int = 0
         self.bullets_remaining: int = 0
+        self.mines_remaining: int = 0
         self.deaths: int = 0
         self.eval_times: list[float] = []
         self.lives_remaining: int = 0
