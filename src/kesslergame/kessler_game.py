@@ -326,10 +326,13 @@ class KesslerGame:
             # Prevents unfairness where ship that dies before another gets score from its bullets as long as the other
             # is alive but the one that lives longer doesn't get the same benefit from its bullets/mines persisting
             # after it dies
-            elif not liveships and not len(mines) > 0 and not len(bullets) > 0:
+            elif not liveships and not (len(mines) > 0 or len(bullets) > 0):
                 stop_reason = StopReason.no_ships
             # All live ships are out of bullets and no bullets are on map
-            elif not sum([ship.bullets_remaining for ship in liveships]) and not len(bullets) > 0 and scenario.stop_if_no_ammo:
+            elif not sum([ship.bullets_remaining for ship in liveships]) > 0 \
+                    and not sum([ship.mines_remaining for ship in liveships])\
+                    and not (len(bullets) > 0 or len(mines) > 0) \
+                    and scenario.stop_if_no_ammo:
                 stop_reason = StopReason.out_of_bullets
             # Out of time
             elif sim_time > time_limit:
