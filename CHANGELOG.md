@@ -1,5 +1,10 @@
 # Changelog
 
+## [2.1.6] - 2 July 2024
+
+- Changed `stop_if_no_ammo` condition to also check mines. Also changed condition such that sum of mines and bullets 
+  remaining has to be > 0 since negative values are considered true.
+
 ## [2.1.5] - 18 April 2024
 
 - Added `Mines left` to TK graphics
