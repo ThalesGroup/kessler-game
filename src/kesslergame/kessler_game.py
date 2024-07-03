@@ -54,6 +54,7 @@ class KesslerGame:
         self.graphics_obj: Optional[KesslerGraphics] = settings.get("graphics_obj", None)
         self.realtime_multiplier: float = settings.get("realtime_multiplier", 0 if self.graphics_type==GraphicsType.NoGraphics else 1)
         self.time_limit: float = settings.get("time_limit", float("inf"))
+        self.random_ast_splits = settings.get("random_ast_splits", False)
 
         # UI settings
         default_ui = {'ships': True, 'lives_remaining': True, 'accuracy': True,
@@ -209,7 +210,7 @@ class KesslerGame:
                         bullet.destruct()
                         bullet_remove_idxs.append(idx_bul)
                         # Asteroid destruct function and mark for removal
-                        asteroids.extend(asteroid.destruct(impactor=bullet))
+                        asteroids.extend(asteroid.destruct(impactor=bullet, random_ast_split=self.random_ast_splits))
                         asteroid_remove_idxs.add(idx_ast)
                         # Stop checking this bullet
                         break
@@ -230,7 +231,7 @@ class KesslerGame:
                         if dx * dx + dy * dy <= radius_sum * radius_sum:
                             mine.owner.asteroids_hit += 1
                             mine.owner.mines_hit += 1
-                            new_asteroids.extend(asteroid.destruct(impactor=mine))
+                            new_asteroids.extend(asteroid.destruct(impactor=mine, random_ast_split=self.random_ast_splits))
                             asteroid_remove_idxs.add(idx_ast)
                     for ship in liveships:
                         if not ship.is_respawning:
@@ -263,7 +264,7 @@ class KesslerGame:
                         # Most of the time no collision occurs, so use early exit to optimize collision check
                         if abs(dx) <= radius_sum and abs(dy) <= radius_sum and dx * dx + dy * dy <= radius_sum * radius_sum:
                             # Asteroid destruct function and mark for removal
-                            asteroids.extend(asteroid.destruct(impactor=ship))
+                            asteroids.extend(asteroid.destruct(impactor=ship, random_ast_split=self.random_ast_splits))
                             asteroid_remove_idxs.add(idx_ast)
                             # Ship destruct function. Add one to asteroids_hit
                             ship.asteroids_hit += 1

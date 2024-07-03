@@ -1,5 +1,11 @@
 # Changelog
 
+## [2.1.7] - 3 July 2024
+
+- Added optional Boolean setting `random_ast_splits` for game object instantiation. If `True`, left and right asteroid 
+  child asteroid vectors will be be random within a bounded range about the main child asteroid vector. By default 
+  is set to `False`.
+
 ## [2.1.6] - 2 July 2024
 
 - Changed `stop_if_no_ammo` condition to also check mines. Also changed condition such that sum of mines and bullets 
