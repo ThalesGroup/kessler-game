@@ -86,7 +86,7 @@ class Asteroid:
         self.position = (self.position[0] + self.velocity[0] * delta_time, self.position[1] + self.velocity[1] * delta_time)
         self.angle += delta_time * self.turnrate
 
-    def destruct(self, impactor: Union['Bullet', 'Mine', 'Ship']) -> list['Asteroid']:
+    def destruct(self, impactor: Union['Bullet', 'Mine', 'Ship'], random_ast_split: bool) -> list['Asteroid']:
         """ Spawn child asteroids"""
 
         if self.size != 1:
@@ -107,7 +107,7 @@ class Asteroid:
                     v = math.sqrt(vfx*vfx + vfy*vfy)
                     # Split angle is the angle off of the new velocity vector for the two asteroids to the sides, the center child
                     # asteroid continues on the new velocity path
-                    split_angle = 15.0
+                    split_angle_bound = 30.0
                 else:
                     vfx = self.vx
                     vfy = self.vy
@@ -117,7 +117,7 @@ class Asteroid:
                     v = math.sqrt(vfx*vfx + vfy*vfy + a*a)
                     # Split angle is the angle off of the new velocity vector for the two asteroids to the sides, the center child
                     # asteroid continues on the new velocity path
-                    split_angle = 120.0
+                    split_angle_bound = 120.0
             else:
                 # Calculating new velocity vector of asteroid children based on bullet-asteroid collision/momentum
                 # Currently collisions are considered perfectly inelastic i.e. the bullet is absorbed by the asteroid
@@ -135,10 +135,13 @@ class Asteroid:
                 v = math.sqrt(vfx*vfx + vfy*vfy)
                 # Split angle is the angle off of the new velocity vector for the two asteroids to the sides, the center child
                 # asteroid continues on the new velocity path
-                split_angle = 15.0
+                split_angle_bound = 30.0
             # Calculate angle of center asteroid for split (degrees)
             theta = math.degrees(math.atan2(vfy, vfx))
-            angles = [theta + split_angle, theta, theta - split_angle]
+            if random_ast_split:
+                angles = [theta + split_angle_bound*random.random(), theta, theta - split_angle_bound*random.random()]
+            else:
+                angles = [theta + split_angle_bound/2.0, theta, theta - split_angle_bound/2.0]
 
             return [Asteroid(position=self.position, size=self.size-1, speed=v, angle=angle) for angle in angles]
 

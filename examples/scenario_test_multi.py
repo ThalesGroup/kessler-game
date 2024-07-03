@@ -20,14 +20,16 @@ my_test_scenario = Scenario(name='Test Scenario',
                             map_size=(1000, 800),
                             time_limit=60,
                             ammo_limit_multiplier=0,
-                            stop_if_no_ammo=False)
+                            stop_if_no_ammo=False,
+                            seed=8)
 
 # Define Game Settings
 game_settings = {'perf_tracker': True,
                  'graphics_type': GraphicsType.Tkinter,
                  'realtime_multiplier': 1,
                  'graphics_obj': None,
-                 'frequency': 30}
+                 'frequency': 60,
+                 'random_ast_splits': True}
 
 game = KesslerGame(settings=game_settings)  # Use this to visualize the game scenario
 # game = TrainerEnvironment(settings=game_settings)  # Use this for max-speed, no-graphics simulation
