@@ -120,7 +120,7 @@ class KesslerGame:
             liveships = [ship for ship in ships if ship.alive]
 
             # Generate game_state info to send to controllers
-            game_state = immutabledict({
+            game_state: immutabledict = immutabledict({
                 'asteroids': [asteroid.state for asteroid in asteroids],
                 'ships': [ship.state for ship in liveships],
                 'bullets': [bullet.state for bullet in bullets],

@@ -14,7 +14,7 @@ class KesslerController:
     game_state dictionary. This action method then sets the thrust, turn_rate, and fire commands on the ship object.
     """
 
-    def actions(self, ship_state: Dict[str, Any], game_state: type[immutabledict[str, Any]]) -> Tuple[float, float, bool, bool]:
+    def actions(self, ship_state: Dict[str, Any], game_state: immutabledict[Any, Any]) -> Tuple[float, float, bool, bool]:
         """
         Method processed each time step by this controller.
         """
