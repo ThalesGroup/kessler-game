@@ -89,6 +89,11 @@ class Asteroid:
     def destruct(self, impactor: Union['Bullet', 'Mine', 'Ship'], random_ast_split: bool) -> list['Asteroid']:
         """ Spawn child asteroids"""
 
+        # Split angle is the angle off of the new velocity vector for the two asteroids to the sides, the center child
+        # asteroid continues on the new velocity path
+        # If random_ast_split, the bound is the range within which uniform random angles will be selected, otherwise the
+        # angle will be half of the bound
+        split_angle_bound = 30.0
         if self.size != 1:
             if isinstance(impactor, Mine):
                 delta_x = impactor.position[0] - self.position[0]
@@ -105,9 +110,7 @@ class Asteroid:
 
                     # Calculate speed of resultant asteroid(s) based on velocity vector
                     v = math.sqrt(vfx*vfx + vfy*vfy)
-                    # Split angle is the angle off of the new velocity vector for the two asteroids to the sides, the center child
-                    # asteroid continues on the new velocity path
-                    split_angle_bound = 30.0
+
                 else:
                     vfx = self.vx
                     vfy = self.vy
@@ -117,7 +120,7 @@ class Asteroid:
                     v = math.sqrt(vfx*vfx + vfy*vfy + a*a)
                     # Split angle is the angle off of the new velocity vector for the two asteroids to the sides, the center child
                     # asteroid continues on the new velocity path
-                    split_angle_bound = 120.0
+                    split_angle_bound *= 8
             else:
                 # Calculating new velocity vector of asteroid children based on bullet-asteroid collision/momentum
                 # Currently collisions are considered perfectly inelastic i.e. the bullet is absorbed by the asteroid
@@ -133,15 +136,10 @@ class Asteroid:
 
                 # Calculate speed of resultant asteroid(s) based on velocity vector
                 v = math.sqrt(vfx*vfx + vfy*vfy)
-                # Split angle is the angle off of the new velocity vector for the two asteroids to the sides, the center child
-                # asteroid continues on the new velocity path
-                split_angle_bound = 30.0
+
             # Calculate angle of center asteroid for split (degrees)
             theta = math.degrees(math.atan2(vfy, vfx))
-            if random_ast_split:
-                angles = [theta + split_angle_bound*random.random(), theta, theta - split_angle_bound*random.random()]
-            else:
-                angles = [theta + split_angle_bound/2.0, theta, theta - split_angle_bound/2.0]
+            angles = [theta + (split_angle_bound*random.random()*random_ast_split + (1-random_ast_split)*split_angle_bound/2.0), theta, theta - (split_angle_bound*random.random()*random_ast_split + (1-random_ast_split)*split_angle_bound/2.0)]
 
             return [Asteroid(position=self.position, size=self.size-1, speed=v, angle=angle) for angle in angles]
 
