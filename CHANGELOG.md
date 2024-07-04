@@ -1,5 +1,9 @@
 # Changelog
 
+## [2.1.9] - 4 July 2024
+
+- Added missing package in `requirements.txt`
+
 ## [2.1.8] - 4 July 2024
 
 - Changed the `game_state` dictionary that is passed to controllers to be type `immutabledict`. This prevents 
