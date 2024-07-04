@@ -1,5 +1,11 @@
 # Changelog
 
+## [2.1.8] - 4 July 2024
+
+- Changed the `game_state` dictionary that is passed to controllers to be type `immutabledict`. This prevents 
+  changing of `game_state` values by controllers to prevent tampering/affecting controllers later in the loop where 
+  it is passed. This is faster than passing copies of the dict and is still passed by reference.
+
 ## [2.1.7] - 3 July 2024
 
 - Added optional Boolean setting `random_ast_splits` for game object instantiation. If `True`, left and right asteroid 
