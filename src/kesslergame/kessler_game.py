@@ -9,6 +9,7 @@ import math
 from typing import Dict, Any, List, Tuple, TypedDict, Optional
 from enum import Enum
 from collections import OrderedDict
+from immutabledict import immutabledict
 
 from .scenario import Scenario
 from .score import Score
@@ -38,7 +39,7 @@ class PerfDict(TypedDict, total=False):
     score_update: float
     graphics_draw: float
     total_frame_time: float
-
+    
 
 class KesslerGame:
     def __init__(self, settings: Optional[Dict[str, Any]] = None) -> None:
@@ -119,7 +120,7 @@ class KesslerGame:
             liveships = [ship for ship in ships if ship.alive]
 
             # Generate game_state info to send to controllers
-            game_state = {
+            game_state = immutabledict({
                 'asteroids': [asteroid.state for asteroid in asteroids],
                 'ships': [ship.state for ship in liveships],
                 'bullets': [bullet.state for bullet in bullets],
@@ -129,7 +130,7 @@ class KesslerGame:
                 'delta_time': self.time_step,
                 'sim_frame': step,
                 'time_limit': time_limit
-            }
+            })
 
             # Initialize controller time recording in performance tracker
             if self.perf_tracker:
