@@ -96,27 +96,32 @@ class FuzzyController(KesslerController):
 
         norm_ast_distance = ast_distance/self.normalization_dist
 
-        thrust = 0
         self.aiming_fis_sim.input["angle"] = norm_relative_angle
         self.aiming_fis_sim.input["distance"] = norm_ast_distance
 
         self.aiming_fis_sim.compute()
-        desired_aim_angle = self.aiming_fis_sim.output["aiming_angle"]*10.0
+        desired_aim_angle = self.aiming_fis_sim.output["aiming_angle"]*180.0
 
-        turn_rate = 0
         # turn at maximum turn rate until at desired aim angle
+        turn_rate = 0
+        # if desired_aim_angle < -10.0:
+        #     turn_rate = ship_state["turn_rate_range"][1]/2
+        # elif desired_aim_angle > 10.0:
+        #     turn_rate = ship_state["turn_rate_range"][0]/2
+        # else:
+        #     turn_rate = desired_aim_angle
         if desired_aim_angle < 0.0:
-            turn_rate = ship_state["turn_rate_range"][1]
+            turn_rate = ship_state["turn_rate_range"][1]/2
         elif desired_aim_angle > 0.0:
-            turn_rate = ship_state["turn_rate_range"][0]
+            turn_rate = ship_state["turn_rate_range"][0]/2
 
         # print(ship_state["heading"], angle_to_ast, ast_distance)
-        print(relative_angle, norm_relative_angle)
+        # print(relative_angle, norm_relative_angle)
         # print(relative_angle)
         # print(norm_relative_angle, norm_ast_distance)
-        # print(desired_aim_angle, turn_rate)
+        print(desired_aim_angle, turn_rate)
 
-
+        thrust = 0
         fire = True
         drop_mine = False
 
@@ -130,7 +135,7 @@ class FuzzyController(KesslerController):
         Returns:
             str: name of this controller
         """
-        return "Test Controller"
+        return "Fuzzy Test1"
 
     # @property
     # def custom_sprite_path(self) -> str:
