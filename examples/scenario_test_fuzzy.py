@@ -10,27 +10,27 @@ from test_controller_fuzzy import FuzzyController
 from graphics_both import GraphicsBoth
 
 # Define game scenario
-my_test_scenario = Scenario(name='Test Scenario',
-                            num_asteroids=10,
-                            ship_states=[
-                                {'position': (400, 400), 'angle': 0, 'lives': 3, 'team': 1, "mines_remaining": 3},
-                                # {'position': (400, 600), 'angle': 90, 'lives': 3, 'team': 2, "mines_remaining": 3},
-                            ],
-                            map_size=(1000, 800),
-                            time_limit=60,
-                            ammo_limit_multiplier=0,
-                            stop_if_no_ammo=False)
-
 # my_test_scenario = Scenario(name='Test Scenario',
-#                             asteroid_states=[{'position': (200, 400), 'angle': 0, 'speed': 0, 'size': 4}],
+#                             num_asteroids=10,
 #                             ship_states=[
-#                                 {'position': (400, 400), 'angle': 90, 'lives': 3, 'team': 1, "mines_remaining": 3},
+#                                 {'position': (400, 400), 'angle': 0, 'lives': 3, 'team': 1, "mines_remaining": 3},
 #                                 # {'position': (400, 600), 'angle': 90, 'lives': 3, 'team': 2, "mines_remaining": 3},
 #                             ],
 #                             map_size=(1000, 800),
 #                             time_limit=60,
 #                             ammo_limit_multiplier=0,
 #                             stop_if_no_ammo=False)
+
+my_test_scenario = Scenario(name='Test Scenario',
+                            asteroid_states=[{'position': (200, 400), 'angle': 0, 'speed': 0, 'size': 4}],
+                            ship_states=[
+                                {'position': (400, 400), 'angle': 90, 'lives': 3, 'team': 1, "mines_remaining": 3},
+                                # {'position': (400, 600), 'angle': 90, 'lives': 3, 'team': 2, "mines_remaining": 3},
+                            ],
+                            map_size=(1000, 800),
+                            time_limit=60,
+                            ammo_limit_multiplier=0,
+                            stop_if_no_ammo=False)
 
 # Define Game Settings
 game_settings = {'perf_tracker': True,
