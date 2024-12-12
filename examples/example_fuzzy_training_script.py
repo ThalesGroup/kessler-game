@@ -13,34 +13,40 @@ from deap import algorithms
 
 from example_fitness_function import exampleFitness
 
+# orginal fitness function from DEAP onemax example
+# def evalOneMax(individual):
+#     # print("test", individual[:2])
+#     # print(type(individual))
+#     return sum(individual),
 
-def evalOneMax(individual):
-    # print("test", individual[:2])
-    # print(type(individual))
-    return sum(individual),
 
 def main():
+    # createing individual and fitness characteristics/types
     creator.create("FitnessMax", base.Fitness, weights=(1.0,))
     creator.create("Individual", list, fitness=creator.FitnessMax)
 
     toolbox = base.Toolbox()
     # Attribute generator
-    # toolbox.register("attr_bool", random.randint, 0, 1)
+    # creating a float attribute - this will be the encoding of the GA individuals so all of the DNA in a chromosome will be floats
+    # The random component is to initialize the population with random values
     toolbox.register("attr_flt1", random.uniform, 0.0, 1.0)
     # Structure initializers
+    # this registers an individual as an iterable of 50 values where each value is using the float attribute we just defined above
     toolbox.register("individual", tools.initRepeat, creator.Individual,
                      toolbox.attr_flt1, 50)
+    # this creates our population by creating a list of the individuals as defined above
     toolbox.register("population", tools.initRepeat, list, toolbox.individual)
 
-    # toolbox.register("evaluate", evalOneMax)
+    # here we register our custom fitness function that we import above - in the DEAP onemax example this is where "evalOneMax" would be passed instead
     toolbox.register("evaluate", exampleFitness)
+    # Defining what type of crossover will be used
     toolbox.register("mate", tools.cxTwoPoint)
+    # defining what type of mutation will be used - in this case our encoding is floats so we're using Gaussian - we could use other methods
     toolbox.register("mutate", tools.mutGaussian, mu=0.0, sigma=0.2, indpb=0.05)
-    # toolbox.register("mutate", tools.mutUniformInt(), mu=0.0, sigma=0.2, indpb=0.05)
-
-    # toolbox.register("mutate", tools.mutGaussian(0.0, 0.0, 0.2, 0.05), indpb=0.05)
+    # defining how selection is performed - we use tournament selection like the DEAP onemax example
     toolbox.register("select", tools.selTournament, tournsize=3)
 
+    # creating a population - in this case we only have 20 individuals in our population
     pop = toolbox.population(n=20)
 
     # Evaluate the entire population
@@ -61,7 +67,6 @@ def main():
     g = 0
 
     # Begin the evolution
-    # while max(fits) < 100 and g < 1000:
     while g < 1000:
         # A new generation
         g = g + 1
@@ -94,7 +99,6 @@ def main():
 
         # Gather all the fitnesses in one list and print the stats
         fits = [ind.fitness.values[0] for ind in pop]
-        print
 
         length = len(pop)
         mean = sum(fits) / length

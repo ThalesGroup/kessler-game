@@ -91,15 +91,22 @@ class FuzzyController(KesslerController):
             # create list of output membership functions to index into to create rule antecedents
             output_mfs = [aiming_angle["negative"], aiming_angle["zero"], aiming_angle["positive"]]
 
-            # bin the values associated with rules
+            # bin the values associated with rules - this is done so we can use the floats in the chromosome DNA
+            # associated with the output membership functions in order to index into our predefined output membership
+            # function set - i.e. the "output_mfs" list
             bins = np.array([0.0, 0.33333, 0.66666, 1.0])
             num_mfs1 = len(input1_mfs)
             num_mfs2 = len(input2_mfs)
             num_rules = num_mfs1*num_mfs2
+            # grabbing the corresponding DNA values that determine the output mfs from the chromosome
             rules_raw = self.chromosome[3:3+num_rules]
+            # binning the values to convert the floats to integer values to be used as indices
             ind = np.digitize(rules_raw, bins, right=True)-1
             count = 0
+            # mapping the DNA indices to output_mfs
             rule_consequents_linear = [output_mfs[idx] for idx in ind]
+            # constructing the rules by combining our antecedents (conjunction of input mfs) with the corresponding
+            # consequents (output mfs)
             rules = []
             for ii in range(num_mfs1):
                 for jj in range(num_mfs2):
