@@ -6,7 +6,7 @@
 import time
 
 from src.kesslergame import Scenario, KesslerGame, GraphicsType
-from test_controller_fuzzy import FuzzyController
+from example_controller_fuzzy import FuzzyController
 from graphics_both import GraphicsBoth
 
 # Define game scenario
