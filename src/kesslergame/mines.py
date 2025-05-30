@@ -51,4 +51,4 @@ class Mine:
         Calculates the blast force based on the blast radius, blast pressure, and a linear decrease in intensity from the mine location to the blast radius
         Also takes into account asteroid diameter to resolve total acceleration based on size/mass
         """
-        return (-dist/self.blast_radius + 1) * self.blast_pressure * 2.0 * obj.radius
+        return (1.0 - dist/(self.blast_radius + obj.radius)) * self.blast_pressure * 2.0 * obj.radius
