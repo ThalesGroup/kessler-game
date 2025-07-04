@@ -86,7 +86,8 @@ def circle_line_collision_continuous(
     ):
         return True
 
-    # If not, then the only way this can still be a collision is if the circle is completely contained within the parallelogram, which is impossible in this case.
+    # If still no collision, then the only way this can still be a collision is if the circle is completely contained within the parallelogram,
+    # which is impossible in this case because the bullet is too short for an asteroid to fit between its ends.
     # But for completeness, for the general solution, you can uncomment the following code which checks whether the origin is within the parallelogram using a cross product orientation checker
     '''
     def is_origin_in_parallelogram(ax, ay, bx, by, cx, cy, dx, dy):
