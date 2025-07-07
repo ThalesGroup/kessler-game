@@ -116,7 +116,53 @@ def circle_line_collision_continuous(
     '''
     return False
 
-def circle_line_collision(line_A: tuple[float, float], line_B: tuple[float, float], center: tuple[float, float], radius: float) -> bool:
+def circle_line_collision_discrete(line_A: tuple[float, float], line_B: tuple[float, float], center: tuple[float, float], radius: float) -> bool:
+    # Accurate version of the discrete collision check
+    
+    # Quick rejection check:
+    # Check if circle edge is within the outer bounds of the line segment (offset for radius)
+    x_bounds = [min(line_A[0], line_B[0]) - radius, max(line_A[0], line_B[0]) + radius]
+    if center[0] < x_bounds[0] or center[0] > x_bounds[1]:
+        return False
+    y_bounds = [min(line_A[1], line_B[1]) - radius, max(line_A[1], line_B[1]) + radius]
+    if center[1] < y_bounds[0] or center[1] > y_bounds[1]:
+        return False
+
+    # This works by taking the circle's center, and projecting it onto the line segment's line, and clamping it to the line segment.
+    # This process will yield the point on the line segment that is closest to the circle's center.
+    # We can then check whether this point is inside the circle.
+
+    # Fix frame of reference to the circle center. Shift the segment so the circle is at the origin
+    ax = line_A[0] - center[0]
+    ay = line_A[1] - center[1]
+    bx = line_B[0] - center[0]
+    by = line_B[1] - center[1]
+
+    # Now project the origin (0, 0), the center of the circle, onto the segment A-B
+    dx = bx - ax
+    dy = by - ay
+    len_sq = dx * dx + dy * dy
+
+    # If the segment is degenerate (very short), just use the distance to one of the endpoints
+    if len_sq < 1e-12:
+        dist_sq = ax * ax + ay * ay
+    else:
+        # Compute projection parameter t of origin onto line defined by segment A-B
+        # Clamp t to [0, 1] to project onto the actual segment
+        t = -(ax * dx + ay * dy) / len_sq
+        t = max(0.0, min(1.0, t))
+
+        # Compute closest point on segment to the circle's center (which is now at origin)
+        px = ax + t * dx
+        py = ay + t * dy
+
+        # Compute squared distance from circle center (origin) to this point
+        dist_sq = px * px + py * py
+
+    # If the squared distance of the closest point on line segment to the center of circle is less than or equal to the squared radius, there is a collision
+    return dist_sq <= radius * radius
+
+def circle_line_collision_old(line_A: tuple[float, float], line_B: tuple[float, float], center: tuple[float, float], radius: float) -> bool:
     # Old collision check, which was discrete, and also had false positives:
     
     # Check if circle edge is within the outer bounds of the line segment (offset for radius)
