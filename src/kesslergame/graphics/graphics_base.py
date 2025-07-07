@@ -18,10 +18,10 @@ from ..scenario import Scenario
 
 class KesslerGraphics:
     def start(self, scenario: Scenario) -> None:
-        raise NotImplementedError('Your derived KesslerController must include a start() method.')
+        raise NotImplementedError('Your derived KesslerGraphics must include a start() method.')
 
     def update(self, score: Score, ships: List[Ship], asteroids: List[Asteroid], bullets: List[Bullet], mines: List[Mine]) -> None:
-        raise NotImplementedError('Your derived KesslerController must include an update() method.')
+        raise NotImplementedError('Your derived KesslerGraphics must include an update() method.')
 
     def close(self) -> None:
-        raise NotImplementedError('Your derived KesslerController must include a close() method.')
+        raise NotImplementedError('Your derived KesslerGraphics must include a close() method.')
