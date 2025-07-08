@@ -164,35 +164,6 @@ class Ship:
         Update our position and other particulars.
         """
 
-        # Fire a bullet if instructed to
-        if self.fire:
-            new_bullet = self.fire_bullet()
-        else:
-            new_bullet = None
-
-        if self.drop_mine:
-            new_mine = self.deploy_mine()
-        else:
-            new_mine = None
-
-        # Decrement respawn timer (if necessary)
-        if self._respawning <= 0.0:
-            self._respawning = 0.0
-        else:
-            self._respawning -= delta_time
-
-        # Decrement fire limit timer (if necessary)
-        if self._fire_limiter != 0.0:
-            self._fire_limiter -= delta_time
-            if self._fire_limiter <= 0.00000000001:
-                self._fire_limiter = 0.0
-
-        # Decrement mine deployment limit timer (if necessary)
-        if self._mine_limiter != 0.0:
-            self._mine_limiter -= delta_time
-            if self._mine_limiter <= 0.00000000001:
-                self._mine_limiter = 0.0
-
         # Apply drag. Fully stop the ship if it would cross zero speed in this time (prevents oscillation)
         drag_amount = self.drag * delta_time
         if drag_amount > abs(self.speed):
@@ -232,6 +203,35 @@ class Ship:
 
         # Update the position based off the velocities
         self.position = (self.position[0] + self.velocity[0] * delta_time, self.position[1] + self.velocity[1] * delta_time)
+
+        # Fire a bullet if instructed to, from the new location/heading of the ship
+        if self.fire:
+            new_bullet = self.fire_bullet()
+        else:
+            new_bullet = None
+
+        if self.drop_mine:
+            new_mine = self.deploy_mine()
+        else:
+            new_mine = None
+
+        # Decrement respawn timer (if necessary)
+        if self._respawning <= 0.0:
+            self._respawning = 0.0
+        else:
+            self._respawning -= delta_time
+
+        # Decrement fire limit timer (if necessary)
+        if self._fire_limiter != 0.0:
+            self._fire_limiter -= delta_time
+            if self._fire_limiter <= 0.00000000001:
+                self._fire_limiter = 0.0
+
+        # Decrement mine deployment limit timer (if necessary)
+        if self._mine_limiter != 0.0:
+            self._mine_limiter -= delta_time
+            if self._mine_limiter <= 0.00000000001:
+                self._mine_limiter = 0.0
 
         return new_bullet, new_mine
 
