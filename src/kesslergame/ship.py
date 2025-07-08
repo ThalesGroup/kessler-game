@@ -181,10 +181,10 @@ class Ship:
             new_mine = None
 
         # Decrement respawn timer (if necessary)
-        if self._respawning <= 0.0:
-            self._respawning = 0.0
-        else:
+        if self._respawning != 0.0:
             self._respawning -= delta_time
+            if self._respawning <= 0.00000000001:
+                self._respawning = 0.0
 
         # Decrement fire limit timer (if necessary)
         if self._fire_limiter != 0.0:
