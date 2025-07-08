@@ -89,16 +89,17 @@ class Ship:
     @property
     def state(self) -> Dict[str, Any]:
         return {
-            "is_respawning": True if self.is_respawning else False,
             "position": tuple(self.position),
-            "velocity": tuple([float(v) for v in self.velocity]),
+            "velocity": tuple(self.velocity),
             "speed": float(self.speed),
             "heading": float(self.heading),
             "mass": float(self.mass),
             "radius": float(self.radius),
             "id": int(self.id),
             "team": str(self.team),
+            "is_respawning": True if self.is_respawning else False,
             "lives_remaining": int(self.lives),
+            "deaths": int(self.deaths),
         }
 
     @property
@@ -107,9 +108,13 @@ class Ship:
                 "bullets_remaining": self.bullets_remaining,
                 "mines_remaining": self.mines_remaining,
                 "can_fire": self.can_fire,
+                "fire_cooldown": self.fire_wait_time,
                 "fire_rate": self.fire_rate,
                 "can_deploy_mine": self.can_deploy_mine,
+                "mine_cooldown": self.mine_wait_time,
                 "mine_deploy_rate": self.mine_deploy_rate,
+                "respawn_time_left": self.respawn_time_left,
+                "respawn_time": self.respawn_time,
                 "thrust_range": self.thrust_range,
                 "turn_rate_range": self.turn_rate_range,
                 "max_speed": self.max_speed,
