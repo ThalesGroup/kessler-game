@@ -51,7 +51,7 @@ def circle_line_collision_continuous(
     #    return True
 
     # Project the point (0, 0), the center of the circle, onto each of the edges of the parallelogram
-    def project_origin_onto_segment_dist_sq(x1, y1, x2, y2) -> float:
+    def project_origin_onto_segment_dist_sq(x1: float, y1: float, x2: float, y2: float) -> float:
         # Given a segment from (x1, y1) to (x2, y2), project the origin (0, 0)
         # onto this segment and return the squared distance from the origin
         # to the closest point on the segment.

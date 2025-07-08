@@ -39,20 +39,20 @@ class Asteroid:
             self.size = 4
 
         # Set max speed based off of scaling factor
-        speed_scaler = 2.0 + (4.0 - self.size) / 4.0
-        self.max_speed = 60.0 * speed_scaler
+        speed_scaler: float = 2.0 + (4.0 - self.size) / 4.0
+        self.max_speed: float = 60.0 * speed_scaler
 
         # Number of child asteroids spawned when this asteroid is destroyed
-        self.num_children = 3
+        self.num_children: int = 3
 
         # Set collision radius based on size # TODO May need to change once size can be visualized
-        self.radius = self.size * 8.0
+        self.radius: float = self.size * 8.0
 
-        self.mass = 0.25*math.pi*self.radius*self.radius
+        self.mass: float = 0.25 * math.pi * self.radius * self.radius
 
         # Use optional angle and speed arguments otherwise generate random angle and speed
-        starting_angle = angle if angle is not None else random.random()*360.0
-        starting_speed = speed if speed is not None else random.random()*self.max_speed - self.max_speed/2.0
+        starting_angle: float = angle if angle is not None else random.random()*360.0
+        starting_speed: float = speed if speed is not None else random.random()*self.max_speed - self.max_speed/2.0
 
         # Set velocity based on starting angle and speed
         # self.velocity = [
@@ -62,10 +62,10 @@ class Asteroid:
 
         self.vx = starting_speed*math.cos(math.radians(starting_angle))
         self.vy = starting_speed*math.sin(math.radians(starting_angle))
-        self.velocity = (self.vx, self.vy)
+        self.velocity: Tuple[float, float] = (self.vx, self.vy)
 
         # Set position as specified
-        self.position = position
+        self.position: Tuple[float, float] = position
 
         # Random rotations for use in display or future use with complex hit box
         self.angle: float = random.uniform(0.0, 360.0)
@@ -93,7 +93,7 @@ class Asteroid:
         # asteroid continues on the new velocity path
         # If random_ast_split, the bound is the range within which uniform random angles will be selected, otherwise the
         # angle will be half of the bound
-        split_angle_bound = 30.0
+        split_angle_bound: float = 30.0
         if self.size != 1:
             if isinstance(impactor, Mine):
                 delta_x = impactor.position[0] - self.position[0]

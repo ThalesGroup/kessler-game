@@ -12,18 +12,18 @@ if TYPE_CHECKING:
 
 class Mine:
     __slots__ = ('fuse_time', 'detonation_time', 'mass', 'radius', 'blast_radius', 'blast_pressure', 'owner', 'countdown_timer', 'detonating', 'position')
-    def __init__(self, starting_position: List[float], owner: 'Ship') -> None:
-        self.fuse_time = 3.0
-        self.detonation_time = 0.25
-        self.mass = 25.0  # mass units - kg?
-        self.radius = 12.0
-        self.blast_radius = 150.0
-        self.blast_pressure = 2000.0
+    def __init__(self, starting_position: Tuple[float, float], owner: 'Ship') -> None:
+        self.fuse_time: float = 3.0
+        self.detonation_time: float = 0.25
+        self.mass: float = 25.0  # kg
+        self.radius: float = 12.0
+        self.blast_radius: float = 150.0
+        self.blast_pressure: float = 2000.0
 
         self.owner = owner
-        self.countdown_timer = self.fuse_time
-        self.detonating = False
-        self.position = starting_position
+        self.countdown_timer: float = self.fuse_time
+        self.detonating: bool = False
+        self.position: Tuple[float, float] = starting_position
 
     def update(self, delta_time: float = 1/30) -> None:
         self.countdown_timer -= delta_time
