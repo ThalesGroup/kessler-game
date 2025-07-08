@@ -13,22 +13,19 @@ if TYPE_CHECKING:
 
 
 class Bullet:
-    __slots__ = ('owner', 'speed', 'length', 'mass', 'position', 'heading', 'rad_heading', 'tail', 'vx', 'vy', 'velocity')
+    __slots__ = ('owner', 'speed', 'length', 'mass', 'position', 'heading', 'rad_heading', 'tail', 'velocity')
     def __init__(self, starting_position: Tuple[float, float], starting_heading: float, owner: 'Ship') -> None:
         self.owner = owner
-        self.speed = 800.0  # m/s
-        self.length = 12.0
-        self.mass = 1.0  # mass units - kg?
-        self.position = starting_position
-        self.heading = starting_heading
-        self.rad_heading = math.radians(starting_heading)
-        cos_heading = math.cos(self.rad_heading)
-        sin_heading = math.sin(self.rad_heading)
-        self.tail = (self.position[0] - self.length*cos_heading,
-                     self.position[1] - self.length*sin_heading)
-        self.vx = self.speed*cos_heading
-        self.vy = self.speed*sin_heading
-        self.velocity = [self.vx, self.vy]
+        self.speed: float = 800.0  # m/s
+        self.length: float = 12.0
+        self.mass: float = 1.0  # mass units - kg?
+        self.position: Tuple[float, float] = starting_position
+        self.heading: float = starting_heading
+        self.rad_heading: float = math.radians(starting_heading)
+        cos_heading: float = math.cos(self.rad_heading)
+        sin_heading: float = math.sin(self.rad_heading)
+        self.tail: Tuple[float, float] = (self.position[0] - self.length * cos_heading, self.position[1] - self.length * sin_heading)
+        self.velocity: Tuple[float, float] = (self.speed * cos_heading, self.speed * sin_heading)
 
     def update(self, delta_time: float = 1/30) -> None:
         # Update the position:
@@ -41,8 +38,8 @@ class Bullet:
     @property
     def state(self) -> Dict[str, Any]:
         return {
-            "position": tuple(self.position),
-            "velocity": tuple(self.velocity),
-            "heading": float(self.heading),
-            "mass": float(self.mass)
+            "position": self.position,
+            "velocity": self.velocity,
+            "heading": self.heading,
+            "mass": self.mass
         }
