@@ -102,6 +102,8 @@ class KesslerGame:
         ######################
         # MAIN SCENARIO LOOP #
         ######################
+
+        # Conceptually these following collections should just be sets, but lists can be faster if there's very few elements
         bullet_remove_idxs: List[int] = []
         asteroid_remove_idxs: set[int] = set()
         mine_remove_idxs: List[int] = []
@@ -175,13 +177,6 @@ class KesslerGame:
                     if new_mine is not None:
                         mines.append(new_mine)
 
-            # Cull any bullets past the map edge
-            bullets = [bullet
-                       for bullet
-                       in bullets
-                       if 0.0 <= bullet.position[0] <= scenario.map_size[0]
-                       and 0.0 <= bullet.position[1] <= scenario.map_size[1]]
-
             # Wrap ships and asteroids to other side of map
             for ship in liveships:
                 ship.position = (ship.position[0] % scenario.map_size[0], ship.position[1] % scenario.map_size[1])
@@ -214,6 +209,11 @@ class KesslerGame:
                         asteroid_remove_idxs.add(idx_ast)
                         # Stop checking this bullet
                         break
+                # Cull any bullets past the map edge
+                # It is important we do this after the asteroid-bullet collision checks occur, in the case of bullets leaving the map but might hit an asteroid on the edge
+                if not ((0.0 <= bullet.position[0] <= scenario.map_size[0] and 0.0 <= bullet.position[1] <= scenario.map_size[1])
+                        or (0.0 <= bullet.tail[0] <= scenario.map_size[0] and 0.0 <= bullet.tail[1] <= scenario.map_size[1])):
+                    bullet_remove_idxs.append(idx_bul)
             # Cull bullets and asteroids that are marked for removal
             if bullet_remove_idxs:
                 bullets = [bullet for idx, bullet in enumerate(bullets) if idx not in bullet_remove_idxs]
