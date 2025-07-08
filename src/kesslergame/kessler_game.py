@@ -5,11 +5,8 @@
 
 import time
 
-import math
 from typing import Dict, Any, List, Tuple, TypedDict, Optional
 from enum import Enum
-from collections import OrderedDict
-from immutabledict import immutabledict
 
 from .scenario import Scenario
 from .score import Score
@@ -105,10 +102,10 @@ class KesslerGame:
         ######################
         # MAIN SCENARIO LOOP #
         ######################
-        bullet_remove_idxs: list[int] = []
+        bullet_remove_idxs: List[int] = []
         asteroid_remove_idxs: set[int] = set()
-        mine_remove_idxs: list[int] = []
-        new_asteroids: list[Asteroid] = []
+        mine_remove_idxs: List[int] = []
+        new_asteroids: List[Asteroid] = []
         while stop_reason == StopReason.not_stopped:
 
             # Get perf time at the start of time step evaluation and initialize performance tracker
@@ -119,21 +116,6 @@ class KesslerGame:
             # Get all live ships
             liveships = [ship for ship in ships if ship.alive]
 
-            # Generate game_state info to send to controllers
-            game_state: immutabledict = immutabledict({
-                'asteroids': [asteroid.state for asteroid in asteroids],
-                'ships': [ship.state for ship in liveships],
-                'bullets': [bullet.state for bullet in bullets],
-                'mines': [mine.state for mine in mines],
-                'map_size': scenario.map_size,
-                'time': sim_time,
-                'delta_time': self.time_step,
-                'frame_rate': self.frequency,
-                'sim_frame': step,
-                'time_limit': time_limit,
-                'random_asteroid_splits': self.random_ast_splits
-            })
-
             # Initialize controller time recording in performance tracker
             if self.perf_tracker:
                 perf_dict['controller_times'] = []
@@ -142,6 +124,21 @@ class KesslerGame:
             # Loop through each controller/ship combo and apply their actions
             for idx, ship in enumerate(ships):
                 if ship.alive:
+                    # Generate game_state info to send to controller
+                    # It is important we regenerate this for each controller, so they do not tamper it for the next controller
+                    game_state: Dict[str, Any] = {
+                        'asteroids': [asteroid.state for asteroid in asteroids],
+                        'ships': [ship.state for ship in liveships],
+                        'bullets': [bullet.state for bullet in bullets],
+                        'mines': [mine.state for mine in mines],
+                        'map_size': scenario.map_size,
+                        'time': sim_time,
+                        'delta_time': self.time_step,
+                        'frame_rate': self.frequency,
+                        'sim_frame': step,
+                        'time_limit': time_limit,
+                        'random_asteroid_splits': self.random_ast_splits
+                    }
                     # Reset controls on ship to defaults
                     ship.thrust = 0.0
                     ship.turn_rate = 0.0
