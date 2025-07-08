@@ -8,18 +8,20 @@ import time
 from src.kesslergame import Scenario, KesslerGame, GraphicsType
 from test_controller import TestController
 from graphics_both import GraphicsBoth
+from example_scenarios import scenario1
 
 # Define game scenario
-my_test_scenario = Scenario(name='Test Scenario',
-                            num_asteroids=10,
-                            ship_states=[
-                                {'position': (400, 400), 'angle': 90, 'lives': 3, 'team': 1, "mines_remaining": 3},
-                                # {'position': (400, 600), 'angle': 90, 'lives': 3, 'team': 2, "mines_remaining": 3},
-                            ],
-                            map_size=(1000, 800),
-                            time_limit=60,
-                            ammo_limit_multiplier=0,
-                            stop_if_no_ammo=False)
+my_test_scenario = scenario1
+# my_test_scenario = Scenario(name='Test Scenario',
+#                             num_asteroids=10,
+#                             ship_states=[
+#                                 {'position': (400, 400), 'angle': 90, 'lives': 3, 'team': 1, "mines_remaining": 3},
+#                                 # {'position': (400, 600), 'angle': 90, 'lives': 3, 'team': 2, "mines_remaining": 3},
+#                             ],
+#                             map_size=(1000, 800),
+#                             time_limit=60,
+#                             ammo_limit_multiplier=0,
+#                             stop_if_no_ammo=False)
 
 # Define Game Settings
 game_settings = {'perf_tracker': True,

@@ -72,7 +72,11 @@ class FuzzyController(KesslerController):
             # Create membership functions from chromosome - Note that we're constraining the triangular membership
             # functions to have Ruspini partitioning
             # creae distance membership functions from chromosome
-            distance["close"] = skf.trimf(distance.universe, [-1.0, -1.0, self.chromosome[0]*2-1])
+            try:
+                distance["close"] = skf.trimf(distance.universe, [-1.0, -1.0, self.chromosome[0]*2-1])
+            except:
+                print(self.chromosome[0])
+                print(self.chromosome[0]*2-1)
             distance["medium"] = skf.trimf(distance.universe, [-1.0, self.chromosome[0]*2-1, 1.0])
             distance["far"] = skf.trimf(distance.universe, [self.chromosome[0]*2-1, 1.0, 1.0])
             # create angle membership functions from chromosome
@@ -102,9 +106,15 @@ class FuzzyController(KesslerController):
             rules_raw = self.chromosome[3:3+num_rules]
             # binning the values to convert the floats to integer values to be used as indices
             ind = np.digitize(rules_raw, bins, right=True)-1
+            ind = [int(min(max(idx, 0), 2)) for idx in ind]
+
             count = 0
             # mapping the DNA indices to output_mfs
-            rule_consequents_linear = [output_mfs[idx] for idx in ind]
+            try:
+                rule_consequents_linear = [output_mfs[idx] for idx in ind]
+            except:
+                print(ind)
+                print(rules_raw)
             # constructing the rules by combining our antecedents (conjunction of input mfs) with the corresponding
             # consequents (output mfs)
             rules = []
@@ -112,6 +122,7 @@ class FuzzyController(KesslerController):
                 for jj in range(num_mfs2):
                     rules.append(ctrl.Rule(input1_mfs[ii] & input2_mfs[jj], rule_consequents_linear[count]))
 
+            # creating a FIS controller from the rules + membership functions
             self.aiming_fis = ctrl.ControlSystem(rules)
             # creating a controller sim to evaluate the FIS
             self.aiming_fis_sim = ctrl.ControlSystemSimulation(self.aiming_fis)
