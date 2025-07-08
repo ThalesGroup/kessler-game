@@ -26,7 +26,7 @@ class Scenario:
         :param ship_states: Optional, Ship Starting states (list of dictionaries)
         :param game_map: Game Map using ``Map`` object
         :param seed: Optional seeding value to pass to random.seed() which is called before asteroid creation
-        :param time_limit: Optional seeding value to pass to random.seed() which is called before asteroid creation
+        :param time_limit: Optional value for limiting the total duration of the scenario, will be set to infinity if value is 0 or None
         :param ammo_limit_multiplier: Optional value for limiting the number of bullets each ship will have
         :param stop_if_no_ammo: Optional flag for stopping the scenario if all ships run out of ammo
         """
