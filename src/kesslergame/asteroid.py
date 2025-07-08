@@ -100,7 +100,7 @@ class Asteroid:
                 delta_y = impactor.position[1] - self.position[1]
                 dist = math.sqrt(delta_x * delta_x + delta_y * delta_y)
                 F = impactor.calculate_blast_force(dist=dist, obj=self)
-                a = F/self.mass
+                a = F / self.mass
                 # calculate "impulse" based on acc
                 if dist != 0.0:
                     cos_theta = (self.position[0] - impactor.position[0]) / dist
@@ -152,7 +152,7 @@ class Asteroid:
                 theta,
                 theta - angle_offset
             ]
-            
+
             return [Asteroid(position=self.position, size=self.size - 1, speed=v, angle=angle) for angle in angles]
 
                 # Old method of doing random splits

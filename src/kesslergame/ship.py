@@ -63,14 +63,14 @@ class Ship:
         self.turn_rate_range: Tuple[float, float] = (-180.0, 180.0)  # Degrees per second
         self.max_speed: float = 240.0  # Meters per second
         self.drag: float = 80.0  # m/s^2
-        self.radius: float = 20.0  # meters TODO verify radius size
+        self.radius: float = 20.0  # meters
         self.mass: float = 300.0  # kg - reasonable? max asteroid mass currently is ~490 kg
 
         # Manage respawns/firing via timers
-        self._respawning: float = 0.0
-        self._respawn_time: float = 3.0  # seconds
+        self._respawning: float = 0.0 # seconds
+        self._respawn_time: float = 3.0 # seconds
         self._fire_limiter: float = 0.0 # seconds
-        self._fire_time: float = 1 / 10  # seconds
+        self._fire_time: float = 1.0 / 10.0 # seconds
         self._mine_limiter: float = 0.0 # second
         self._mine_deploy_time: float = 1.0 # seconds
 
@@ -181,19 +181,19 @@ class Ship:
         # Decrement respawn timer (if necessary)
         if self._respawning != 0.0:
             self._respawning -= delta_time
-            if self._respawning <= 0.00000000001:
+            if self._respawning <= 1e-12:
                 self._respawning = 0.0
 
         # Decrement fire limit timer (if necessary)
         if self._fire_limiter != 0.0:
             self._fire_limiter -= delta_time
-            if self._fire_limiter <= 0.00000000001:
+            if self._fire_limiter <= 1e-12:
                 self._fire_limiter = 0.0
 
         # Decrement mine deployment limit timer (if necessary)
         if self._mine_limiter != 0.0:
             self._mine_limiter -= delta_time
-            if self._mine_limiter <= 0.00000000001:
+            if self._mine_limiter <= 1e-12:
                 self._mine_limiter = 0.0
 
         # Apply drag. Fully stop the ship if it would cross zero speed in this time (prevents oscillation)

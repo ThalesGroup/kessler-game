@@ -182,7 +182,7 @@ def circle_line_collision_old(line_A: tuple[float, float], line_B: tuple[float, 
     # Heron's formula to calculate area of triangle and resultant height (distance from circle center to line segment)
     s = 0.5 * (a + b + c)
 
-    cen_dist = 2.0 / c * math.sqrt(max(0.0, s * (s-a) * (s-b) * (s-c)))
+    cen_dist = 2.0 / c * math.sqrt(max(0.0, s * (s - a) * (s - b) * (s - c)))
 
     # If circle distance to line segment is less than circle radius, they are colliding
     return cen_dist < radius
