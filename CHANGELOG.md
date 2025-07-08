@@ -1,5 +1,14 @@
 # Changelog
 
+## [2.2.0] - 8 July 2025
+
+- Added better collision detection based on geometry of bullet over timesteps - now framerate independent
+- Fixed docstrings and error messages
+- Added Scott Dick's example controller and getting started guide
+- Fixed bug with mine momentum direction given to asteroids
+- Added more information to `game_state` dictionary for agents to access.
+- Added more information to ship state and ownship state
+
 ## [2.1.9] - 4 July 2024
 
 - Added missing package in `requirements.txt`
