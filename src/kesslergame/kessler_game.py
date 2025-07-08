@@ -14,7 +14,7 @@ from immutabledict import immutabledict
 from .scenario import Scenario
 from .score import Score
 from .controller import KesslerController
-from .collisions import circle_line_collision
+from .collisions import circle_line_collision_continuous
 from .graphics import GraphicsType, GraphicsHandler
 from .mines import Mine
 from .asteroid import Asteroid
@@ -206,7 +206,7 @@ class KesslerGame:
                     if idx_ast in asteroid_remove_idxs:
                         continue
                     # If collision occurs
-                    if circle_line_collision(bullet.position, bullet.tail, asteroid.position, asteroid.radius):
+                    if circle_line_collision_continuous(bullet.position, bullet.tail, bullet.velocity, asteroid.position, asteroid.velocity, asteroid.radius, self.time_step):
                         # Increment hit values on ship that fired bullet then destruct bullet and mark for removal
                         bullet.owner.asteroids_hit += 1
                         bullet.owner.bullets_hit += 1
