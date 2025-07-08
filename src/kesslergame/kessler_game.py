@@ -128,8 +128,10 @@ class KesslerGame:
                 'map_size': scenario.map_size,
                 'time': sim_time,
                 'delta_time': self.time_step,
+                'frame_rate': self.frequency,
                 'sim_frame': step,
-                'time_limit': time_limit
+                'time_limit': time_limit,
+                'random_asteroid_splits': self.random_ast_splits
             })
 
             # Initialize controller time recording in performance tracker
