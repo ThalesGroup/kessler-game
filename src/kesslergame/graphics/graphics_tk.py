@@ -59,7 +59,7 @@ class GraphicsTK(KesslerGraphics):
         # Set DPI Aware before anything else
         if sys.platform == "win32":
             from ctypes import windll
-            windll.shcore.SetProcessDpiAwareness(1)
+            windll.shcore.SetProcessDpiAwareness(2)
 
         # create and center main window
         self.window = Tk()
