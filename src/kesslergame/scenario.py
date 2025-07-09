@@ -71,9 +71,8 @@ class Scenario:
         if num_asteroids and asteroid_states:
             raise ValueError("Both `num_asteroids` and `asteroid_positions` are specified for Scenario() constructor."
                              "Make sure to only define one of these arguments")
-
-        # Store asteroid states
         elif asteroid_states:
+            # Store asteroid states
             self.asteroid_states = asteroid_states
         elif num_asteroids:
             self.asteroid_states = [dict() for _ in range(num_asteroids)]
@@ -110,7 +109,6 @@ class Scenario:
                 return temp + 1
             else:
                 return temp
-
         else:
             return -1
 
@@ -150,4 +148,4 @@ class Scenario:
         :return: List of ShipSprites
         """
         # Loop through and create ShipSprites based on starting state
-        return [Ship(idx+1, bullets_remaining=self.bullet_limit, **ship_state) for idx, ship_state in enumerate(self.ship_states)]
+        return [Ship(idx + 1, bullets_remaining=self.bullet_limit, **ship_state) for idx, ship_state in enumerate(self.ship_states)]

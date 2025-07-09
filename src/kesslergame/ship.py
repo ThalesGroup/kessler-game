@@ -37,8 +37,6 @@ class Ship:
 
         # Control information
         self.controller: Optional[KesslerController] = None
-        self.thrust: float = 0.0  # speed defaults to minimum
-        self.turn_rate: float = 0.0
 
         # Ship custom graphics
         self.custom_sprite_path = None
@@ -46,8 +44,8 @@ class Ship:
         # State info
         self.id: int = ship_id
         self.speed: float = 0.0
-        self.position: tuple[float, float] = position
-        self.velocity: tuple[float, float] = (0.0, 0.0)
+        self.position: Tuple[float, float] = position
+        self.velocity: Tuple[float, float] = (0.0, 0.0)
         self.heading: float = angle
         self.lives: int = lives
         self.deaths: int = 0
@@ -55,51 +53,51 @@ class Ship:
         self.team_name: str = team_name if team_name is not None else 'Team ' + str(self.team)
 
         # Controller inputs
-        self.fire = False
-        self.thrust = 0.0
-        self.turn_rate = 0.0
-        self.drop_mine = False
+        self.thrust: float = 0.0
+        self.turn_rate: float = 0.0
+        self.fire: bool = False
+        self.drop_mine: bool = False
 
         # Physical model constants/params
-        self.thrust_range = (-480.0, 480.0)  # m/s^2
-        self.turn_rate_range = (-180.0, 180.0)  # Degrees per second
-        self.max_speed = 240.0  # Meters per second
-        self.drag = 80.0  # m/s^2
-        self.radius = 20.0  # meters TODO verify radius size
-        self.mass = 300.0  # kg - reasonable? max asteroid mass currently is ~490 kg
+        self.thrust_range: Tuple[float, float] = (-480.0, 480.0)  # m/s^2
+        self.turn_rate_range: Tuple[float, float] = (-180.0, 180.0)  # Degrees per second
+        self.max_speed: float = 240.0  # Meters per second
+        self.drag: float = 80.0  # m/s^2
+        self.radius: float = 20.0  # meters
+        self.mass: float = 300.0  # kg - reasonable? max asteroid mass currently is ~490 kg
 
         # Manage respawns/firing via timers
-        self._respawning = 0.0
-        self._respawn_time = 3.0  # seconds
-        self._fire_limiter = 0.0 # seconds
-        self._fire_time = 1 / 10  # seconds
-        self._mine_limiter = 0.0 # second
-        self._mine_deploy_time = 1.0 # seconds
+        self._respawning: float = 0.0 # seconds
+        self._respawn_time: float = 3.0 # seconds
+        self._fire_limiter: float = 0.0 # seconds
+        self._fire_time: float = 1.0 / 10.0 # seconds
+        self._mine_limiter: float = 0.0 # second
+        self._mine_deploy_time: float = 1.0 # seconds
 
         # Track bullet/mine statistics
-        self.mines_remaining = mines_remaining
-        self.bullets_remaining = bullets_remaining
-        self.bullets_shot = 0
-        self.mines_dropped = 0
-        self.bullets_hit = 0    # Number of bullets that hit an asteroid
-        self.mines_hit = 0      # Number of asteroids hit by mines
-        self.asteroids_hit = 0  # Number of asteroids hit (including ship collision)
+        self.mines_remaining: int = mines_remaining
+        self.bullets_remaining: int = bullets_remaining
+        self.bullets_shot: int = 0
+        self.mines_dropped: int = 0
+        self.bullets_hit: int = 0    # Number of bullets that hit an asteroid
+        self.mines_hit: int = 0      # Number of asteroids hit by mines
+        self.asteroids_hit: int = 0  # Number of asteroids hit (including ship collision)
 
 
     @property
     def state(self) -> Dict[str, Any]:
         return {
-            "position": tuple(self.position),
-            "velocity": tuple(self.velocity),
-            "speed": float(self.speed),
-            "heading": float(self.heading),
-            "mass": float(self.mass),
-            "radius": float(self.radius),
-            "id": int(self.id),
-            "team": str(self.team),
+            "position": self.position,
+            "velocity": self.velocity,
+            "speed": self.speed,
+            "heading": self.heading,
+            "mass": self.mass,
+            "radius": self.radius,
+            "id": self.id,
+            "team": self.team,
             "is_respawning": True if self.is_respawning else False,
-            "lives_remaining": int(self.lives),
-            "deaths": int(self.deaths),
+            "lives_remaining": self.lives,
+            "deaths": self.deaths,
         }
 
     @property
@@ -164,7 +162,7 @@ class Ship:
     def shoot(self) -> None:
         self.fire = True
 
-    def update(self, delta_time: float = 1 / 30) -> tuple[Optional[Bullet], Optional[Mine]]:
+    def update(self, delta_time: float = 1 / 30) -> Tuple[Optional[Bullet], Optional[Mine]]:
         """
         Update our position and other particulars.
         """
@@ -181,21 +179,21 @@ class Ship:
             new_mine = None
 
         # Decrement respawn timer (if necessary)
-        if self._respawning <= 0.0:
-            self._respawning = 0.0
-        else:
+        if self._respawning != 0.0:
             self._respawning -= delta_time
+            if self._respawning <= 1e-12:
+                self._respawning = 0.0
 
         # Decrement fire limit timer (if necessary)
         if self._fire_limiter != 0.0:
             self._fire_limiter -= delta_time
-            if self._fire_limiter <= 0.00000000001:
+            if self._fire_limiter <= 1e-12:
                 self._fire_limiter = 0.0
 
         # Decrement mine deployment limit timer (if necessary)
         if self._mine_limiter != 0.0:
             self._mine_limiter -= delta_time
-            if self._mine_limiter <= 0.00000000001:
+            if self._mine_limiter <= 1e-12:
                 self._mine_limiter = 0.0
 
         # Apply drag. Fully stop the ship if it would cross zero speed in this time (prevents oscillation)
@@ -240,7 +238,7 @@ class Ship:
 
         return new_bullet, new_mine
 
-    def destruct(self, map_size: tuple[float, float]) -> None:
+    def destruct(self, map_size: Tuple[float, float]) -> None:
         """
         Called by the game when a ship collides with something and dies. Handles life decrementing and triggers respawn
         """
@@ -279,7 +277,7 @@ class Ship:
             self.mines_dropped += 1
             mine_x = self.position[0]
             mine_y = self.position[1]
-            return Mine([mine_x, mine_y], owner=self)
+            return Mine((mine_x, mine_y), owner=self)
         else:
             return None
 

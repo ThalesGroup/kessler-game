@@ -5,11 +5,8 @@
 
 import time
 
-import math
 from typing import Dict, Any, List, Tuple, TypedDict, Optional
 from enum import Enum
-from collections import OrderedDict
-from immutabledict import immutabledict
 
 from .scenario import Scenario
 from .score import Score
@@ -48,7 +45,7 @@ class KesslerGame:
             settings = {}
         # Game settings
         self.frequency: float = settings.get("frequency", 30.0)
-        self.time_step: float = 1 / settings.get("frequency", 30.0)
+        self.time_step: float = 1.0 / settings.get("frequency", 30.0)
         self.perf_tracker: bool = settings.get("perf_tracker", True)
         self.prints_on: bool = settings.get("prints_on", True)
         self.graphics_type: GraphicsType = settings.get("graphics_type", GraphicsType.Tkinter)
@@ -59,12 +56,12 @@ class KesslerGame:
 
         # UI settings
         default_ui = {'ships': True, 'lives_remaining': True, 'accuracy': True,
-                      'asteroids_hit': True, 'bullets_remaining': True, 'controller_name': True}
+                      'asteroids_hit': True, 'bullets_remaining': True, 'controller_name': True, 'scale': 1.0}
         self.UI_settings = settings.get("UI_settings", default_ui)
         if self.UI_settings == 'all':
             self.UI_settings = {'ships': True, 'lives_remaining': True, 'accuracy': True,
                                 'asteroids_hit': True, 'shots_fired': True, 'bullets_remaining': True,
-                                'controller_name': True}
+                                'controller_name': True, 'scale': 1.0}
         
     def run(self, scenario: Scenario, controllers: List[KesslerController]) -> Tuple[Score, List[PerfDict]]:
         """
@@ -105,10 +102,12 @@ class KesslerGame:
         ######################
         # MAIN SCENARIO LOOP #
         ######################
-        bullet_remove_idxs: list[int] = []
+
+        # Conceptually these following collections should just be sets, but lists can be faster if there's very few elements
+        bullet_remove_idxs: List[int] = []
         asteroid_remove_idxs: set[int] = set()
-        mine_remove_idxs: list[int] = []
-        new_asteroids: list[Asteroid] = []
+        mine_remove_idxs: List[int] = []
+        new_asteroids: List[Asteroid] = []
         while stop_reason == StopReason.not_stopped:
 
             # Get perf time at the start of time step evaluation and initialize performance tracker
@@ -119,21 +118,6 @@ class KesslerGame:
             # Get all live ships
             liveships = [ship for ship in ships if ship.alive]
 
-            # Generate game_state info to send to controllers
-            game_state: immutabledict = immutabledict({
-                'asteroids': [asteroid.state for asteroid in asteroids],
-                'ships': [ship.state for ship in liveships],
-                'bullets': [bullet.state for bullet in bullets],
-                'mines': [mine.state for mine in mines],
-                'map_size': scenario.map_size,
-                'time': sim_time,
-                'delta_time': self.time_step,
-                'frame_rate': self.frequency,
-                'sim_frame': step,
-                'time_limit': time_limit,
-                'random_asteroid_splits': self.random_ast_splits
-            })
-
             # Initialize controller time recording in performance tracker
             if self.perf_tracker:
                 perf_dict['controller_times'] = []
@@ -142,6 +126,21 @@ class KesslerGame:
             # Loop through each controller/ship combo and apply their actions
             for idx, ship in enumerate(ships):
                 if ship.alive:
+                    # Generate game_state info to send to controller
+                    # It is important we regenerate this for each controller, so they do not tamper it for the next controller
+                    game_state: Dict[str, Any] = {
+                        'asteroids': [asteroid.state for asteroid in asteroids],
+                        'ships': [ship.state for ship in liveships],
+                        'bullets': [bullet.state for bullet in bullets],
+                        'mines': [mine.state for mine in mines],
+                        'map_size': scenario.map_size,
+                        'time': sim_time,
+                        'delta_time': self.time_step,
+                        'frame_rate': self.frequency,
+                        'sim_frame': step,
+                        'time_limit': time_limit,
+                        'random_asteroid_splits': self.random_ast_splits
+                    }
                     # Reset controls on ship to defaults
                     ship.thrust = 0.0
                     ship.turn_rate = 0.0
@@ -178,13 +177,6 @@ class KesslerGame:
                     if new_mine is not None:
                         mines.append(new_mine)
 
-            # Cull any bullets past the map edge
-            bullets = [bullet
-                       for bullet
-                       in bullets
-                       if 0.0 <= bullet.position[0] <= scenario.map_size[0]
-                       and 0.0 <= bullet.position[1] <= scenario.map_size[1]]
-
             # Wrap ships and asteroids to other side of map
             for ship in liveships:
                 ship.position = (ship.position[0] % scenario.map_size[0], ship.position[1] % scenario.map_size[1])
@@ -217,6 +209,11 @@ class KesslerGame:
                         asteroid_remove_idxs.add(idx_ast)
                         # Stop checking this bullet
                         break
+                # Cull any bullets past the map edge
+                # It is important we do this after the asteroid-bullet collision checks occur, in the case of bullets leaving the map but might hit an asteroid on the edge
+                if not ((0.0 <= bullet.position[0] <= scenario.map_size[0] and 0.0 <= bullet.position[1] <= scenario.map_size[1])
+                        or (0.0 <= bullet.tail[0] <= scenario.map_size[0] and 0.0 <= bullet.tail[1] <= scenario.map_size[1])):
+                    bullet_remove_idxs.append(idx_bul)
             # Cull bullets and asteroids that are marked for removal
             if bullet_remove_idxs:
                 bullets = [bullet for idx, bullet in enumerate(bullets) if idx not in bullet_remove_idxs]

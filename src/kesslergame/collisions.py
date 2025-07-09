@@ -51,7 +51,7 @@ def circle_line_collision_continuous(
     #    return True
 
     # Project the point (0, 0), the center of the circle, onto each of the edges of the parallelogram
-    def project_origin_onto_segment_dist_sq(x1, y1, x2, y2) -> float:
+    def project_origin_onto_segment_dist_sq(x1: float, y1: float, x2: float, y2: float) -> float:
         # Given a segment from (x1, y1) to (x2, y2), project the origin (0, 0)
         # onto this segment and return the squared distance from the origin
         # to the closest point on the segment.
@@ -182,7 +182,7 @@ def circle_line_collision_old(line_A: tuple[float, float], line_B: tuple[float, 
     # Heron's formula to calculate area of triangle and resultant height (distance from circle center to line segment)
     s = 0.5 * (a + b + c)
 
-    cen_dist = 2.0 / c * math.sqrt(max(0.0, s * (s-a) * (s-b) * (s-c)))
+    cen_dist = 2.0 / c * math.sqrt(max(0.0, s * (s - a) * (s - b) * (s - c)))
 
     # If circle distance to line segment is less than circle radius, they are colliding
     return cen_dist < radius

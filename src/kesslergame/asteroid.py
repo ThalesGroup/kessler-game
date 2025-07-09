@@ -39,20 +39,20 @@ class Asteroid:
             self.size = 4
 
         # Set max speed based off of scaling factor
-        speed_scaler = 2.0 + (4.0 - self.size) / 4.0
-        self.max_speed = 60.0 * speed_scaler
+        speed_scaler: float = 2.0 + (4.0 - self.size) / 4.0
+        self.max_speed: float = 60.0 * speed_scaler
 
         # Number of child asteroids spawned when this asteroid is destroyed
-        self.num_children = 3
+        self.num_children: int = 3
 
         # Set collision radius based on size # TODO May need to change once size can be visualized
-        self.radius = self.size * 8.0
+        self.radius: float = self.size * 8.0
 
-        self.mass = 0.25*math.pi*self.radius*self.radius
+        self.mass: float = 0.25 * math.pi * self.radius * self.radius
 
         # Use optional angle and speed arguments otherwise generate random angle and speed
-        starting_angle = angle if angle is not None else random.random()*360.0
-        starting_speed = speed if speed is not None else random.random()*self.max_speed - self.max_speed/2.0
+        starting_angle: float = angle if angle is not None else random.random() * 360.0
+        starting_speed: float = speed if speed is not None else random.random() * self.max_speed - self.max_speed / 2.0
 
         # Set velocity based on starting angle and speed
         # self.velocity = [
@@ -60,12 +60,12 @@ class Asteroid:
         #     starting_speed * math.cos(math.radians(starting_angle))
         # ]
 
-        self.vx = starting_speed*math.cos(math.radians(starting_angle))
-        self.vy = starting_speed*math.sin(math.radians(starting_angle))
-        self.velocity = (self.vx, self.vy)
+        self.vx = starting_speed * math.cos(math.radians(starting_angle))
+        self.vy = starting_speed * math.sin(math.radians(starting_angle))
+        self.velocity: Tuple[float, float] = (self.vx, self.vy)
 
         # Set position as specified
-        self.position = position
+        self.position: Tuple[float, float] = position
 
         # Random rotations for use in display or future use with complex hit box
         self.angle: float = random.uniform(0.0, 360.0)
@@ -93,34 +93,33 @@ class Asteroid:
         # asteroid continues on the new velocity path
         # If random_ast_split, the bound is the range within which uniform random angles will be selected, otherwise the
         # angle will be half of the bound
-        split_angle_bound = 30.0
+        split_angle_bound: float = 30.0
         if self.size != 1:
             if isinstance(impactor, Mine):
                 delta_x = impactor.position[0] - self.position[0]
                 delta_y = impactor.position[1] - self.position[1]
-                dist = math.sqrt(delta_x*delta_x + delta_y*delta_y)
+                dist = math.sqrt(delta_x * delta_x + delta_y * delta_y)
                 F = impactor.calculate_blast_force(dist=dist, obj=self)
-                a = F/self.mass
+                a = F / self.mass
                 # calculate "impulse" based on acc
                 if dist != 0.0:
-                    cos_theta = (self.position[0] - impactor.position[0])/dist
-                    sin_theta = (self.position[1] - impactor.position[1])/dist
-                    vfx = self.vx + a*cos_theta
-                    vfy = self.vy + a*sin_theta
+                    cos_theta = (self.position[0] - impactor.position[0]) / dist
+                    sin_theta = (self.position[1] - impactor.position[1]) / dist
+                    vfx = self.vx + a * cos_theta
+                    vfy = self.vy + a * sin_theta
 
                     # Calculate speed of resultant asteroid(s) based on velocity vector
-                    v = math.sqrt(vfx*vfx + vfy*vfy)
-
+                    v = math.sqrt(vfx * vfx + vfy * vfy)
                 else:
                     vfx = self.vx
                     vfy = self.vy
                     
                     # Calculate speed of resultant asteroid(s) based on velocity vector
                     # This v calculation matches the speed you would get in the nonzero dist case, if you take the limit as dist -> 0
-                    v = math.sqrt(vfx*vfx + vfy*vfy + a*a)
+                    v = math.sqrt(vfx * vfx + vfy * vfy + a * a)
                     # Split angle is the angle off of the new velocity vector for the two asteroids to the sides, the center child
                     # asteroid continues on the new velocity path
-                    split_angle_bound *= 8
+                    split_angle_bound *= 8.0
             else:
                 # Calculating new velocity vector of asteroid children based on bullet-asteroid collision/momentum
                 # Currently collisions are considered perfectly inelastic i.e. the bullet is absorbed by the asteroid
@@ -131,17 +130,30 @@ class Asteroid:
                 impactor_vx = impactor.velocity[0]
                 impactor_vy = impactor.velocity[1]
 
-                vfx = (1/(impactor.mass + self.mass))*(impactor.mass*impactor_vx + self.mass*self.vx)
-                vfy = (1/(impactor.mass + self.mass))*(impactor.mass*impactor_vy + self.mass*self.vy)
+                vfx = (1.0 / (impactor.mass + self.mass)) * (impactor.mass * impactor_vx + self.mass * self.vx)
+                vfy = (1.0 / (impactor.mass + self.mass)) * (impactor.mass * impactor_vy + self.mass * self.vy)
 
                 # Calculate speed of resultant asteroid(s) based on velocity vector
-                v = math.sqrt(vfx*vfx + vfy*vfy)
+                v = math.sqrt(vfx * vfx + vfy * vfy)
 
             # Calculate angle of center asteroid for split (degrees)
             theta = math.degrees(math.atan2(vfy, vfx))
-            angles = [theta + (split_angle_bound*random.random()*random_ast_split + (1-random_ast_split)*split_angle_bound/2.0), theta, theta - (split_angle_bound*random.random()*random_ast_split + (1-random_ast_split)*split_angle_bound/2.0)]
 
-            return [Asteroid(position=self.position, size=self.size-1, speed=v, angle=angle) for angle in angles]
+            if random_ast_split:
+                # Use a random angle offset
+                angle_offset = split_angle_bound * random.random()
+            else:
+                # Use a fixed half-angle offset
+                angle_offset = split_angle_bound / 2.0
+
+            # Create the angles list
+            angles = [
+                theta + angle_offset,
+                theta,
+                theta - angle_offset
+            ]
+
+            return [Asteroid(position=self.position, size=self.size - 1, speed=v, angle=angle) for angle in angles]
 
                 # Old method of doing random splits
                 # return [Asteroid(position=self.position, size=self.size-1) for _ in range(self.num_children)]
