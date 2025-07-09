@@ -8,10 +8,23 @@ If the ship runs out of lives, the game terminates. In multi-ship scenarios, shi
 but cannot shoot each other.
 
 Kessler can be built as python extension for install using pip, or used as a local package by copying the
-`src/kessler_game` directory to your project. Wheels are provided in
-[releases](https://github.com/ThalesGroup/kessler-game/releases) for install using:
+`src/kessler_game` directory to your project. Kessler is available on PyPI and can be installed using:
+``` 
+pip install KesslerGame
+```
+Pure Python wheels are provided on PyPI at 
+[KesslerGame](https://pypi.org/project/KesslerGame/#files) for manual install using:
 ``` 
 pip install <path to kessler_game-#.#.#-py3-none-any.whl>
+```
+
+Kessler also has a compiled version using mypyc that currently is only available on 
+[releases](https://github.com/ThalesGroup/kessler-game/releases) for that version. This compiled version is faster 
+than the pure Python version and is better for use for machine/reinforcement learning.  This version is not available on
+PyPi, but is a wheel that can be installed using:
+
+``` 
+pip install <path to KesslerGame-#.#.#-cp310-cp310-win_amd64.whl>
 ```
 
 Kessler has two primary graphics modules. The first uses Python's Tkinter UI library to display the game. The second
