@@ -40,10 +40,10 @@ class Mine:
     @property
     def state(self) -> Dict[str, Any]:
         return {
-            "position": tuple(self.position),
-            "mass": float(self.mass),
-            "fuse_time": float(self.fuse_time),
-            "remaining_time": float(self.countdown_timer)
+            "position": self.position,
+            "mass": self.mass,
+            "fuse_time": self.fuse_time,
+            "remaining_time": self.countdown_timer
         }
 
     def calculate_blast_force(self, dist: float, obj: 'Asteroid') -> float:
