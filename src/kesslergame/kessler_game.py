@@ -45,7 +45,7 @@ class KesslerGame:
             settings = {}
         # Game settings
         self.frequency: float = settings.get("frequency", 30.0)
-        self.time_step: float = 1 / settings.get("frequency", 30.0)
+        self.time_step: float = 1.0 / settings.get("frequency", 30.0)
         self.perf_tracker: bool = settings.get("perf_tracker", True)
         self.prints_on: bool = settings.get("prints_on", True)
         self.graphics_type: GraphicsType = settings.get("graphics_type", GraphicsType.Tkinter)
@@ -56,12 +56,12 @@ class KesslerGame:
 
         # UI settings
         default_ui = {'ships': True, 'lives_remaining': True, 'accuracy': True,
-                      'asteroids_hit': True, 'bullets_remaining': True, 'controller_name': True}
+                      'asteroids_hit': True, 'bullets_remaining': True, 'controller_name': True, 'scale': 1.0}
         self.UI_settings = settings.get("UI_settings", default_ui)
         if self.UI_settings == 'all':
             self.UI_settings = {'ships': True, 'lives_remaining': True, 'accuracy': True,
                                 'asteroids_hit': True, 'shots_fired': True, 'bullets_remaining': True,
-                                'controller_name': True}
+                                'controller_name': True, 'scale': 1.0}
         
     def run(self, scenario: Scenario, controllers: List[KesslerController]) -> Tuple[Score, List[PerfDict]]:
         """
