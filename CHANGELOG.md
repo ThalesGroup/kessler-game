@@ -1,6 +1,6 @@
 # Changelog
 
-## [2.2.0] - 8 July 2025
+## [2.2.0] - 9 July 2025
 
 - Added better collision detection based on geometry of bullet over timesteps - now framerate independent
 - Fixed docstrings and error messages
@@ -8,6 +8,13 @@
 - Fixed bug with mine momentum direction given to asteroids
 - Added more information to `game_state` dictionary for agents to access.
 - Added more information to ship state and ownship state
+- Improved bullet culling by considering head and tail, and deferring it until after the collision check in each frame. This makes it easier to hit asteroids on the edge.
+- Switched from using immutabledict to recreating a fresh dict for each ship, to properly fix gamestate tampering issue 
+- Resolved respawn time tracking off-by-two. At 30 FPS, the respawn invincibility is now the correct 90 frames instead of 92 frames. 
+- Tkinter: Fixed ship sprite handling so multiple ships using the same sprite will render correctly 
+- Set DPI awareness to PROCESS_PER_MONITOR_DPI_AWARE on Windows for proper high-DPI support, without blurriness 
+- Changed ship shield color transition to fade gradually from red to blue over 3 seconds instead of just the final second 
+- Added a scale configuration value to UI_settings, now definable in the game settings. For 1440p, 1.5 is recommended. For 4K, 2.0 is recommended.
 
 ## [2.1.9] - 4 July 2024
 
