@@ -87,13 +87,10 @@ class GraphicsTK(KesslerGraphics):
         self.ship_sprites = [ImageTk.PhotoImage(img) for img in self.ship_images]
         self.ship_icons = [ImageTk.PhotoImage((Image.open(image)).resize((ship_radius, ship_radius))) for image in self.image_paths]
 
-        self.detoantion_time = 0.3
-        #self.detonation_timers = []
-
     def update(self, score: Score, ships: List[Ship], asteroids: List[Asteroid], bullets: List[Bullet], mines: List[Mine]) -> None:
-
         # Delete everything from canvas so we can re-plot
         self.game_canvas.delete("all")
+        self._per_frame_images = []  # Keep PhotoImage references for this frame, to prevent GC
 
         # Plot shields, bullets, ships, and asteroids
         self.plot_shields(ships)
@@ -204,12 +201,13 @@ class GraphicsTK(KesslerGraphics):
             if ship.alive:
                 # plot ship image and id text next to it
                 if ship.custom_sprite_path:
-                    sprite_idx = self.image_paths.index(os.path.join(self.img_dir,ship.custom_sprite_path))
+                    sprite_idx = self.image_paths.index(os.path.join(self.img_dir, ship.custom_sprite_path))
                 else:
-                    sprite_idx = idx
-                self.ship_sprites[sprite_idx] = ImageTk.PhotoImage(self.ship_images[sprite_idx].rotate(180 - (-ship.heading - 90)))
+                    sprite_idx = idx % self.num_images
+                rotated_ship_sprite = ImageTk.PhotoImage(self.ship_images[sprite_idx].rotate(180 - (-ship.heading - 90)))
+                self._per_frame_images.append(rotated_ship_sprite) # Storing a reference to this image will prevent Python from garbage collecting it
                 self.game_canvas.create_image(ship.position[0], self.game_height - ship.position[1],
-                                              image=self.ship_sprites[sprite_idx])
+                                              image=rotated_ship_sprite)
                 self.game_canvas.create_text(ship.position[0] + ship.radius,
                                              self.game_height - (ship.position[1] + ship.radius), text=str(ship.id),
                                              fill="white")
@@ -221,7 +219,8 @@ class GraphicsTK(KesslerGraphics):
         for ship in ships:
             if ship.alive:
                 # Color shield based on respawn time remaining
-                respawn_scaler = max(min(ship.respawn_time_left, 1), 0)
+                full_invincibility_duration = 3.0
+                respawn_scaler = max(min(ship.respawn_time_left / full_invincibility_duration, 1.0), 0.0)
                 r = int(120 + (respawn_scaler * (255 - 120)))
                 g = int(200 + (respawn_scaler * (0 - 200)))
                 b = int(255 + (respawn_scaler * (0 - 255)))
