@@ -4,6 +4,7 @@
 # this source code package.
 
 import os
+import sys
 from tkinter import Tk, Canvas, NW
 from PIL import Image, ImageTk  # type: ignore[import-untyped]
 
@@ -55,8 +56,14 @@ class GraphicsTK(KesslerGraphics):
         self.window_width = self.game_width + self.score_width
         ship_radius: int = int(scenario.ships()[0].radius * 2 - 5)
 
+        # Set DPI Aware before anything else
+        if sys.platform == "win32":
+            from ctypes import windll
+            windll.shcore.SetProcessDpiAwareness(1)
+
         # create and center main window
         self.window = Tk()
+        
         self.window.title('Kessler')
         screen_width = self.window.winfo_screenwidth()
         screen_height = self.window.winfo_screenheight()
@@ -121,7 +128,7 @@ class GraphicsTK(KesslerGraphics):
 
         # show simulation time
         time_text = "Time: " + f'{score.sim_time:.2f}' + " / " + str(self.max_time) + " sec"
-        self.game_canvas.create_text(10, 10, text=time_text, fill="white", font=("Courier New", 10), anchor=NW)
+        self.game_canvas.create_text(10, 10, text=time_text, fill="white", font=("Courier New", -13), anchor=NW)
 
         # index for loop: allows teams to be displayed in order regardless of team num skipping or strings for team name
         team_num = 0
@@ -166,7 +173,7 @@ class GraphicsTK(KesslerGraphics):
 
             # display of team information
             self.game_canvas.create_text(output_location_x, output_location_y,
-                                    text=score_board, fill="white", font=("Courier New", 10), anchor=NW, )
+                                    text=score_board, fill="white", font=("Courier New", -13), anchor=NW, )
             icon_idx = team.team_id-1
             for ship in ships:
                 if ship.custom_sprite_path and ship.team == team.team_id:
