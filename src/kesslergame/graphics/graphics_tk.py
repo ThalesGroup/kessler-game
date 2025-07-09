@@ -96,7 +96,7 @@ class GraphicsTK(KesslerGraphics):
     def update(self, score: Score, ships: List[Ship], asteroids: List[Asteroid], bullets: List[Bullet], mines: List[Mine]) -> None:
         # Delete everything from canvas so we can re-plot
         self.game_canvas.delete("all")
-        self._per_frame_images = []  # Keep PhotoImage references for this frame, to prevent GC
+        self._per_frame_images: List[ImageTk.PhotoImage] = []  # Keep PhotoImage references for this frame, to prevent GC
 
         # Plot shields, bullets, ships, and asteroids
         self.plot_shields(ships)
