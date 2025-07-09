@@ -131,11 +131,11 @@ class GraphicsTK(KesslerGraphics):
         )
 
         # show simulation time
-        font_size = -round(13 * self.scale)
+        time_font_size = -round(20 * self.scale)
         time_text = "Time: " + f'{score.sim_time:.2f}' + " / " + str(self.max_time) + " sec"
         self.game_canvas.create_text(
             round(10 * self.scale), round(10 * self.scale),
-            text=time_text, fill="white", font=("Courier New", font_size), anchor=NW
+            text=time_text, fill="white", font=("Courier New", time_font_size), anchor=NW
         )
 
         # index for loop: allows teams to be displayed in order regardless of team num skipping or strings for team name
@@ -155,7 +155,7 @@ class GraphicsTK(KesslerGraphics):
                         ships_text += ("Ship " + str(ship.id))
                         if self.show_controller_name:
                             assert ship.controller is not None
-                            ships_text += ": " + str(ship.controller.name)
+                            ships_text += ": " + '\n' + str(ship.controller.name)
                         ships_text += '\n'
 
             team_info = self.format_ui(team)
@@ -182,9 +182,10 @@ class GraphicsTK(KesslerGraphics):
                     max_lines = score_board.count("\n")
 
             # display of team information
+            team_font_size = -round(16 * self.scale)
             self.game_canvas.create_text(
                 output_location_x, output_location_y,
-                text=score_board, fill="white", font=("Courier New", font_size), anchor=NW
+                text=score_board, fill="white", font=("Courier New", team_font_size), anchor=NW
             )
             icon_idx = team.team_id-1
             for ship in ships:
@@ -219,6 +220,7 @@ class GraphicsTK(KesslerGraphics):
         """
         Plots each ship on the game screen using cached sprites and rotating them
         """
+        ship_id_font_size = -round(15 * self.scale)
         for idx, ship in enumerate(ships):
             if ship.alive:
                 # plot ship image and id text next to it
@@ -238,7 +240,7 @@ class GraphicsTK(KesslerGraphics):
                     self.game_height - ((ship.position[1] + ship.radius) * self.scale),
                     text=str(ship.id),
                     fill="white",
-                    font=("Courier New", -round(10 * self.scale))
+                    font=("Courier New", ship_id_font_size)
                 )
 
     def plot_shields(self, ships: List[Ship]) -> None:
