@@ -5,7 +5,7 @@
 
 import time
 
-from src.kesslergame import Scenario, KesslerGame, GraphicsType
+from kesslergame import Scenario, KesslerGame, GraphicsType
 from test_controller import TestController
 from graphics_both import GraphicsBoth
 
