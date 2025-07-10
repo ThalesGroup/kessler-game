@@ -15,9 +15,9 @@ from .controller import KesslerController
 
 class Ship:
     __slots__ = (
-        'controller', 'thrust', 'turn_rate', 'id', 'speed', 'position',
-        'velocity', 'heading', 'lives', 'deaths', 'team', 'team_name',
-        'fire', 'drop_mine', 'thrust_range', 'turn_rate_range', 'max_speed',
+        'controller', 'thrust', 'turn_thrust', 'id', 'speed', 'position',
+        'velocity', 'angular_velocity', 'heading', 'lives', 'deaths', 'team', 'team_name',
+        'fire', 'drop_mine', 'thrust_range', 'turn_thrust_range', 'max_speed', 'max_angular_speed',
         'drag', 'radius', 'mass', '_respawning', '_respawn_time', '_fire_limiter',
         '_fire_time', '_mine_limiter', '_mine_deploy_time', 'mines_remaining',
         'bullets_remaining', 'bullets_shot', 'mines_dropped', 'bullets_hit',
@@ -46,6 +46,7 @@ class Ship:
         self.speed: float = 0.0
         self.position: Tuple[float, float] = position
         self.velocity: Tuple[float, float] = (0.0, 0.0)
+        self.angular_velocity: float = 0.0
         self.heading: float = angle
         self.lives: int = lives
         self.deaths: int = 0
@@ -54,15 +55,16 @@ class Ship:
 
         # Controller inputs
         self.thrust: float = 0.0
-        self.turn_rate: float = 0.0
+        self.turn_thrust: float = 0.0
         self.fire: bool = False
         self.drop_mine: bool = False
 
         # Physical model constants/params
         self.thrust_range: Tuple[float, float] = (-480.0, 480.0)  # m/s^2
-        self.turn_rate_range: Tuple[float, float] = (-180.0, 180.0)  # Degrees per second
+        self.turn_thrust_range: Tuple[float, float] = (-180.0, 180.0)  # degrees/s^2
         self.max_speed: float = 240.0  # Meters per second
-        self.drag: float = 80.0  # m/s^2
+        self.max_angular_speed: float = 360.0 # degrees per second
+        self.drag: float = 0.0  # m/s^2
         self.radius: float = 20.0  # meters
         self.mass: float = 300.0  # kg - reasonable? max asteroid mass currently is ~490 kg
 
@@ -89,6 +91,7 @@ class Ship:
         return {
             "position": self.position,
             "velocity": self.velocity,
+            "angular_velocity": self.angular_velocity,
             "speed": self.speed,
             "heading": self.heading,
             "mass": self.mass,
@@ -114,8 +117,9 @@ class Ship:
                 "respawn_time_left": self.respawn_time_left,
                 "respawn_time": self.respawn_time,
                 "thrust_range": self.thrust_range,
-                "turn_rate_range": self.turn_rate_range,
+                "turn_thrust_range": self.turn_thrust_range,
                 "max_speed": self.max_speed,
+                "max_angular_speed": self.max_angular_speed,
                 "drag": self.drag,
         }
 
@@ -209,29 +213,39 @@ class Ship:
             warnings.warn('Ship ' + str(self.id) + ' thrust command outside of allowable range', RuntimeWarning)
 
         # Apply thrust
-        self.speed += self.thrust * delta_time
+        self.velocity = (
+            self.velocity[0] + self.thrust * delta_time * math.cos(math.radians(self.heading)),
+            self.velocity[1] + self.thrust * delta_time * math.sin(math.radians(self.heading))
+        )
 
-        # Bounds check the speed
+        # Calculate speed based on velocity
+        self.speed = math.hypot(self.velocity[0], self.velocity[1])
+
+        # Bounds check the speed and update velocity accordingly
         if self.speed > self.max_speed:
+            scale: float = self.max_speed / self.speed
+            self.velocity = (self.velocity[0]*scale, self.velocity[1]*scale)
             self.speed = self.max_speed
-        elif self.speed < -self.max_speed:
-            self.speed = -self.max_speed
 
-        # Bounds check the turn rate
-        if self.turn_rate < self.turn_rate_range[0] or self.turn_rate > self.turn_rate_range[1]:
-            self.turn_rate = min(max(self.turn_rate_range[0], self.turn_rate), self.turn_rate_range[1])
-            warnings.warn('Ship ' + str(self.id) + ' turn rate command outside of allowable range', RuntimeWarning)
+        # Bounds check the turn thrust
+        if self.turn_thrust < self.turn_thrust_range[0] or self.turn_thrust > self.turn_thrust_range[1]:
+            self.turn_thrust = min(max(self.turn_thrust_range[0], self.turn_thrust), self.turn_thrust_range[1])
+            warnings.warn('Ship ' + str(self.id) + ' turn thrust command outside of allowable range', RuntimeWarning)
 
-        # Update the angle based on turning rate
-        self.heading += self.turn_rate * delta_time
+        # Update the angular velocity based on turning thrust
+        self.angular_velocity += self.turn_thrust * delta_time
+
+        # Bounds check the angular velocity
+        if self.angular_velocity > self.max_angular_speed:
+            self.angular_velocity = self.max_angular_speed
+        elif self.angular_velocity < -self.max_angular_speed:
+            self.angular_velocity = -self.max_angular_speed
+
+        # Update the heading based on angular velocity
+        self.heading += self.angular_velocity
 
         # Keep the angle within (0, 360)
         self.heading %= 360.0
-
-        # Use speed magnitude to get velocity vector
-        rad_heading = math.radians(self.heading)
-        self.velocity = (math.cos(rad_heading) * self.speed,
-                         math.sin(rad_heading) * self.speed)
 
         # Update the position based off the velocities
         self.position = (self.position[0] + self.velocity[0] * delta_time, self.position[1] + self.velocity[1] * delta_time)
@@ -261,6 +275,7 @@ class Ship:
         # Set location and physical parameters
         self.position = position
         self.speed = 0.0
+        self.angular_velocity = 0.0
         self.velocity = (0.0, 0.0)
         self.heading = heading
 
