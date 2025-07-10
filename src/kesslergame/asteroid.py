@@ -140,18 +140,24 @@ class Asteroid:
             theta = math.degrees(math.atan2(vfy, vfx))
 
             if random_ast_split:
-                # Use a random angle offset
-                angle_offset = split_angle_bound * random.random()
+                # Use random angle offsets
+                angle_offset_1 = split_angle_bound * random.random()
+                angle_offset_2 = split_angle_bound * random.random()
+                # Create the angles list
+                angles = [
+                    theta + angle_offset_1,
+                    theta,
+                    theta - angle_offset_2
+                ]
             else:
                 # Use a fixed half-angle offset
                 angle_offset = split_angle_bound / 2.0
-
-            # Create the angles list
-            angles = [
-                theta + angle_offset,
-                theta,
-                theta - angle_offset
-            ]
+                # Create the angles list
+                angles = [
+                    theta + angle_offset,
+                    theta,
+                    theta - angle_offset
+                ]
 
             return [Asteroid(position=self.position, size=self.size - 1, speed=v, angle=angle) for angle in angles]
 
