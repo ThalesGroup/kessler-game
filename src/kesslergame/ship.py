@@ -272,14 +272,14 @@ class Ship:
         # If we are in the middle of respawning, this is non-zero.
         self._respawning = self._respawn_time
 
-        # Set location and physical parameters
+        # Set location and physical parameters # TODO: realistic physics for respawn - change nothing? check interactions on collision with objects
         self.position = position
         self.speed = 0.0
         self.angular_velocity = 0.0
         self.velocity = (0.0, 0.0)
         self.heading = heading
 
-    def deploy_mine(self) -> Mine | None:
+    def deploy_mine(self) -> Mine | None: # TODO: decrease ship mass by 1x mine mass?
         # if self.mines_remaining != 0 and not self._mine_limiter:
         if self.can_deploy_mine:
 
@@ -290,9 +290,7 @@ class Ship:
             if self.mines_remaining > 0:
                 self.mines_remaining -= 1
             self.mines_dropped += 1
-            mine_x = self.position[0]
-            mine_y = self.position[1]
-            return Mine((mine_x, mine_y), owner=self)
+            return Mine(self.position, self.velocity, owner=self)
         else:
             return None
 
