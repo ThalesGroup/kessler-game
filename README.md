@@ -27,6 +27,8 @@ PyPi, but is a wheel that can be installed using:
 pip install <path to KesslerGame-#.#.#-cp310-cp310-win_amd64.whl>
 ```
 
+You may also compile your own .whl files, by running `python setup_mypyc.py bdist_wheel`. This works if you have an appropriate version of Python, MyPy, and a compiler like MSVC installed. The wheel file will appear in the `dist` subfolder if all is successful.
+
 Kessler has two primary graphics modules. The first uses Python's Tkinter UI library to display the game. The second
 utilizes a separate executable process called kessler_graphics made in Unreal Engine 5. Data is sent to the
 kessler_graphics instance using UDP protocol on a local machine.

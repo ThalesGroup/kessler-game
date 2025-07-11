@@ -39,7 +39,7 @@ class Ship:
         self.controller: Optional[KesslerController] = None
 
         # Ship custom graphics
-        self.custom_sprite_path = None
+        self.custom_sprite_path: Optional[str] = None
 
         # State info
         self.id: int = ship_id
