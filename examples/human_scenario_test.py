@@ -5,8 +5,8 @@
 
 import time
 
-from kesslergame import Scenario, KesslerGame, GraphicsType
-from kesslergame.controller_gamepad import GamepadController
+from src.kesslergame import Scenario, KesslerGame, GraphicsType
+from src.kesslergame.controller_gamepad import GamepadController
 from test_controller import TestController
 from graphics_both import GraphicsBoth
 

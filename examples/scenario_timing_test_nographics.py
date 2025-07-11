@@ -7,7 +7,7 @@ import time
 import numpy as np
 import sys
 
-from kesslergame import Scenario, KesslerGame, GraphicsType
+from src.kesslergame import Scenario, KesslerGame, GraphicsType
 from test_controller import TestController
 from graphics_both import GraphicsBoth
 

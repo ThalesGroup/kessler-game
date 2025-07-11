@@ -1,7 +1,7 @@
 
-from kesslergame import KesslerGraphics
-from kesslergame.graphics.graphics_tk import GraphicsTK
-from kesslergame.graphics.graphics_ue import GraphicsUE
+from src.kesslergame import KesslerGraphics
+from src.kesslergame.graphics.graphics_tk import GraphicsTK
+from src.kesslergame.graphics.graphics_ue import GraphicsUE
 
 class GraphicsBoth(KesslerGraphics):
     def __init__(self):
