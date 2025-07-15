@@ -25,7 +25,7 @@ jobs:
         run: python -m pip install --upgrade pip cibuildwheel twine
 
       - name: Build wheels
-        env:
+        #env:
           # If using a custom build, you can set these:
           # CIBW_BEFORE_BUILD: "pip install mypy"
           # CIBW_BUILD: "cp310-*"
