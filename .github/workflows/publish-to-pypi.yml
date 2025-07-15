@@ -19,7 +19,7 @@ jobs:
       - name: Set up Python
         uses: actions/setup-python@v4
         with:
-          python-version: '3.11'
+          python-version: '3.11' # This is not the target version (3.10). This is the Python version cibuildwheel runs on, which needs to be at least 3.11 for the latest version
 
       - name: Install dependencies
         run: python -m pip install --upgrade pip cibuildwheel build twine
