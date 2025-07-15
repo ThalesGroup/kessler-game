@@ -5,7 +5,7 @@
 
 import time
 
-from typing import Dict, Any, List, Tuple, TypedDict, Optional
+from typing import Any, TypedDict, Optional
 from enum import Enum
 
 from .scenario import Scenario
@@ -29,18 +29,16 @@ class StopReason(Enum):
 
 
 class PerfDict(TypedDict, total=False):
-    controller_times: List[float]
+    controller_times: list[float]
     total_controller_time: float
     physics_update: float
     collisions_check: float
     score_update: float
     graphics_draw: float
     total_frame_time: float
-    
 
 class KesslerGame:
-    def __init__(self, settings: Optional[Dict[str, Any]] = None) -> None:
-
+    def __init__(self, settings: Optional[dict[str, Any]] = None) -> None:
         if settings is None:
             settings = {}
         # Game settings
@@ -63,7 +61,7 @@ class KesslerGame:
                                 'asteroids_hit': True, 'shots_fired': True, 'bullets_remaining': True,
                                 'controller_name': True, 'scale': 1.0}
         
-    def run(self, scenario: Scenario, controllers: List[KesslerController]) -> Tuple[Score, List[PerfDict]]:
+    def run(self, scenario: Scenario, controllers: list[KesslerController]) -> tuple[Score, list[PerfDict]]:
         """
         Run an entire scenario from start to finish and return score and stop reason
         """
@@ -72,10 +70,10 @@ class KesslerGame:
         # INITIALIZATION #
         ##################
         # Initialize objects lists from scenario
-        asteroids: List[Asteroid] = scenario.asteroids()
-        ships: List[Ship] = scenario.ships()
-        bullets: List[Bullet] = []
-        mines: List[Mine] = []
+        asteroids: list[Asteroid] = scenario.asteroids()
+        ships: list[Ship] = scenario.ships()
+        bullets: list[Bullet] = []
+        mines: list[Mine] = []
 
         # Initialize Scoring class
         score = Score(scenario)
@@ -97,19 +95,18 @@ class KesslerGame:
         graphics = GraphicsHandler(type=self.graphics_type, scenario=scenario, UI_settings=self.UI_settings, graphics_obj=self.graphics_obj)
 
         # Initialize list of dictionary for performance tracking (will remain empty if perf_tracker is false
-        perf_list: List[PerfDict] = []
+        perf_list: list[PerfDict] = []
 
         ######################
         # MAIN SCENARIO LOOP #
         ######################
 
         # Conceptually these following collections should just be sets, but lists can be faster if there's very few elements
-        bullet_remove_idxs: List[int] = []
+        bullet_remove_idxs: list[int] = []
         #asteroid_remove_idxs: set[int] = set()
-        mine_remove_idxs: List[int] = []
-        new_asteroids: List[Asteroid] = []
+        mine_remove_idxs: list[int] = []
+        new_asteroids: list[Asteroid] = []
         while stop_reason == StopReason.not_stopped:
-
             # Get perf time at the start of time step evaluation and initialize performance tracker
             step_start = time.perf_counter()
             perf_dict: PerfDict = {}
@@ -128,7 +125,7 @@ class KesslerGame:
                 if ship.alive:
                     # Generate game_state info to send to controller
                     # It is important we regenerate this for each controller, so they do not tamper it for the next controller
-                    game_state: Dict[str, Any] = {
+                    game_state: dict[str, Any] = {
                         'asteroids': [asteroid.state for asteroid in asteroids],
                         'ships': [ship.state for ship in liveships],
                         'bullets': [bullet.state for bullet in bullets],
@@ -194,8 +191,8 @@ class KesslerGame:
             # --- Check asteroid-bullet collisions ---
             for idx_bul, bullet in enumerate(bullets):
                 i = 0
-                original_len = len(asteroids)
-                while i < original_len:
+                num_asts = len(asteroids)
+                while i < num_asts:
                     asteroid = asteroids[i]
                     # If collision occurs
                     if circle_line_collision_continuous(
@@ -209,12 +206,12 @@ class KesslerGame:
                         bullet_remove_idxs.append(idx_bul)
                         # Asteroid destruct function and immediate removal
                         new_asteroids.extend(asteroid.destruct(impactor=bullet, random_ast_split=self.random_ast_splits))
-                        # Swap and pop
+                        # Swap and pop, O(1) removal of asteroid
                         last_idx = len(asteroids) - 1
                         if i != last_idx:
                             asteroids[i] = asteroids[last_idx]
                         asteroids.pop()
-                        original_len -= 1  # Since the overall length has decreased
+                        num_asts -= 1  # Since the overall length has decreased
                         # Stop checking this bullet
                         break
                     else:
@@ -224,19 +221,20 @@ class KesslerGame:
                 if not ((0.0 <= bullet.position[0] <= scenario.map_size[0] and 0.0 <= bullet.position[1] <= scenario.map_size[1])
                         or (0.0 <= bullet.tail[0] <= scenario.map_size[0] and 0.0 <= bullet.tail[1] <= scenario.map_size[1])):
                     bullet_remove_idxs.append(idx_bul)
-            if new_asteroids:
-                asteroids.extend(new_asteroids)
-                new_asteroids.clear()
             # Cull bullets that are marked for removal
             if bullet_remove_idxs:
                 bullets = [bullet for idx, bullet in enumerate(bullets) if idx not in bullet_remove_idxs]
                 bullet_remove_idxs.clear()
+            # Add the new asteroids from the bullet-asteroid collisions
+            if new_asteroids:
+                asteroids.extend(new_asteroids)
+                new_asteroids.clear()
             # --- Check mine-asteroid and mine-ship effects ---
             for idx_mine, mine in enumerate(mines):
                 if mine.detonating:
                     i = 0
-                    original_len = len(asteroids)
-                    while i < original_len:
+                    num_asts = len(asteroids)
+                    while i < num_asts:
                         asteroid = asteroids[i]
                         dx = asteroid.position[0] - mine.position[0]
                         dy = asteroid.position[1] - mine.position[1]
@@ -249,7 +247,7 @@ class KesslerGame:
                             if i != last_idx:
                                 asteroids[i] = asteroids[last_idx]
                             asteroids.pop()
-                            original_len -= 1
+                            num_asts -= 1
                             # Don't advance i, must check the swapped-in asteroid
                         else:
                             i += 1
@@ -267,6 +265,7 @@ class KesslerGame:
             if mine_remove_idxs:
                 mines = [mine for idx, mine in enumerate(mines) if idx not in mine_remove_idxs]
                 mine_remove_idxs.clear()
+            # Add new asteroids from mine-asteroid collisions
             if new_asteroids:
                 asteroids.extend(new_asteroids)
                 new_asteroids.clear()
@@ -274,8 +273,8 @@ class KesslerGame:
             for ship in liveships:
                 if not ship.is_respawning:
                     i = 0
-                    original_len = len(asteroids)
-                    while i < original_len:
+                    num_asts = len(asteroids)
+                    while i < num_asts:
                         asteroid = asteroids[i]
                         dx = ship.position[0] - asteroid.position[0]
                         dy = ship.position[1] - asteroid.position[1]
@@ -288,7 +287,7 @@ class KesslerGame:
                             if i != last_idx:
                                 asteroids[i] = asteroids[last_idx]
                             asteroids.pop()
-                            original_len -= 1
+                            num_asts -= 1
                             # Ship destruct function. Add one to asteroids_hit
                             ship.asteroids_hit += 1
                             ship.destruct(map_size=scenario.map_size)
@@ -298,6 +297,7 @@ class KesslerGame:
                             i += 1
             # Cull ships if not alive
             liveships = [ship for ship in liveships if ship.alive]
+            # Add new asteroids from ship-asteroid collisions
             if new_asteroids:
                 asteroids.extend(new_asteroids)
                 new_asteroids.clear()
@@ -344,23 +344,23 @@ class KesslerGame:
             sim_time += self.time_step
             step += 1
 
-            # No asteroids remain
             if not asteroids:
+                # No asteroids remain
                 stop_reason = StopReason.no_asteroids
-            # No ships are alive and no mines exist and no bullets exist
-            # Prevents unfairness where ship that dies before another gets score from its bullets as long as the other
-            # is alive but the one that lives longer doesn't get the same benefit from its bullets/mines persisting
-            # after it dies
             elif not liveships and not (len(mines) > 0 or len(bullets) > 0):
+                # No ships are alive and no mines exist and no bullets exist
+                # Prevents unfairness where ship that dies before another gets score from its bullets as long as the other
+                # is alive but the one that lives longer doesn't get the same benefit from its bullets/mines persisting
+                # after it dies
                 stop_reason = StopReason.no_ships
-            # All live ships are out of bullets and no bullets are on map
             elif not sum([ship.bullets_remaining for ship in liveships]) > 0 \
                     and not sum([ship.mines_remaining for ship in liveships])\
                     and not (len(bullets) > 0 or len(mines) > 0) \
                     and scenario.stop_if_no_ammo:
+                # All live ships are out of bullets and no bullets are on map
                 stop_reason = StopReason.out_of_bullets
-            # Out of time
             elif sim_time > time_limit:
+                # Out of time
                 stop_reason = StopReason.time_expired
 
             # --- FINISHING TIME STEP ----------------------------------------------------------------------------------
@@ -372,7 +372,7 @@ class KesslerGame:
             # Hold simulation so that it runs at realtime ratio if specified, else let it pass
             if self.realtime_multiplier != 0:
                 time_dif = time.perf_counter() - step_start
-                while time_dif < (self.time_step/self.realtime_multiplier):
+                while time_dif < (self.time_step / self.realtime_multiplier):
                     time_dif = time.perf_counter() - step_start
 
         ############################################
@@ -390,7 +390,7 @@ class KesslerGame:
 
 
 class TrainerEnvironment(KesslerGame):
-    def __init__(self, settings: Optional[Dict[str, Any]] = None) -> None:
+    def __init__(self, settings: Optional[dict[str, Any]] = None) -> None:
         """
         Instantiates a KesslerGame object with settings to optimize training time
         """
