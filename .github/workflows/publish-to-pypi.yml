@@ -30,7 +30,7 @@ jobs:
       - name: Build compiled wheels with MyPyC
         env:
           CIBW_BEFORE_ALL: "copy setup_mypyc.py setup.py"
-          CIBW_SKIP: pypy*  # Disable PyPy builds explicitly since we don't need them
+          CIBW_SKIP: pp*  # Disable PyPy builds explicitly since we don't need them
         run: cibuildwheel --output-dir wheelhouse
 
       - name: Build sdist (compiled)
