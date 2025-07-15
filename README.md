@@ -3,31 +3,38 @@
 ## Getting started
 
 Kessler is a simulation environment loosely modeled after our internal project PsiBee and the external project [Fuzzy Asteroids](https://github.com/xfuzzycomp/FuzzyAsteroids).
-The game has ships that shoot bullets at asteroids to gain score. Ships can collide with asteroids and lose lives.
-If the ship runs out of lives, the game terminates. In multi-ship scenarios, ships can collide with each other as well, 
-but cannot shoot each other.
+The game features ships that can shoot bullets, or drop mines to destroy asteroids and gain score.
+Ships can also be destroyed by colliding with asteroids or getting caught in mine explosions, causing them to lose lives. When a ship runs out of lives, the game ends.
+In multi-ship scenarios, they can't shoot one another, but they can drop mines or crash into the other ship to take each other's lives.
 
-Kessler can be built as python extension for install using pip, or used as a local package by copying the
-`src/kessler_game` directory to your project. Kessler is available on PyPI and can be installed using:
-``` 
+This game is used for the [Explainable Fuzzy Competition](https://xfuzzycomp.github.io/XFC/)
+
+Kessler can be used as a local Python package by copying the `src/kessler_game` directory into your project, or installed as a Python extension via `pip`.
+It is available on PyPI and can be installed with:
+```
 pip install KesslerGame
 ```
-Pure Python wheels are provided on PyPI at 
-[KesslerGame](https://pypi.org/project/KesslerGame/#files) for manual install using:
+
+Both **pure Python** wheels (e.g. KesslerGame-1.2.3-py3-none-any.whl) and **compiled** wheels built with [mypyc](https://mypyc.readthedocs.io/en/latest/) (e.g. KesslerGame-1.2.3-cp310-cp310-win_amd64.whl) are provided on [PyPI](https://pypi.org/project/KesslerGame/#files) and on the [GitHub releases page](https://github.com/ThalesGroup/kessler-game/releases).
+
+`pip install` will automatically select the compiled version if it is compatible with your system. You can also install a wheel manually by downloading the wheel file and running:
 ``` 
-pip install <path to kessler_game-#.#.#-py3-none-any.whl>
+pip install <path to wheel file>
 ```
 
-Kessler also has a compiled version using mypyc that currently is only available on 
-[releases](https://github.com/ThalesGroup/kessler-game/releases) for that version. This compiled version is faster 
-than the pure Python version and is better for use for machine/reinforcement learning.  This version is not available on
-PyPi, but is a wheel that can be installed using:
+The compiled version can be 4X+ faster than the pure Python version and can simulate the game at 1000X+ real-time speed. It is especially recommended for performance-sensitive use cases, such as reinforcement learning. All releases (on PyPI and GitHub) now include:
+
+* Pure Python wheels
+* Compiled wheels (for supported platforms)
+* Source distributions
+
+If you prefer, you can compile your own `.whl` file using:
 
 ``` 
-pip install <path to KesslerGame-#.#.#-cp310-cp310-win_amd64.whl>
+python setup_mypyc.py bdist_wheel
 ```
 
-You may also compile your own .whl files, by running `python setup_mypyc.py bdist_wheel`. This works if you have an appropriate version of Python, MyPy, and a compiler like MSVC installed. The wheel file will appear in the `dist` subfolder if all is successful.
+This requires a compatible Python version, `mypyc`, and a compatible C compiler (e.g., MSVC on Windows). If successful, the generated wheel will be located in the `dist/` directory.
 
 Kessler has two primary graphics modules. The first uses Python's Tkinter UI library to display the game. The second
 utilizes a separate executable process called kessler_graphics made in Unreal Engine 5. Data is sent to the
@@ -43,6 +50,7 @@ displaying it in a 3d environment. To contribute to the UE5 project, you will ne
 - Follow installation instructions for UDP-Unreal from its included README
 - Right click `kessler_graphics.uproject` under the `kessler_graphics` directory and select "Generate Visual Studio Project Files" from the context menu
 - Launch the project by double-clicking on `kessler_graphics.uproject`, and select "Yes" if prompted to rebuild engine modules
+NOTE: UE5 graphics currently do not support the display of mines, and it also has other bugs. It is not currently recommended to be used.
 
 ## Documentation
 
