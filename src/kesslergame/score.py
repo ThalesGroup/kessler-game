@@ -8,7 +8,6 @@ from typing import Optional, TYPE_CHECKING
 import numpy as np
 
 from .ship import Ship
-from .asteroid import Asteroid
 from .scenario import Scenario
 from .team import Team
 if TYPE_CHECKING:
