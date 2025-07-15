@@ -33,11 +33,11 @@ jobs:
           CIBW_SKIP: pp*  # Disable PyPy builds explicitly since we don't need them
         run: cibuildwheel --output-dir wheelhouse
 
-      - name: Build sdist (compiled)
-        run: python setup.py sdist --dist-dir wheelhouse
-
       - name: Restore original setup.py
         run: copy /Y setup_original.py setup.py
+
+      - name: Build sdist
+        run: python setup.py sdist --dist-dir wheelhouse
 
       - name: Build pure Python wheel
         run: python -m build --wheel --outdir wheelhouse
