@@ -3,7 +3,7 @@
 # NOTICE: This file is subject to the license agreement defined in file 'LICENSE', which is part of
 # this source code package.
 
-from typing import Any, Optional, TYPE_CHECKING
+from typing import Any, Optional, TYPE_CHECKING, Union
 import random
 import math
 
@@ -86,7 +86,7 @@ class Asteroid:
         self.position = (self.position[0] + self.velocity[0] * delta_time, self.position[1] + self.velocity[1] * delta_time)
         self.angle += delta_time * self.turnrate
 
-    def destruct(self, impactor: 'Bullet' | 'Mine' | 'Ship', random_ast_split: bool) -> list['Asteroid']:
+    def destruct(self, impactor: Union['Bullet', 'Mine', 'Ship'], random_ast_split: bool) -> list['Asteroid']:
         """ Spawn child asteroids"""
 
         # Split angle is the angle off of the new velocity vector for the two asteroids to the sides, the center child

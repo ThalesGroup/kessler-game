@@ -103,7 +103,6 @@ class KesslerGame:
 
         # Conceptually these following collections should just be sets, but lists can be faster if there's very few elements
         bullet_remove_idxs: list[int] = []
-        #asteroid_remove_idxs: set[int] = set()
         mine_remove_idxs: list[int] = []
         new_asteroids: list[Asteroid] = []
         while stop_reason == StopReason.not_stopped:
@@ -189,11 +188,17 @@ class KesslerGame:
             # --- CHECK FOR COLLISIONS ---------------------------------------------------------------------------------
 
             # --- Check asteroid-bullet collisions ---
-            for idx_bul, bullet in enumerate(bullets):
-                i = 0
+            #for bul_idx, bullet in enumerate(bullets):
+            bul_idx = 0
+            num_buls = len(bullets)
+            remove_bullet: bool = False
+            while bul_idx < num_buls:
+                remove_bullet = False
+                bullet = bullets[bul_idx]
+                ast_idx = 0
                 num_asts = len(asteroids)
-                while i < num_asts:
-                    asteroid = asteroids[i]
+                while ast_idx < num_asts:
+                    asteroid = asteroids[ast_idx]
                     # If collision occurs
                     if circle_line_collision_continuous(
                         bullet.position, bullet.tail, bullet.velocity,
@@ -203,28 +208,37 @@ class KesslerGame:
                         bullet.owner.asteroids_hit += 1
                         bullet.owner.bullets_hit += 1
                         bullet.destruct()
-                        bullet_remove_idxs.append(idx_bul)
+                        remove_bullet = True
                         # Asteroid destruct function and immediate removal
                         new_asteroids.extend(asteroid.destruct(impactor=bullet, random_ast_split=self.random_ast_splits))
                         # Swap and pop, O(1) removal of asteroid
                         last_idx = len(asteroids) - 1
-                        if i != last_idx:
-                            asteroids[i] = asteroids[last_idx]
+                        if ast_idx != last_idx:
+                            asteroids[ast_idx] = asteroids[last_idx]
                         asteroids.pop()
                         num_asts -= 1  # Since the overall length has decreased
                         # Stop checking this bullet
                         break
                     else:
-                        i += 1
+                        ast_idx += 1
                 # Cull any bullets past the map edge
                 # It is important we do this after the asteroid-bullet collision checks occur, in the case of bullets leaving the map but might hit an asteroid on the edge
                 if not ((0.0 <= bullet.position[0] <= scenario.map_size[0] and 0.0 <= bullet.position[1] <= scenario.map_size[1])
                         or (0.0 <= bullet.tail[0] <= scenario.map_size[0] and 0.0 <= bullet.tail[1] <= scenario.map_size[1])):
-                    bullet_remove_idxs.append(idx_bul)
+                    remove_bullet = True
+                if remove_bullet:
+                    last_idx = len(bullets) - 1
+                    if bul_idx != last_idx:
+                        bullets[bul_idx] = bullets[last_idx]
+                    bullets.pop()
+                    num_buls -= 1
+                else:
+                    bul_idx += 1
+
             # Cull bullets that are marked for removal
-            if bullet_remove_idxs:
-                bullets = [bullet for idx, bullet in enumerate(bullets) if idx not in bullet_remove_idxs]
-                bullet_remove_idxs.clear()
+            #if bullet_remove_idxs:
+            #    bullets = [bullet for idx, bullet in enumerate(bullets) if idx not in bullet_remove_idxs]
+            #    bullet_remove_idxs.clear()
             # Add the new asteroids from the bullet-asteroid collisions
             if new_asteroids:
                 asteroids.extend(new_asteroids)
