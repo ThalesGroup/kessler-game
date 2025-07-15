@@ -105,7 +105,7 @@ class KesslerGame:
 
         # Conceptually these following collections should just be sets, but lists can be faster if there's very few elements
         bullet_remove_idxs: List[int] = []
-        asteroid_remove_idxs: set[int] = set()
+        #asteroid_remove_idxs: set[int] = set()
         mine_remove_idxs: List[int] = []
         new_asteroids: List[Asteroid] = []
         while stop_reason == StopReason.not_stopped:
@@ -191,40 +191,53 @@ class KesslerGame:
 
             # --- CHECK FOR COLLISIONS ---------------------------------------------------------------------------------
 
-
             # --- Check asteroid-bullet collisions ---
             for idx_bul, bullet in enumerate(bullets):
-                for idx_ast, asteroid in enumerate(asteroids):
-                    if idx_ast in asteroid_remove_idxs:
-                        continue
+                i = 0
+                original_len = len(asteroids)
+                while i < original_len:
+                    asteroid = asteroids[i]
                     # If collision occurs
-                    if circle_line_collision_continuous(bullet.position, bullet.tail, bullet.velocity, asteroid.position, asteroid.velocity, asteroid.radius, self.time_step):
+                    if circle_line_collision_continuous(
+                        bullet.position, bullet.tail, bullet.velocity,
+                        asteroid.position, asteroid.velocity, asteroid.radius, self.time_step
+                    ):
                         # Increment hit values on ship that fired bullet then destruct bullet and mark for removal
                         bullet.owner.asteroids_hit += 1
                         bullet.owner.bullets_hit += 1
                         bullet.destruct()
                         bullet_remove_idxs.append(idx_bul)
-                        # Asteroid destruct function and mark for removal
-                        asteroids.extend(asteroid.destruct(impactor=bullet, random_ast_split=self.random_ast_splits))
-                        asteroid_remove_idxs.add(idx_ast)
+                        # Asteroid destruct function and immediate removal
+                        new_asteroids.extend(asteroid.destruct(impactor=bullet, random_ast_split=self.random_ast_splits))
+                        # Swap and pop
+                        last_idx = len(asteroids) - 1
+                        if i != last_idx:
+                            asteroids[i] = asteroids[last_idx]
+                        asteroids.pop()
+                        original_len -= 1  # Since the overall length has decreased
                         # Stop checking this bullet
                         break
+                    else:
+                        i += 1
                 # Cull any bullets past the map edge
                 # It is important we do this after the asteroid-bullet collision checks occur, in the case of bullets leaving the map but might hit an asteroid on the edge
                 if not ((0.0 <= bullet.position[0] <= scenario.map_size[0] and 0.0 <= bullet.position[1] <= scenario.map_size[1])
                         or (0.0 <= bullet.tail[0] <= scenario.map_size[0] and 0.0 <= bullet.tail[1] <= scenario.map_size[1])):
                     bullet_remove_idxs.append(idx_bul)
-            # Cull bullets and asteroids that are marked for removal
+            if new_asteroids:
+                asteroids.extend(new_asteroids)
+                new_asteroids.clear()
+            # Cull bullets that are marked for removal
             if bullet_remove_idxs:
                 bullets = [bullet for idx, bullet in enumerate(bullets) if idx not in bullet_remove_idxs]
                 bullet_remove_idxs.clear()
-
             # --- Check mine-asteroid and mine-ship effects ---
             for idx_mine, mine in enumerate(mines):
                 if mine.detonating:
-                    for idx_ast, asteroid in enumerate(asteroids):
-                        if idx_ast in asteroid_remove_idxs:
-                            continue
+                    i = 0
+                    original_len = len(asteroids)
+                    while i < original_len:
+                        asteroid = asteroids[i]
                         dx = asteroid.position[0] - mine.position[0]
                         dy = asteroid.position[1] - mine.position[1]
                         radius_sum = mine.blast_radius + asteroid.radius
@@ -232,7 +245,14 @@ class KesslerGame:
                             mine.owner.asteroids_hit += 1
                             mine.owner.mines_hit += 1
                             new_asteroids.extend(asteroid.destruct(impactor=mine, random_ast_split=self.random_ast_splits))
-                            asteroid_remove_idxs.add(idx_ast)
+                            last_idx = len(asteroids) - 1
+                            if i != last_idx:
+                                asteroids[i] = asteroids[last_idx]
+                            asteroids.pop()
+                            original_len -= 1
+                            # Don't advance i, must check the swapped-in asteroid
+                        else:
+                            i += 1
                     for ship in liveships:
                         if not ship.is_respawning:
                             dx = ship.position[0] - mine.position[0]
@@ -250,33 +270,37 @@ class KesslerGame:
             if new_asteroids:
                 asteroids.extend(new_asteroids)
                 new_asteroids.clear()
-
-
             # --- Check asteroid-ship collisions ---
             for ship in liveships:
                 if not ship.is_respawning:
-                    for idx_ast, asteroid in enumerate(asteroids):
-                        if idx_ast in asteroid_remove_idxs:
-                            continue
+                    i = 0
+                    original_len = len(asteroids)
+                    while i < original_len:
+                        asteroid = asteroids[i]
                         dx = ship.position[0] - asteroid.position[0]
                         dy = ship.position[1] - asteroid.position[1]
                         radius_sum = ship.radius + asteroid.radius
                         # Most of the time no collision occurs, so use early exit to optimize collision check
                         if abs(dx) <= radius_sum and abs(dy) <= radius_sum and dx * dx + dy * dy <= radius_sum * radius_sum:
-                            # Asteroid destruct function and mark for removal
-                            asteroids.extend(asteroid.destruct(impactor=ship, random_ast_split=self.random_ast_splits))
-                            asteroid_remove_idxs.add(idx_ast)
+                            # Asteroid destruct function and immediate removal
+                            new_asteroids.extend(asteroid.destruct(impactor=ship, random_ast_split=self.random_ast_splits))
+                            last_idx = len(asteroids) - 1
+                            if i != last_idx:
+                                asteroids[i] = asteroids[last_idx]
+                            asteroids.pop()
+                            original_len -= 1
                             # Ship destruct function. Add one to asteroids_hit
                             ship.asteroids_hit += 1
                             ship.destruct(map_size=scenario.map_size)
                             # Stop checking this ship's collisions
                             break
-            # Cull ships if not alive and asteroids that are marked for removal
+                        else:
+                            i += 1
+            # Cull ships if not alive
             liveships = [ship for ship in liveships if ship.alive]
-            if asteroid_remove_idxs:
-                asteroids = [asteroid for idx, asteroid in enumerate(asteroids) if idx not in asteroid_remove_idxs]
-                asteroid_remove_idxs.clear()
-
+            if new_asteroids:
+                asteroids.extend(new_asteroids)
+                new_asteroids.clear()
             # --- Check ship-ship collisions ---
             for i, ship1 in enumerate(liveships):
                 for ship2 in liveships[i + 1:]:
