@@ -25,7 +25,7 @@ jobs:
         run: python -m pip install --upgrade pip cibuildwheel build twine
 
       - name: Backup original setup.py
-        run: copy setup.py setup_original.py
+        run: python -c "import shutil; shutil.copyfile('setup.py', 'setup_original.py')"
 
       - name: Build compiled wheels with MyPyC
         env:
@@ -34,7 +34,7 @@ jobs:
         run: cibuildwheel --output-dir wheelhouse
 
       - name: Restore original setup.py
-        run: copy /Y setup_original.py setup.py
+        run: python -c "import shutil; shutil.copyfile('setup_original.py', 'setup.py')"
 
       - name: Build sdist
         run: python setup.py sdist --dist-dir wheelhouse
