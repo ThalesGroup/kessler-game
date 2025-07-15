@@ -10,16 +10,15 @@ jobs:
     runs-on: ${{ matrix.os }}
     strategy:
       matrix:
-        # os: [ubuntu-latest, windows-latest, macos-latest]
-        os: [windows-latest]
+        os: [windows-latest]  # Add more platforms if needed: ubuntu-latest, macos-latest
 
     steps:
       - uses: actions/checkout@v3
 
-      - name: Set up Python
+      - name: Set up Python (for cibuildwheel host)
         uses: actions/setup-python@v4
         with:
-          python-version: '3.11' # This is not the target version (3.10). This is the Python version cibuildwheel runs on, which needs to be at least 3.11 for the latest version
+          python-version: '3.11'  # This is not the target version (3.10), just the version cibuildwheel runs on
 
       - name: Install dependencies
         run: python -m pip install --upgrade pip cibuildwheel build twine
@@ -29,15 +28,15 @@ jobs:
 
       - name: Build compiled wheels with MyPyC
         env:
-          CIBW_BEFORE_ALL: "copy setup_mypyc.py setup.py"
-#          CIBW_SKIP: pp*  # Disable PyPy builds explicitly since we don't need them
+          CIBW_BEFORE_ALL: python -c "import shutil; shutil.copyfile('setup_mypyc.py', 'setup.py')"
+#          CIBW_SKIP: "pp*"  # Explicitly skip PyPy builds
         run: cibuildwheel --output-dir wheelhouse
 
       - name: Restore original setup.py
         run: python -c "import shutil; shutil.copyfile('setup_original.py', 'setup.py')"
 
-      - name: Build sdist
-        run: python setup.py sdist --dist-dir wheelhouse
+      - name: Build sdist (PEP 625 compliant)
+        run: python -m build --sdist --outdir wheelhouse
 
       - name: Build pure Python wheel
         run: python -m build --wheel --outdir wheelhouse
@@ -46,9 +45,7 @@ jobs:
         env:
           TWINE_USERNAME: ${{ secrets.TEST_PYPI_USERNAME }}
           TWINE_PASSWORD: ${{ secrets.TEST_PYPI_PASSWORD }}
-        run: |
-          python -m pip install twine
-          twine upload --repository-url https://test.pypi.org/legacy/ --skip-existing wheelhouse/*
+        run: twine upload --repository-url https://test.pypi.org/legacy/ --skip-existing wheelhouse/*
 
       - name: Upload wheels to GitHub Release
         uses: softprops/action-gh-release@v1
