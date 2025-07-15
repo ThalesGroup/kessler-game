@@ -3,7 +3,7 @@
 # NOTICE: This file is subject to the license agreement defined in file 'LICENSE', which is part of
 # this source code package.
 
-from typing import Tuple, Dict, List, Any, Optional, TYPE_CHECKING, Union
+from typing import Any, Optional, TYPE_CHECKING
 import random
 import math
 
@@ -16,7 +16,7 @@ class Asteroid:
     """ Sprite that represents an asteroid. """
     __slots__ = ('size', 'max_speed', 'num_children', 'radius', 'mass', 'vx', 'vy', 'velocity', 'position', 'angle', 'turnrate')
     def __init__(self,
-                 position: Tuple[float, float],
+                 position: tuple[float, float],
                  speed: Optional[float] = None,
                  angle: Optional[float] = None,
                  size: Optional[int] = None) -> None:
@@ -62,17 +62,17 @@ class Asteroid:
 
         self.vx = starting_speed * math.cos(math.radians(starting_angle))
         self.vy = starting_speed * math.sin(math.radians(starting_angle))
-        self.velocity: Tuple[float, float] = (self.vx, self.vy)
+        self.velocity: tuple[float, float] = (self.vx, self.vy)
 
         # Set position as specified
-        self.position: Tuple[float, float] = position
+        self.position: tuple[float, float] = position
 
         # Random rotations for use in display or future use with complex hit box
         self.angle: float = random.uniform(0.0, 360.0)
         self.turnrate: float = random.uniform(-100, 100)
 
     @property
-    def state(self) -> Dict[str, Any]:
+    def state(self) -> dict[str, Any]:
         return {
             "position": self.position,
             "velocity": self.velocity,
@@ -86,7 +86,7 @@ class Asteroid:
         self.position = (self.position[0] + self.velocity[0] * delta_time, self.position[1] + self.velocity[1] * delta_time)
         self.angle += delta_time * self.turnrate
 
-    def destruct(self, impactor: Union['Bullet', 'Mine', 'Ship'], random_ast_split: bool) -> list['Asteroid']:
+    def destruct(self, impactor: 'Bullet' | 'Mine' | 'Ship', random_ast_split: bool) -> list['Asteroid']:
         """ Spawn child asteroids"""
 
         # Split angle is the angle off of the new velocity vector for the two asteroids to the sides, the center child
