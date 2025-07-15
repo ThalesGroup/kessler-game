@@ -48,6 +48,8 @@ jobs:
         run: twine upload --repository-url https://test.pypi.org/legacy/ --skip-existing wheelhouse/*
 
       - name: Upload wheels to GitHub Release
-        uses: softprops/action-gh-release@v1
+        uses: softprops/action-gh-release@v2
         with:
           files: wheelhouse/*
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
