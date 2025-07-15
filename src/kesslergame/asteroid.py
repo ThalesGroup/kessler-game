@@ -3,7 +3,7 @@
 # NOTICE: This file is subject to the license agreement defined in file 'LICENSE', which is part of
 # this source code package.
 
-from typing import Tuple, Dict, List, Any, Optional, TYPE_CHECKING, Union
+from typing import Any, Optional, TYPE_CHECKING, Union
 import random
 import math
 
@@ -16,7 +16,7 @@ class Asteroid:
     """ Sprite that represents an asteroid. """
     __slots__ = ('size', 'max_speed', 'num_children', 'radius', 'mass', 'vx', 'vy', 'velocity', 'position', 'angle', 'turnrate')
     def __init__(self,
-                 position: Tuple[float, float],
+                 position: tuple[float, float],
                  speed: Optional[float] = None,
                  angle: Optional[float] = None,
                  size: Optional[int] = None) -> None:
@@ -62,17 +62,17 @@ class Asteroid:
 
         self.vx = starting_speed * math.cos(math.radians(starting_angle))
         self.vy = starting_speed * math.sin(math.radians(starting_angle))
-        self.velocity: Tuple[float, float] = (self.vx, self.vy)
+        self.velocity: tuple[float, float] = (self.vx, self.vy)
 
         # Set position as specified
-        self.position: Tuple[float, float] = position
+        self.position: tuple[float, float] = position
 
         # Random rotations for use in display or future use with complex hit box
         self.angle: float = random.uniform(0.0, 360.0)
         self.turnrate: float = random.uniform(-100, 100)
 
     @property
-    def state(self) -> Dict[str, Any]:
+    def state(self) -> dict[str, Any]:
         return {
             "position": self.position,
             "velocity": self.velocity,
@@ -140,18 +140,24 @@ class Asteroid:
             theta = math.degrees(math.atan2(vfy, vfx))
 
             if random_ast_split:
-                # Use a random angle offset
-                angle_offset = split_angle_bound * random.random()
+                # Use random angle offsets
+                angle_offset_1 = split_angle_bound * random.random()
+                angle_offset_2 = split_angle_bound * random.random()
+                # Create the angles list
+                angles = [
+                    theta + angle_offset_1,
+                    theta,
+                    theta - angle_offset_2
+                ]
             else:
                 # Use a fixed half-angle offset
                 angle_offset = split_angle_bound / 2.0
-
-            # Create the angles list
-            angles = [
-                theta + angle_offset,
-                theta,
-                theta - angle_offset
-            ]
+                # Create the angles list
+                angles = [
+                    theta + angle_offset,
+                    theta,
+                    theta - angle_offset
+                ]
 
             return [Asteroid(position=self.position, size=self.size - 1, speed=v, angle=angle) for angle in angles]
 

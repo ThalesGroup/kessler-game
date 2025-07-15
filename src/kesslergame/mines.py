@@ -3,7 +3,7 @@
 # NOTICE: This file is subject to the license agreement defined in file 'LICENSE', which is part of
 # this source code package.
 
-from typing import List, Tuple, Dict, Any, TYPE_CHECKING
+from typing import Any, TYPE_CHECKING
 
 if TYPE_CHECKING:
     from .ship import Ship
@@ -12,7 +12,7 @@ if TYPE_CHECKING:
 
 class Mine:
     __slots__ = ('fuse_time', 'detonation_time', 'mass', 'radius', 'blast_radius', 'blast_pressure', 'owner', 'countdown_timer', 'detonating', 'position')
-    def __init__(self, starting_position: Tuple[float, float], owner: 'Ship') -> None:
+    def __init__(self, starting_position: tuple[float, float], owner: 'Ship') -> None:
         self.fuse_time: float = 3.0
         self.detonation_time: float = 0.25
         self.mass: float = 25.0  # kg
@@ -23,7 +23,7 @@ class Mine:
         self.owner = owner
         self.countdown_timer: float = self.fuse_time
         self.detonating: bool = False
-        self.position: Tuple[float, float] = starting_position
+        self.position: tuple[float, float] = starting_position
 
     def update(self, delta_time: float = 1/30) -> None:
         self.countdown_timer -= delta_time
@@ -38,7 +38,7 @@ class Mine:
         pass
 
     @property
-    def state(self) -> Dict[str, Any]:
+    def state(self) -> dict[str, Any]:
         return {
             "position": self.position,
             "mass": self.mass,

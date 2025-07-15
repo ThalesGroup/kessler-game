@@ -5,6 +5,201 @@
 
 import math
 
+def solve_quadratic(a: float, b: float, c: float) -> tuple[float, float]:
+    """
+    Solve the quadratic equation a*x**2 + b*x + c = 0 for real roots.
+
+    Handles degenerate linear and constant cases. Returns a tuple of roots (t0, t1) in sorted order.
+    If there are no real roots, returns (math.nan, math.nan). If linear, returns one solution repeated.
+
+    Note: Does not handle floating point overflow.
+
+    Args:
+        a (float): Quadratic coefficient.
+        b (float): Linear coefficient.
+        c (float): Constant term.
+
+    Returns:
+        tuple[float, float]: Roots (t0, t1), sorted in ascending order, or (nan, nan) if no real roots.
+    """
+    if a == 0.0:
+        # Linear case: bx + c = 0
+        if b == 0.0:
+            if c == 0.0:
+                return 0.0, 0.0
+            else:
+                return math.nan, math.nan
+        else:
+            x = -c / b
+            return x, x
+
+    discriminant = b * b - 4.0 * a * c
+    if discriminant < 0.0:
+        # No real solutions
+        return math.nan, math.nan
+
+    q = -0.5 * (b + math.copysign(math.sqrt(discriminant), b))
+    if c == 0.0:
+        x1 = -b / a
+        if x1 < 0.0:
+            return x1, 0.0
+        else:
+            return 0.0, x1
+
+    # q cannot be 0 here
+    x1 = q / a
+    x2 = c / q
+    if x1 <= x2:
+        return x1, x2
+    else:
+        return x2, x1
+
+def collision_time_interval(
+    line_A: tuple[float, float],
+    line_B: tuple[float, float],
+    line_vel: tuple[float, float],
+    circle_center: tuple[float, float],
+    circle_vel: tuple[float, float],
+    circle_radius: float
+) -> tuple[float, float]:
+    """
+    Returns the time interval [t0, t1] where the moving segment (A,B) and moving circle intersect.
+    Returns (nan, nan) if there is no interception.
+    """
+
+    ax, ay = line_A
+    bx, by = line_B
+    vx, vy = line_vel  # Both endpoints move the same way
+
+    cx, cy = circle_center
+    cvx, cvy = circle_vel
+    r = circle_radius
+    r_sq = r * r
+
+    # Relative velocity: treat circle as stationary, move A and B at (line_vel - circle_vel)
+    rvx = vx - cvx
+    rvy = vy - cvy
+
+    # Initial positions relative to circle's center
+    # (Place circle at origin)
+    a0x = ax - cx
+    a0y = ay - cy
+    b0x = bx - cx
+    b0y = by - cy
+
+    # Segment vector and length
+    seg_dx = b0x - a0x
+    seg_dy = b0y - a0y
+    seg_len = math.hypot(seg_dx, seg_dy)  # Will be 12.0
+    # For normalization later
+    if seg_len == 0.:
+        # Degenerate segment, treat as point
+        # We'll just reduce to point vs circle, i.e., treat both A and B as A
+        seg_dx = seg_dy = 0.0
+
+    # Solve for when A and B independently are on the circle (corner-collisions)
+    # For A
+    k0 = a0x * a0x + a0y * a0y - r_sq
+    k1 = 2.0 * (rvx * a0x + rvy * a0y)
+    k2 = rvx * rvx + rvy * rvy
+
+    t0_A, t1_A = solve_quadratic(k2, k1, k0)
+
+    # For B
+    q0 = b0x * b0x + b0y * b0y - r_sq
+    q1 = 2.0*(rvx * b0x + rvy * b0y)
+    q2 = k2  # Same as velocity terms above
+
+    t0_B, t1_B = solve_quadratic(q2, q1, q0)
+
+    # Should check for NaNs - if both are nan, there's no possibility
+    if math.isnan(t0_A) and math.isnan(t0_B):
+        return (math.nan, math.nan)
+
+    t0 = math.inf
+    t1 = -math.inf
+    for t in [t0_A, t0_B]:
+        if not math.isnan(t):
+            t0 = min(t0, t)
+    for t in [t1_A, t1_B]:
+        if not math.isnan(t):
+            t1 = max(t1, t)
+
+    # Mid-segment "side swipe" collisions
+    # Compute the perpendicular axis n to the segment (A->B); positive to the left of AB
+    # n = (dy, -dx) / seg_len as a unit normal (right-hand swap/flop)
+    if seg_len > 0:
+        nx = seg_dy / seg_len
+        ny = -seg_dx / seg_len
+    else:
+        # Segment degenerate: side swipe not possible, skip this block
+        nx = ny = 0.0
+
+    # Project relative velocity onto normal axis
+    v_proj_n = nx * rvx + ny * rvy
+    # We always want v_proj_n positive, flip the normal if not
+    if v_proj_n < 0.0:
+        nx *= -1.0
+        ny *= -1.0
+        v_proj_n *= -1.0
+
+    # Project vector from A to origin (circle center) onto normal axis
+    r_a0_to_center_x = -a0x
+    r_a0_to_center_y = -a0y
+    ast_proj_n = r_a0_to_center_x * nx + r_a0_to_center_y * ny
+
+    # Find when the center of the circle crosses the (possibly growing or shrinking) normal tube of radius r
+    t_ast_center = ast_proj_n / v_proj_n if v_proj_n != 0.0 else math.inf
+    t_diff_ast_radius = r / v_proj_n if v_proj_n != 0.0 else math.inf
+
+    t0_mid = t_ast_center - t_diff_ast_radius
+    t1_mid = t_ast_center + t_diff_ast_radius
+
+    # The bullet's endpoints are at n=0; so check if these collision points lie within the inside of the segment
+    def project_point_onto_segment_and_get_t(x1, y1, x2, y2, px, py) -> float:
+        """
+        Projects point P onto segment A->B, returns t in [0,1] where projection falls;
+        If out of [0,1], the closest endpoint is closer than the interior.
+        """
+        dx = x2 - x1
+        dy = y2 - y1
+        len_sq = dx * dx + dy * dy
+        if len_sq < 1e-12:
+            return 0.0
+        px_rel = px - x1
+        py_rel = py - y1
+        t = (px_rel * dx + py_rel * dy) / len_sq
+        return t
+
+    # At time t0_mid, the whole segment translates by t*rv; check where the circle center projects onto segment
+    a0x_t0m = a0x + rvx * t0_mid
+    a0y_t0m = a0y + rvy * t0_mid
+    b0x_t0m = b0x + rvx * t0_mid
+    b0y_t0m = b0y + rvy * t0_mid
+    # The circle remains at the origin
+    t_proj_0 = project_point_onto_segment_and_get_t(a0x_t0m, a0y_t0m, b0x_t0m, b0y_t0m, 0.0, 0.0)
+
+    a0x_t1m = a0x + rvx * t1_mid
+    a0y_t1m = a0y + rvy * t1_mid
+    b0x_t1m = b0x + rvx * t1_mid
+    b0y_t1m = b0y + rvy * t1_mid
+    t_proj_1 = project_point_onto_segment_and_get_t(a0x_t1m, a0y_t1m, b0x_t1m, b0y_t1m, 0.0, 0.0)
+
+    # Only if the projected t is in [0,1] do we allow t0_mid or t1_mid to extend the window
+    if 0.0 <= t_proj_0 <= 1.0:
+        # This t0_mid corresponds to collision at the interior of the segment, possibly before either endpoint brushes
+        assert(t0_mid <= t0)
+        t0 = min(t0, t0_mid)
+    if 0.0 <= t_proj_1 <= 1.0:
+        assert(t1_mid >= t1)
+        t1 = max(t1, t1_mid)
+
+    # If we never updated t0/t1, no collision
+    if not (math.isfinite(t0) and math.isfinite(t1)):
+        return (math.nan, math.nan)
+
+    return (t0, t1)
+
 def circle_line_collision_continuous(
     line_A: tuple[float, float],
     line_B: tuple[float, float],
@@ -12,16 +207,49 @@ def circle_line_collision_continuous(
     circle_center: tuple[float, float],
     circle_vel: tuple[float, float],
     circle_radius: float,
-    delta_time: float,
+    delta_time: float
 ) -> bool:
+    # Returns whether a moving circle and line segment collided within the time interval [-delta_time, 0]
+
     # First, do a quick bounding box rejection check
     # Find the min/max x/y values that the bullet can take on, and then expand by the radius of the asteroid
-    x_values = (line_A[0], line_A[0] - (line_vel[0] - circle_vel[0]) * delta_time, line_B[0], line_B[0] - (line_vel[0] - circle_vel[0]) * delta_time)
-    y_values = (line_A[1], line_A[1] - (line_vel[1] - circle_vel[1]) * delta_time, line_B[1], line_B[1] - (line_vel[1] - circle_vel[1]) * delta_time)
-    min_x = min(x_values)
-    max_x = max(x_values)
-    min_y = min(y_values)
-    max_y = max(y_values)
+    # This code can be written MUCH cleaner by creating a list and using max and min on it, however this unrolled version is many times faster when compiled with mypyc
+    # This code is the most called function in the game, so speed is crucial
+    rel_frame_vel_x = (line_vel[0] - circle_vel[0]) * delta_time
+    rel_frame_vel_y = (line_vel[1] - circle_vel[1]) * delta_time
+
+    # X
+    if line_A[0] < line_B[0]:
+        if rel_frame_vel_x >= 0.0:
+            min_x = line_A[0] - rel_frame_vel_x
+            max_x = line_B[0]
+        else:
+            min_x = line_A[0]
+            max_x = line_B[0] - rel_frame_vel_x
+    else:
+        if rel_frame_vel_x >= 0.0:
+            min_x = line_B[0] - rel_frame_vel_x
+            max_x = line_A[0]
+        else:
+            min_x = line_B[0]
+            max_x = line_A[0] - rel_frame_vel_x
+
+    # Y
+    if line_A[1] < line_B[1]:
+        if rel_frame_vel_y >= 0.0:
+            min_y = line_A[1] - rel_frame_vel_y
+            max_y = line_B[1]
+        else:
+            min_y = line_A[1]
+            max_y = line_B[1] - rel_frame_vel_y
+    else:
+        if rel_frame_vel_y >= 0.0:
+            min_y = line_B[1] - rel_frame_vel_y
+            max_y = line_A[1]
+        else:
+            min_y = line_B[1]
+            max_y = line_A[1] - rel_frame_vel_y
+    
     if circle_center[0] + circle_radius < min_x or circle_center[0] - circle_radius > max_x or circle_center[1] + circle_radius < min_y or circle_center[1] - circle_radius > max_y:
         return False
 
@@ -57,25 +285,30 @@ def circle_line_collision_continuous(
         # to the closest point on the segment.
         dx = x2 - x1
         dy = y2 - y1
-        len_sq = dx*dx + dy*dy
+        len_sq = dx * dx + dy * dy
 
         # If the endpoints are basically the same point,
         # just return squared dist to the (degenerate) endpoint.
         if len_sq < 1e-12:
-            return x1*x1 + y1*y1
+            return x1 * x1 + y1 * y1
 
         # Compute the projection parameter t of the origin onto the segment,
         # where t=0 yields (x1, y1) and t=1 yields (x2, y2).
         # Clamp t to [0, 1] to stay on the segment.
-        t = -(x1*dx + y1*dy)/len_sq
-        t = max(0.0, min(1.0, t))
+        t = -(x1 * dx + y1 * dy) / len_sq
+        # Avoid max/min to optimize for mypyc compilation
+        if t > 1.0:
+            t = 1.0
+        elif t < 0.0:
+            t = 0.0
+        #t = max(0.0, min(1.0, t))
 
         # Compute the closest point's coordinates.
-        px = x1 + t*dx
-        py = y1 + t*dy
+        px = x1 + t * dx
+        py = y1 + t * dy
 
         # Return the squared distance from the origin to this closest point.
-        return px*px + py*py
+        return px * px + py * py
 
     # Check whether any of these projected points with clamping are within the circle. If yes, there's a collision.
     if (
@@ -150,7 +383,12 @@ def circle_line_collision_discrete(line_A: tuple[float, float], line_B: tuple[fl
         # Compute projection parameter t of origin onto line defined by segment A-B
         # Clamp t to [0, 1] to project onto the actual segment
         t = -(ax * dx + ay * dy) / len_sq
-        t = max(0.0, min(1.0, t))
+        # Avoid max/min to optimize for mypyc compilation
+        if t > 1.0:
+            t = 1.0
+        elif t < 0.0:
+            t = 0.0
+        #t = max(0.0, min(1.0, t))
 
         # Compute closest point on segment to the circle's center (which is now at origin)
         px = ax + t * dx
