@@ -16,12 +16,44 @@ def circle_line_collision_continuous(
 ) -> bool:
     # First, do a quick bounding box rejection check
     # Find the min/max x/y values that the bullet can take on, and then expand by the radius of the asteroid
-    x_values = (line_A[0], line_A[0] - (line_vel[0] - circle_vel[0]) * delta_time, line_B[0], line_B[0] - (line_vel[0] - circle_vel[0]) * delta_time)
-    y_values = (line_A[1], line_A[1] - (line_vel[1] - circle_vel[1]) * delta_time, line_B[1], line_B[1] - (line_vel[1] - circle_vel[1]) * delta_time)
-    min_x = min(x_values)
-    max_x = max(x_values)
-    min_y = min(y_values)
-    max_y = max(y_values)
+    # This code can be written MUCH cleaner using max and min, however this unrolled version is over twice as fast when compiled with mypyc!
+    # And this code is called sooooo many times that every bit matters
+    # Avoiding the built in max/min is much faster
+    rel_frame_vel_x = (line_vel[0] - circle_vel[0]) * delta_time
+    rel_frame_vel_y = (line_vel[1] - circle_vel[1]) * delta_time
+
+    # X
+    if line_A[0] < line_B[0]:
+        if rel_frame_vel_x >= 0.0:
+            min_x = line_A[0] - rel_frame_vel_x
+            max_x = line_B[0]
+        else:
+            min_x = line_A[0]
+            max_x = line_B[0] - rel_frame_vel_x
+    else:
+        if rel_frame_vel_x >= 0.0:
+            min_x = line_B[0] - rel_frame_vel_x
+            max_x = line_A[0]
+        else:
+            min_x = line_B[0]
+            max_x = line_A[0] - rel_frame_vel_x
+
+    # Y
+    if line_A[1] < line_B[1]:
+        if rel_frame_vel_y >= 0.0:
+            min_y = line_A[1] - rel_frame_vel_y
+            max_y = line_B[1]
+        else:
+            min_y = line_A[1]
+            max_y = line_B[1] - rel_frame_vel_y
+    else:
+        if rel_frame_vel_y >= 0.0:
+            min_y = line_B[1] - rel_frame_vel_y
+            max_y = line_A[1]
+        else:
+            min_y = line_B[1]
+            max_y = line_A[1] - rel_frame_vel_y
+    
     if circle_center[0] + circle_radius < min_x or circle_center[0] - circle_radius > max_x or circle_center[1] + circle_radius < min_y or circle_center[1] - circle_radius > max_y:
         return False
 
@@ -57,25 +89,30 @@ def circle_line_collision_continuous(
         # to the closest point on the segment.
         dx = x2 - x1
         dy = y2 - y1
-        len_sq = dx*dx + dy*dy
+        len_sq = dx * dx + dy * dy
 
         # If the endpoints are basically the same point,
         # just return squared dist to the (degenerate) endpoint.
         if len_sq < 1e-12:
-            return x1*x1 + y1*y1
+            return x1 * x1 + y1 * y1
 
         # Compute the projection parameter t of the origin onto the segment,
         # where t=0 yields (x1, y1) and t=1 yields (x2, y2).
         # Clamp t to [0, 1] to stay on the segment.
-        t = -(x1*dx + y1*dy)/len_sq
-        t = max(0.0, min(1.0, t))
+        t = -(x1 * dx + y1 * dy) / len_sq
+        # Avoid max/min to optimize for mypyc compilation
+        if t > 1.0:
+            t = 1.0
+        if t < 0.0:
+            t = 0.0
+        #t = max(0.0, min(1.0, t))
 
         # Compute the closest point's coordinates.
-        px = x1 + t*dx
-        py = y1 + t*dy
+        px = x1 + t * dx
+        py = y1 + t * dy
 
         # Return the squared distance from the origin to this closest point.
-        return px*px + py*py
+        return px * px + py * py
 
     # Check whether any of these projected points with clamping are within the circle. If yes, there's a collision.
     if (
@@ -150,7 +187,12 @@ def circle_line_collision_discrete(line_A: tuple[float, float], line_B: tuple[fl
         # Compute projection parameter t of origin onto line defined by segment A-B
         # Clamp t to [0, 1] to project onto the actual segment
         t = -(ax * dx + ay * dy) / len_sq
-        t = max(0.0, min(1.0, t))
+        # Avoid max/min to optimize for mypyc compilation
+        if t > 1.0:
+            t = 1.0
+        if t < 0.0:
+            t = 0.0
+        #t = max(0.0, min(1.0, t))
 
         # Compute closest point on segment to the circle's center (which is now at origin)
         px = ax + t * dx
