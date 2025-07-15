@@ -4,6 +4,7 @@
 # this source code package.
 
 import time
+import math
 
 from typing import Any, TypedDict, Optional
 from enum import Enum
@@ -11,7 +12,7 @@ from enum import Enum
 from .scenario import Scenario
 from .score import Score
 from .controller import KesslerController
-from .collisions import circle_line_collision_continuous
+from .collisions import circle_line_collision_continuous, collision_time_interval
 from .graphics import GraphicsType, GraphicsHandler
 from .mines import Mine
 from .asteroid import Asteroid
@@ -188,57 +189,56 @@ class KesslerGame:
             # --- CHECK FOR COLLISIONS ---------------------------------------------------------------------------------
 
             # --- Check asteroid-bullet collisions ---
-            #for bul_idx, bullet in enumerate(bullets):
             bul_idx = 0
             num_buls = len(bullets)
-            remove_bullet: bool = False
+            should_remove_bullet: bool = False
             while bul_idx < num_buls:
-                remove_bullet = False
+                should_remove_bullet = False
                 bullet = bullets[bul_idx]
-                ast_idx = 0
-                num_asts = len(asteroids)
-                while ast_idx < num_asts:
-                    asteroid = asteroids[ast_idx]
-                    # If collision occurs
+
+                ast_idx_to_remove: int = -1
+                earliest_collision_time: float = math.inf
+
+                for ast_idx, asteroid in enumerate(asteroids):
+                    # Iterate through all asteroids, and if multiple collisions occur, find the one that occurs first
                     if circle_line_collision_continuous(
                         bullet.position, bullet.tail, bullet.velocity,
                         asteroid.position, asteroid.velocity, asteroid.radius, self.time_step
                     ):
-                        # Increment hit values on ship that fired bullet then destruct bullet and mark for removal
-                        bullet.owner.asteroids_hit += 1
-                        bullet.owner.bullets_hit += 1
-                        bullet.destruct()
-                        remove_bullet = True
-                        # Asteroid destruct function and immediate removal
-                        new_asteroids.extend(asteroid.destruct(impactor=bullet, random_ast_split=self.random_ast_splits))
-                        # Swap and pop, O(1) removal of asteroid
-                        last_idx = len(asteroids) - 1
-                        if ast_idx != last_idx:
-                            asteroids[ast_idx] = asteroids[last_idx]
-                        asteroids.pop()
-                        num_asts -= 1  # Since the overall length has decreased
-                        # Stop checking this bullet
-                        break
-                    else:
-                        ast_idx += 1
+                        collision_start_time, collision_end_time = collision_time_interval(
+                            bullet.position, bullet.tail, bullet.velocity,
+                            asteroid.position, asteroid.velocity, asteroid.radius)
+                        collision_time = max(-self.time_step, collision_start_time)
+                        assert(collision_time <= 0.0)
+                        if collision_time < earliest_collision_time:
+                            earliest_collision_time = collision_time
+                            ast_idx_to_remove = ast_idx
+                if ast_idx_to_remove != -1:
+                    # Increment hit values on ship that fired bullet then destruct bullet and mark for removal
+                    bullet.owner.asteroids_hit += 1
+                    bullet.owner.bullets_hit += 1
+                    should_remove_bullet = True
+                    asteroid = asteroids[ast_idx_to_remove]
+                    # Asteroid destruct function and immediate removal
+                    new_asteroids.extend(asteroid.destruct(impactor=bullet, random_ast_split=self.random_ast_splits))
+                    # Swap and pop, O(1) removal of asteroid
+                    asteroids[ast_idx_to_remove] = asteroids[-1]
+                    asteroids.pop()
                 # Cull any bullets past the map edge
-                # It is important we do this after the asteroid-bullet collision checks occur, in the case of bullets leaving the map but might hit an asteroid on the edge
+                # It is important we do this after the asteroid-bullet collision checks occur,
+                # in the case of bullets leaving the map but might hit an asteroid on the edge
                 if not ((0.0 <= bullet.position[0] <= scenario.map_size[0] and 0.0 <= bullet.position[1] <= scenario.map_size[1])
                         or (0.0 <= bullet.tail[0] <= scenario.map_size[0] and 0.0 <= bullet.tail[1] <= scenario.map_size[1])):
-                    remove_bullet = True
-                if remove_bullet:
-                    last_idx = len(bullets) - 1
-                    if bul_idx != last_idx:
-                        bullets[bul_idx] = bullets[last_idx]
+                    should_remove_bullet = True
+                # O(1) removal of bullet
+                if should_remove_bullet:
+                    bullet.destruct()
+                    bullets[bul_idx] = bullets[-1]
                     bullets.pop()
                     num_buls -= 1
                 else:
                     bul_idx += 1
 
-            # Cull bullets that are marked for removal
-            #if bullet_remove_idxs:
-            #    bullets = [bullet for idx, bullet in enumerate(bullets) if idx not in bullet_remove_idxs]
-            #    bullet_remove_idxs.clear()
             # Add the new asteroids from the bullet-asteroid collisions
             if new_asteroids:
                 asteroids.extend(new_asteroids)
