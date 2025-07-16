@@ -70,12 +70,17 @@ def project_point_onto_segment_and_get_t(x1: float, y1: float, x2: float, y2: fl
     return t
 
 def collision_time_interval(
-    line_A: tuple[float, float],
-    line_B: tuple[float, float],
-    line_vel: tuple[float, float],
-    circle_center: tuple[float, float],
-    circle_vel: tuple[float, float],
-    circle_radius: float
+    ax: float, # Line seg start
+    ay: float,
+    bx: float, # Line seg end
+    by: float,
+    vx: float, # Line vel
+    vy: float,
+    cx: float, # Circle center
+    cy: float,
+    cvx: float, # Circle vel
+    cvy: float,
+    r: float # Circle radius
 ) -> tuple[float, float]:
     """
     Returns the time interval [t0, t1] where the moving segment (A,B) and moving circle intersect.
@@ -89,13 +94,6 @@ def collision_time_interval(
     later, or both, compared to the times found for the bullet head/tail
     """
 
-    ax, ay = line_A
-    bx, by = line_B
-    vx, vy = line_vel  # Both endpoints move the same way
-
-    cx, cy = circle_center
-    cvx, cvy = circle_vel
-    r = circle_radius
     r_sq = r * r
 
     # Relative velocity: treat circle as stationary, move A and B at (line_vel - circle_vel)
@@ -246,22 +244,20 @@ def project_origin_onto_segment_dist_sq(x1: float, y1: float, x2: float, y2: flo
     return px * px + py * py
 
 def circle_line_collision_continuous(
-    line_A: tuple[float, float],
-    line_B: tuple[float, float],
-    line_vel: tuple[float, float],
-    circle_center: tuple[float, float],
-    circle_vel: tuple[float, float],
+    ax0: float,
+    ay0: float,
+    bx0: float,
+    by0: float,
+    line_vel_x: float,
+    line_vel_y: float,
+    circle_x: float,
+    circle_y: float,
+    circle_vel_x: float,
+    circle_vel_y: float,
     circle_radius: float,
     delta_time: float
 ) -> bool:
     # Returns whether a moving circle and line segment collided within the time interval [-delta_time, 0]
-
-    # Unpack input tuples
-    ax0, ay0 = line_A
-    bx0, by0 = line_B
-    line_vel_x, line_vel_y = line_vel
-    circle_x, circle_y = circle_center
-    circle_vel_x, circle_vel_y = circle_vel
 
     # First, do a quick bounding box rejection check
     # Find the min/max x/y values that the bullet can take on, and then expand by the radius of the asteroid

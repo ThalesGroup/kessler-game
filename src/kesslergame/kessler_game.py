@@ -229,12 +229,15 @@ class KesslerGame:
                 for ast_idx, asteroid in enumerate(asteroids):
                     # Iterate through all asteroids, and if multiple collisions occur, find the one that occurs first
                     if circle_line_collision_continuous(
-                        bullet.position, bullet.tail, bullet.velocity,
-                        asteroid.position, asteroid.velocity, asteroid.radius, self.delta_time
+                        bullet.x, bullet.y, bullet.x + bullet.tail_delta_x, bullet.y + bullet.tail_delta_y, bullet.vx, bullet.vy,
+                        asteroid.x, asteroid.y, asteroid.vx, asteroid.vy, asteroid.radius, self.delta_time
                     ):
-                        collision_start_time, _ = collision_time_interval(
-                            bullet.position, bullet.tail, bullet.velocity,
-                            asteroid.position, asteroid.velocity, asteroid.radius)
+                        collision_start_time, _ = collision_time_interval(bullet.x, bullet.y,
+                                                                          bullet.x + bullet.tail_delta_x, bullet.y + bullet.tail_delta_y,
+                                                                          bullet.vx, bullet.vy,
+                                                                          asteroid.x, asteroid.y,
+                                                                          asteroid.vx, asteroid.vy,
+                                                                          asteroid.radius)
                         collision_time = max(-self.delta_time, collision_start_time)
                         assert(collision_time <= 0.0)
                         if collision_time < earliest_collision_time:
