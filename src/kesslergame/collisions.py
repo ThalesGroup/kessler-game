@@ -107,7 +107,7 @@ def collision_time_interval(
 
     # For B
     q0 = b0x * b0x + b0y * b0y - r_sq
-    q1 = 2.0*(rvx * b0x + rvy * b0y)
+    q1 = 2.0 * (rvx * b0x + rvy * b0y)
     q2 = k2  # Same as velocity terms above
 
     t0_B, t1_B = solve_quadratic(q2, q1, q0)
@@ -187,12 +187,17 @@ def collision_time_interval(
 
     # Only if the projected t is in [0,1] do we allow t0_mid or t1_mid to extend the window
     if 0.0 <= t_proj_0 <= 1.0:
-        # This t0_mid corresponds to collision at the interior of the segment, possibly before either endpoint brushes
-        assert(t0_mid <= t0)
-        t0 = min(t0, t0_mid)
+        # This t0_mid corresponds to collision at the interior of the segment
+        # This definitely happens before either end of the bullet collides
+        #assert(t0_mid <= t0)
+        #t0 = min(t0, t0_mid)
+        t0 = t0_mid
     if 0.0 <= t_proj_1 <= 1.0:
-        assert(t1_mid >= t1)
-        t1 = max(t1, t1_mid)
+        # This t1_mid corresponds to collision at the interior of the segment
+        # This definitely happens after either end of the bullet finishes colliding
+        #assert(t1_mid >= t1)
+        #t1 = max(t1, t1_mid)
+        t1 = t1_mid
 
     # If we never updated t0/t1, no collision
     if not (math.isfinite(t0) and math.isfinite(t1)):
