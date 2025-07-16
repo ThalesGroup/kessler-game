@@ -72,7 +72,8 @@ class KesslerGame:
         ##################
         # Initialize objects lists from scenario
         asteroids: list[Asteroid] = scenario.asteroids()
-        ships: list[Ship] = scenario.ships()
+        ships: list[Ship] = scenario.ships() # Keep full list of ships (dead or alive) for score reporting
+        liveships: list[Ship] = list(ships) # Maintain a parallel list of just live ships
         bullets: list[Bullet] = []
         mines: list[Mine] = []
 
@@ -102,9 +103,7 @@ class KesslerGame:
         # MAIN SCENARIO LOOP #
         ######################
 
-        # Conceptually these following collections should just be sets, but lists can be faster if there's very few elements
-        bullet_remove_idxs: list[int] = []
-        mine_remove_idxs: list[int] = []
+        mine_remove_idxs: list[int] = [] # List is faster than a set, due to such few elements
         new_asteroids: list[Asteroid] = []
         while stop_reason == StopReason.not_stopped:
             # Get perf time at the start of time step evaluation and initialize performance tracker
@@ -112,8 +111,6 @@ class KesslerGame:
             perf_dict: PerfDict = {}
 
             # --- CALL CONTROLLER FOR EACH SHIP ------------------------------------------------------------------------
-            # Get all live ships
-            liveships = [ship for ship in ships if ship.alive]
 
             # Initialize controller time recording in performance tracker
             if self.perf_tracker:
@@ -121,31 +118,30 @@ class KesslerGame:
                 t_start = time.perf_counter()
 
             # Loop through each controller/ship combo and apply their actions
-            for idx, ship in enumerate(ships):
-                if ship.alive:
-                    # Generate game_state info to send to controller
-                    # It is important we regenerate this for each controller, so they do not tamper it for the next controller
-                    game_state: dict[str, Any] = {
-                        'asteroids': [asteroid.state for asteroid in asteroids],
-                        'ships': [ship.state for ship in liveships],
-                        'bullets': [bullet.state for bullet in bullets],
-                        'mines': [mine.state for mine in mines],
-                        'map_size': scenario.map_size,
-                        'time': sim_time,
-                        'delta_time': self.time_step,
-                        'frame_rate': self.frequency,
-                        'sim_frame': step,
-                        'time_limit': time_limit,
-                        'random_asteroid_splits': self.random_ast_splits
-                    }
-                    # Reset controls on ship to defaults
-                    ship.thrust = 0.0
-                    ship.turn_rate = 0.0
-                    ship.fire = False
-                    # Evaluate each controller letting control be applied
-                    if controllers[idx].ship_id != ship.id:
-                        raise RuntimeError("Controller and ship ID do not match")
-                    ship.thrust, ship.turn_rate, ship.fire, ship.drop_mine = controllers[idx].actions(ship.ownstate, game_state)
+            for idx, ship in enumerate(liveships):
+                # Generate game_state info to send to controller
+                # It is important we regenerate this for each controller, so they do not tamper it for the next controller
+                game_state: dict[str, Any] = {
+                    'asteroids': [asteroid.state for asteroid in asteroids],
+                    'ships': [ship.state for ship in liveships],
+                    'bullets': [bullet.state for bullet in bullets],
+                    'mines': [mine.state for mine in mines],
+                    'map_size': scenario.map_size,
+                    'time': sim_time,
+                    'delta_time': self.time_step,
+                    'frame_rate': self.frequency,
+                    'sim_frame': step,
+                    'time_limit': time_limit,
+                    'random_asteroid_splits': self.random_ast_splits
+                }
+                # Reset controls on ship to defaults
+                ship.thrust = 0.0
+                ship.turn_rate = 0.0
+                ship.fire = False
+                # Evaluate each controller letting control be applied
+                if controllers[idx].ship_id != ship.id:
+                    raise RuntimeError("Controller and ship ID do not match")
+                ship.thrust, ship.turn_rate, ship.fire, ship.drop_mine = controllers[idx].actions(ship.ownstate, game_state)
 
                 # Update controller evaluation time if performance tracking
                 if self.perf_tracker:
@@ -167,12 +163,11 @@ class KesslerGame:
             for asteroid in asteroids:
                 asteroid.update(self.time_step)
             for ship in liveships:
-                if ship.alive:
-                    new_bullet, new_mine = ship.update(self.time_step)
-                    if new_bullet is not None:
-                        bullets.append(new_bullet)
-                    if new_mine is not None:
-                        mines.append(new_mine)
+                new_bullet, new_mine = ship.update(self.time_step)
+                if new_bullet is not None:
+                    bullets.append(new_bullet)
+                if new_mine is not None:
+                    mines.append(new_mine)
 
             # Wrap ships and asteroids to other side of map
             for ship in liveships:
@@ -188,7 +183,7 @@ class KesslerGame:
 
             # --- CHECK FOR COLLISIONS ---------------------------------------------------------------------------------
 
-            # --- Check asteroid-bullet collisions ---
+            # --- Check bullet-asteroid collisions ---
             bul_idx = 0
             num_buls = len(bullets)
             should_remove_bullet: bool = False
@@ -244,12 +239,12 @@ class KesslerGame:
                 asteroids.extend(new_asteroids)
                 new_asteroids.clear()
             # --- Check mine-asteroid and mine-ship effects ---
-            for idx_mine, mine in enumerate(mines):
+            for mine_idx, mine in enumerate(mines):
                 if mine.detonating:
-                    i = 0
+                    ast_idx = 0
                     num_asts = len(asteroids)
-                    while i < num_asts:
-                        asteroid = asteroids[i]
+                    while ast_idx < num_asts:
+                        asteroid = asteroids[ast_idx]
                         dx = asteroid.position[0] - mine.position[0]
                         dy = asteroid.position[1] - mine.position[1]
                         radius_sum = mine.blast_radius + asteroid.radius
@@ -257,14 +252,12 @@ class KesslerGame:
                             mine.owner.asteroids_hit += 1
                             mine.owner.mines_hit += 1
                             new_asteroids.extend(asteroid.destruct(impactor=mine, random_ast_split=self.random_ast_splits))
-                            last_idx = len(asteroids) - 1
-                            if i != last_idx:
-                                asteroids[i] = asteroids[last_idx]
+                            asteroids[ast_idx] = asteroids[-1]
                             asteroids.pop()
                             num_asts -= 1
-                            # Don't advance i, must check the swapped-in asteroid
+                            # Don't advance ast_idx, must check the swapped-in asteroid
                         else:
-                            i += 1
+                            ast_idx += 1
                     for ship in liveships:
                         if not ship.is_respawning:
                             dx = ship.position[0] - mine.position[0]
@@ -273,8 +266,8 @@ class KesslerGame:
                             if dx * dx + dy * dy <= radius_sum * radius_sum:
                                 # Ship destruct function.
                                 ship.destruct(map_size=scenario.map_size)
-                    if idx_mine not in mine_remove_idxs:
-                        mine_remove_idxs.append(idx_mine)
+                    if mine_idx not in mine_remove_idxs:
+                        mine_remove_idxs.append(mine_idx)
                     mine.destruct()
             if mine_remove_idxs:
                 mines = [mine for idx, mine in enumerate(mines) if idx not in mine_remove_idxs]
@@ -283,7 +276,7 @@ class KesslerGame:
             if new_asteroids:
                 asteroids.extend(new_asteroids)
                 new_asteroids.clear()
-            # --- Check asteroid-ship collisions ---
+            # --- Check ship-asteroid collisions ---
             for ship in liveships:
                 if not ship.is_respawning:
                     i = 0
@@ -326,7 +319,7 @@ class KesslerGame:
                         if abs(dx) <= radius_sum and abs(dy) <= radius_sum and dx * dx + dy * dy <= radius_sum * radius_sum:
                             ship1.destruct(map_size=scenario.map_size)
                             ship2.destruct(map_size=scenario.map_size)
-            # Cull ships that are not alive
+            # Cull ships if not alive
             liveships = [ship for ship in liveships if ship.alive]
 
             # Update performance tracker with collisions timing
