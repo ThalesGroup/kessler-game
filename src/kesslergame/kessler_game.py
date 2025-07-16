@@ -200,7 +200,7 @@ class KesslerGame:
                         bullet.position, bullet.tail, bullet.velocity,
                         asteroid.position, asteroid.velocity, asteroid.radius, self.time_step
                     ):
-                        collision_start_time, collision_end_time = collision_time_interval(
+                        collision_start_time, _ = collision_time_interval(
                             bullet.position, bullet.tail, bullet.velocity,
                             asteroid.position, asteroid.velocity, asteroid.radius)
                         collision_time = max(-self.time_step, collision_start_time)
@@ -279,10 +279,10 @@ class KesslerGame:
             # --- Check ship-asteroid collisions ---
             for ship in liveships:
                 if not ship.is_respawning:
-                    i = 0
+                    ast_idx = 0
                     num_asts = len(asteroids)
-                    while i < num_asts:
-                        asteroid = asteroids[i]
+                    while ast_idx < num_asts:
+                        asteroid = asteroids[ast_idx]
                         dx = ship.position[0] - asteroid.position[0]
                         dy = ship.position[1] - asteroid.position[1]
                         radius_sum = ship.radius + asteroid.radius
@@ -290,9 +290,7 @@ class KesslerGame:
                         if abs(dx) <= radius_sum and abs(dy) <= radius_sum and dx * dx + dy * dy <= radius_sum * radius_sum:
                             # Asteroid destruct function and immediate removal
                             new_asteroids.extend(asteroid.destruct(impactor=ship, random_ast_split=self.random_ast_splits))
-                            last_idx = len(asteroids) - 1
-                            if i != last_idx:
-                                asteroids[i] = asteroids[last_idx]
+                            asteroids[ast_idx] = asteroids[-1]
                             asteroids.pop()
                             num_asts -= 1
                             # Ship destruct function. Add one to asteroids_hit
@@ -301,7 +299,7 @@ class KesslerGame:
                             # Stop checking this ship's collisions
                             break
                         else:
-                            i += 1
+                            ast_idx += 1
             # Cull ships if not alive
             liveships = [ship for ship in liveships if ship.alive]
             # Add new asteroids from ship-asteroid collisions
@@ -309,8 +307,8 @@ class KesslerGame:
                 asteroids.extend(new_asteroids)
                 new_asteroids.clear()
             # --- Check ship-ship collisions ---
-            for i, ship1 in enumerate(liveships):
-                for ship2 in liveships[i + 1:]:
+            for ship_idx, ship1 in enumerate(liveships):
+                for ship2 in liveships[ship_idx + 1:]:
                     if not ship2.is_respawning and not ship1.is_respawning:
                         dx = ship1.position[0] - ship2.position[0]
                         dy = ship1.position[1] - ship2.position[1]
