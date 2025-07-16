@@ -3,14 +3,19 @@
 # NOTICE: This file is subject to the license agreement defined in file 'LICENSE', which is part of
 # this source code package.
 
+from __future__ import annotations
+from typing import TYPE_CHECKING
 from enum import Enum
-from .graphics_base import KesslerGraphics
-from ..scenario import Scenario
-from ..ship import Ship
-from ..asteroid import Asteroid
-from ..bullet import Bullet
-from ..mines import Mine
-from ..score import Score
+
+if TYPE_CHECKING:
+    from .graphics_base import KesslerGraphics
+    from ..scenario import Scenario
+    from ..ship import Ship
+    from ..asteroid import Asteroid
+    from ..bullet import Bullet
+    from ..mines import Mine
+    from ..score import Score
+    from ..state_dicts import UISettingsDict
 
 
 class GraphicsType(Enum):
@@ -22,7 +27,7 @@ class GraphicsType(Enum):
 
 
 class GraphicsHandler:
-    def __init__(self, type: GraphicsType = GraphicsType.NoGraphics, scenario: Scenario | None = None, UI_settings: dict[str, bool] | None = None, graphics_obj: KesslerGraphics | None = None) -> None:
+    def __init__(self, type: GraphicsType = GraphicsType.NoGraphics, scenario: Scenario | None = None, UI_settings: UISettingsDict | None = None, graphics_obj: KesslerGraphics | None = None) -> None:
         """
         Create a graphics handler utilizing the assigned graphics engine defined from GraphicsType
         """

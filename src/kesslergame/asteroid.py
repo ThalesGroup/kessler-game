@@ -83,13 +83,12 @@ class Asteroid:
 
     @property
     def state(self) -> AsteroidState:
-        # Only update the position in the precomputed dict
-        self._state["position"] = self.position
         return self._state
 
     def update(self, delta_time: float = 1/30) -> None:
         """ Move the asteroid based on velocity"""
         self.position = (self.position[0] + self.velocity[0] * delta_time, self.position[1] + self.velocity[1] * delta_time)
+        self._state["position"] = self.position
         self.angle += delta_time * self.turnrate
 
     def destruct(self, impactor: Union['Bullet', 'Mine', 'Ship'], random_ast_split: bool) -> list['Asteroid']:

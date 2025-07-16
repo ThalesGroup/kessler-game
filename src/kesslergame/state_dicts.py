@@ -5,6 +5,8 @@
 
 from typing import TypedDict
 
+from .graphics import GraphicsType, KesslerGraphics
+
 
 class AsteroidState(TypedDict):
     position: tuple[float, float]
@@ -68,6 +70,31 @@ class GameStateDict(TypedDict):
     time: float
     delta_time: float
     frame_rate: float
-    sim_frame: int
+    frame: int
     time_limit: float
     random_asteroid_splits: bool
+    competition_safe_mode: bool
+
+
+class UISettingsDict(TypedDict, total=False):
+    ships: bool
+    lives_remaining: bool
+    accuracy: bool
+    asteroids_hit: bool
+    shots_fired: bool
+    bullets_remaining: bool
+    controller_name: bool
+    scale: float
+
+
+class SettingsDict(TypedDict, total=False):
+    frequency: float
+    perf_tracker: bool
+    prints_on: bool
+    graphics_type: GraphicsType
+    graphics_obj: KesslerGraphics | None
+    realtime_multiplier: float
+    time_limit: float
+    random_ast_splits: bool
+    competition_safe_mode: bool
+    UI_settings: UISettingsDict | str

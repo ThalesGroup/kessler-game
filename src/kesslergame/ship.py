@@ -5,8 +5,6 @@
 
 import math
 import warnings
-import numpy as np
-from typing import Optional
 
 from .bullet import Bullet
 from .mines import Mine
@@ -22,14 +20,14 @@ class Ship:
         'drag', 'radius', 'mass', '_respawning', '_respawn_time', '_fire_limiter',
         '_fire_time', '_mine_limiter', '_mine_deploy_time', 'mines_remaining',
         'bullets_remaining', 'bullets_shot', 'mines_dropped', 'bullets_hit',
-        'mines_hit', 'asteroids_hit', 'custom_sprite_path'
+        'mines_hit', 'asteroids_hit', 'custom_sprite_path', '_state', '_ownstate'
     )
     def __init__(self, ship_id: int,
                  position: tuple[float, float],
                  angle: float = 90.0,
                  lives: int = 3,
                  team: int = 1,
-                 team_name: Optional[str] = None,
+                 team_name: str | None = None,
                  bullets_remaining: int = -1,
                  mines_remaining: int = 0) -> None:
         """
@@ -37,10 +35,10 @@ class Ship:
         """
 
         # Control information
-        self.controller: Optional[KesslerController] = None
+        self.controller: KesslerController | None = None
 
         # Ship custom graphics
-        self.custom_sprite_path: Optional[str] = None
+        self.custom_sprite_path: str | None = None
 
         # State info
         self.id: int = ship_id
@@ -84,10 +82,7 @@ class Ship:
         self.mines_hit: int = 0      # Number of asteroids hit by mines
         self.asteroids_hit: int = 0  # Number of asteroids hit (including ship collision)
 
-
-    @property
-    def state(self) -> ShipState:
-        return {
+        self._state: ShipState = {
             "position": self.position,
             "velocity": self.velocity,
             "speed": self.speed,
@@ -96,29 +91,65 @@ class Ship:
             "radius": self.radius,
             "id": self.id,
             "team": self.team,
-            "is_respawning": True if self.is_respawning else False,
+            "is_respawning": self.is_respawning,
             "lives_remaining": self.lives,
             "deaths": self.deaths,
         }
 
+        self._ownstate: ShipOwnState = {
+            **self._state,
+            "bullets_remaining": self.bullets_remaining,
+            "mines_remaining": self.mines_remaining,
+            "can_fire": self.can_fire,
+            "fire_cooldown": self.fire_wait_time,
+            "fire_rate": self.fire_rate,
+            "can_deploy_mine": self.can_deploy_mine,
+            "mine_cooldown": self.mine_wait_time,
+            "mine_deploy_rate": self.mine_deploy_rate,
+            "respawn_time_left": self.respawn_time_left,
+            "respawn_time": self.respawn_time,
+            "thrust_range": self.thrust_range,
+            "turn_rate_range": self.turn_rate_range,
+            "max_speed": self.max_speed,
+            "drag": self.drag,
+        }
+
+    def update_state(self) -> None:
+        """Update both shared and own state dictionaries."""
+        # Update shared state
+        self._state["position"] = self.position
+        self._state["velocity"] = self.velocity
+        self._state["speed"] = self.speed
+        self._state["heading"] = self.heading
+        self._state["is_respawning"] = self.is_respawning
+        self._state["lives_remaining"] = self.lives
+        self._state["deaths"] = self.deaths
+
+        # Copy each field explicitly to ownstate
+        self._ownstate["position"] = self._state["position"]
+        self._ownstate["velocity"] = self._state["velocity"]
+        self._ownstate["speed"] = self._state["speed"]
+        self._ownstate["heading"] = self._state["heading"]
+        self._ownstate["is_respawning"] = self._state["is_respawning"]
+        self._ownstate["lives_remaining"] = self._state["lives_remaining"]
+        self._ownstate["deaths"] = self._state["deaths"]
+
+        # Now update additional ownstate fields
+        self._ownstate["bullets_remaining"] = self.bullets_remaining
+        self._ownstate["mines_remaining"] = self.mines_remaining
+        self._ownstate["can_fire"] = self.can_fire
+        self._ownstate["fire_cooldown"] = self.fire_wait_time
+        self._ownstate["can_deploy_mine"] = self.can_deploy_mine
+        self._ownstate["mine_cooldown"] = self.mine_wait_time
+        self._ownstate["respawn_time_left"] = self.respawn_time_left
+
+    @property
+    def state(self) -> ShipState:
+        return self._state
+
     @property
     def ownstate(self) -> ShipOwnState:
-        return {**self.state,
-                "bullets_remaining": self.bullets_remaining,
-                "mines_remaining": self.mines_remaining,
-                "can_fire": self.can_fire,
-                "fire_cooldown": self.fire_wait_time,
-                "fire_rate": self.fire_rate,
-                "can_deploy_mine": self.can_deploy_mine,
-                "mine_cooldown": self.mine_wait_time,
-                "mine_deploy_rate": self.mine_deploy_rate,
-                "respawn_time_left": self.respawn_time_left,
-                "respawn_time": self.respawn_time,
-                "thrust_range": self.thrust_range,
-                "turn_rate_range": self.turn_rate_range,
-                "max_speed": self.max_speed,
-                "drag": self.drag,
-        }
+        return self._ownstate
 
     @property
     def alive(self) -> bool:
@@ -146,11 +177,11 @@ class Ship:
 
     @property
     def fire_rate(self) -> float:
-        return 1 / self._fire_time
+        return 1.0 / self._fire_time
 
     @property
     def mine_deploy_rate(self) -> float:
-        return 1 / self._mine_deploy_time
+        return 1.0 / self._mine_deploy_time
 
     @property
     def fire_wait_time(self) -> float:
@@ -163,7 +194,7 @@ class Ship:
     def shoot(self) -> None:
         self.fire = True
 
-    def update(self, delta_time: float = 1 / 30) -> tuple[Optional[Bullet], Optional[Mine]]:
+    def update(self, delta_time: float = 1 / 30) -> tuple[Bullet | None, Mine | None]:
         """
         Update our position and other particulars.
         """
@@ -202,7 +233,7 @@ class Ship:
         if drag_amount > abs(self.speed):
             self.speed = 0.0
         else:
-            self.speed -= drag_amount * np.sign(self.speed)
+            self.speed -= math.copysign(drag_amount, self.speed)
 
         # Bounds check the thrust
         if self.thrust < self.thrust_range[0] or self.thrust > self.thrust_range[1]:
@@ -236,6 +267,9 @@ class Ship:
 
         # Update the position based off the velocities
         self.position = (self.position[0] + self.velocity[0] * delta_time, self.position[1] + self.velocity[1] * delta_time)
+
+        # Update the state dict
+        self.update_state()
 
         return new_bullet, new_mine
 

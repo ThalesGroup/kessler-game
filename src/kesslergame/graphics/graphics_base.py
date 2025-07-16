@@ -3,14 +3,17 @@
 # NOTICE: This file is subject to the license agreement defined in file 'LICENSE', which is part of
 # this source code package.
 
+from __future__ import annotations
+from typing import TYPE_CHECKING
 from tkinter import *
 
-from ..ship import Ship
-from ..asteroid import Asteroid
-from ..bullet import Bullet
-from ..mines import Mine
-from ..score import Score
-from ..scenario import Scenario
+if TYPE_CHECKING:
+    from ..ship import Ship
+    from ..asteroid import Asteroid
+    from ..bullet import Bullet
+    from ..mines import Mine
+    from ..score import Score
+    from ..scenario import Scenario
 
 
 class KesslerGraphics:

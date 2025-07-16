@@ -3,7 +3,7 @@
 # NOTICE: This file is subject to the license agreement defined in file 'LICENSE', which is part of
 # this source code package.
 
-from typing import Optional, TYPE_CHECKING
+from typing import TYPE_CHECKING
 
 import numpy as np
 
@@ -17,7 +17,7 @@ if TYPE_CHECKING:
 class Score:
     def __init__(self, scenario: Scenario) -> None:
         self.sim_time: float = 0.0
-        self.stop_reason: Optional['StopReason'] = None
+        self.stop_reason: 'StopReason' | None = None
 
 
         # Initialize team classes to score team-specific scores
@@ -32,7 +32,7 @@ class Score:
                 if team.team_id == ship.team:
                     team.total_bullets += scenario.bullet_limit
 
-    def update(self, ships: list[Ship], sim_time: float, controller_perf: Optional[list[float]] = None) -> None:
+    def update(self, ships: list[Ship], sim_time: float, controller_perf: list[float] | None = None) -> None:
         self.sim_time = sim_time
         for team in self.teams:
             ast_hit, bul_hit, shots, bullets, mines, deaths, lives = (0, 0, 0, 0, 0, 0, 0)

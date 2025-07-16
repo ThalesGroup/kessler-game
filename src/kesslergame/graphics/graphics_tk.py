@@ -16,9 +16,10 @@ from ..mines import Mine
 from ..score import Score
 from ..scenario import Scenario
 from ..team import Team
+from ..state_dicts import UISettingsDict
 
 class GraphicsTK(KesslerGraphics):
-    def __init__(self, UI_settings: dict[str, bool] | None = None) -> None:
+    def __init__(self, UI_settings: UISettingsDict | None = None) -> None:
         # UI settings
         # lives, accuracy, asteroids hit, shots taken, bullets left
         # default_ui = {'ships': True, 'lives_remaining': True, 'accuracy': True, 'asteroids_hit': True}

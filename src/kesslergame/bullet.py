@@ -4,7 +4,6 @@
 # this source code package.
 
 import math
-
 from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
@@ -13,7 +12,7 @@ from .state_dicts import BulletState
 
 
 class Bullet:
-    __slots__ = ('owner', 'speed', 'length', 'mass', 'position', 'heading', 'rad_heading', 'tail', 'velocity')
+    __slots__ = ('owner', 'speed', 'length', 'mass', 'position', 'heading', 'rad_heading', 'tail', 'velocity', '_state')
     def __init__(self, starting_position: tuple[float, float], starting_heading: float, owner: 'Ship') -> None:
         self.owner = owner
         self.speed: float = 800.0  # m/s
@@ -27,19 +26,28 @@ class Bullet:
         self.tail: tuple[float, float] = (self.position[0] - self.length * cos_heading, self.position[1] - self.length * sin_heading)
         self.velocity: tuple[float, float] = (self.speed * cos_heading, self.speed * sin_heading)
 
+        self._state: BulletState = {
+            "position": self.position,
+            "velocity": self.velocity,
+            "heading": self.heading,
+            "mass": self.mass
+        }
+
+    def update_state(self) -> None:
+        self._state["position"] = self.position
+        self._state["velocity"] = self.velocity
+        self._state["heading"] = self.heading
+        self._state["mass"] = self.mass
+
     def update(self, delta_time: float = 1/30) -> None:
         # Update the position:
         self.position = (self.position[0] + self.velocity[0] * delta_time, self.position[1] + self.velocity[1] * delta_time)
         self.tail = (self.tail[0] + self.velocity[0] * delta_time, self.tail[1] + self.velocity[1] * delta_time)
+        self.update_state()
 
     def destruct(self) -> None:
         pass
 
     @property
     def state(self) -> BulletState:
-        return {
-            "position": self.position,
-            "velocity": self.velocity,
-            "heading": self.heading,
-            "mass": self.mass
-        }
+        return self._state
