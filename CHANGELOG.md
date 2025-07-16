@@ -1,5 +1,12 @@
 # Changelog
 
+## [2.X.X] NEXT VERSION
+- Fixed building mypyc compiled wheels, so compiled modules are now actually being run to provide a 4X+ speed benefit
+- Use cibuildwheel to automate building mypyc compiled wheels, and upload to pypi and the Github release
+- Wait until all asteroid collision checks are finished before appending new asteroids
+- Optimize culling of asteroids and other game objects from O(n) to O(1)
+- Fix rare bug where the asteroid would wrap every frame and oscillate along the map border
+
 ## [2.3.0] - 15 July 2025
 
 - Fixed issues with automated building of mypyc compiled wheels
