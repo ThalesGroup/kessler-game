@@ -1,10 +1,13 @@
 # Changelog
 
-## [2.X.X] NEXT VERSION
-- Fixed building mypyc compiled wheels, so compiled modules are now actually being run to provide a 4X+ speed benefit
+## [2.4.0] - NEXT VERSION 2025
+- Fixed building mypyc compiled wheels, so compiled modules are now actually being run to provide a 4X+ speed benefit over interpreted
 - Use cibuildwheel to automate building mypyc compiled wheels, and upload to pypi and the Github release
 - Wait until all asteroid collision checks are finished before appending new asteroids
-- Optimize culling of asteroids and other game objects from O(n) to O(1)
+- Change bullet-asteroid collision detection to take earlier collision in time, instead of whichever asteroid is first in the list
+- Optimize removal of asteroids and other game objects from O(n) to O(1)
+- Optimize creation of game_state and ship_state by reusing dictionaries instead of recreating them
+- Optimize creation of game_state by sharing the same dictionary between controllers by default, and only recreating in a competition setting
 - Fix rare bug where the asteroid would wrap every frame and oscillate along the map border
 
 ## [2.3.0] - 15 July 2025
