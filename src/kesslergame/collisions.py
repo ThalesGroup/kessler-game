@@ -224,59 +224,66 @@ def circle_line_collision_continuous(
 ) -> bool:
     # Returns whether a moving circle and line segment collided within the time interval [-delta_time, 0]
 
+    # Unpack input tuples
+    ax0, ay0 = line_A
+    bx0, by0 = line_B
+    line_vel_x, line_vel_y = line_vel
+    circle_x, circle_y = circle_center
+    circle_vel_x, circle_vel_y = circle_vel
+
     # First, do a quick bounding box rejection check
     # Find the min/max x/y values that the bullet can take on, and then expand by the radius of the asteroid
     # This code can be written MUCH cleaner by creating a list and using max and min on it, however this unrolled version is many times faster when compiled with mypyc
     # This code is the most called function in the game, so speed is crucial
-    rel_frame_vel_x = (line_vel[0] - circle_vel[0]) * delta_time
-    rel_frame_vel_y = (line_vel[1] - circle_vel[1]) * delta_time
+    rel_frame_vel_x = (line_vel_x - circle_vel_x) * delta_time
+    rel_frame_vel_y = (line_vel_y - circle_vel_y) * delta_time
 
     # X
-    if line_A[0] < line_B[0]:
+    if ax0 < bx0:
         if rel_frame_vel_x >= 0.0:
-            min_x = line_A[0] - rel_frame_vel_x
-            max_x = line_B[0]
+            min_x = ax0 - rel_frame_vel_x
+            max_x = bx0
         else:
-            min_x = line_A[0]
-            max_x = line_B[0] - rel_frame_vel_x
+            min_x = ax0
+            max_x = bx0 - rel_frame_vel_x
     else:
         if rel_frame_vel_x >= 0.0:
-            min_x = line_B[0] - rel_frame_vel_x
-            max_x = line_A[0]
+            min_x = bx0 - rel_frame_vel_x
+            max_x = ax0
         else:
-            min_x = line_B[0]
-            max_x = line_A[0] - rel_frame_vel_x
+            min_x = bx0
+            max_x = ax0 - rel_frame_vel_x
 
     # Y
-    if line_A[1] < line_B[1]:
+    if ay0 < by0:
         if rel_frame_vel_y >= 0.0:
-            min_y = line_A[1] - rel_frame_vel_y
-            max_y = line_B[1]
+            min_y = ay0 - rel_frame_vel_y
+            max_y = by0
         else:
-            min_y = line_A[1]
-            max_y = line_B[1] - rel_frame_vel_y
+            min_y = ay0
+            max_y = by0 - rel_frame_vel_y
     else:
         if rel_frame_vel_y >= 0.0:
-            min_y = line_B[1] - rel_frame_vel_y
-            max_y = line_A[1]
+            min_y = by0 - rel_frame_vel_y
+            max_y = ay0
         else:
-            min_y = line_B[1]
-            max_y = line_A[1] - rel_frame_vel_y
-    
-    if circle_center[0] + circle_radius < min_x or circle_center[0] - circle_radius > max_x or circle_center[1] + circle_radius < min_y or circle_center[1] - circle_radius > max_y:
+            min_y = by0
+            max_y = ay0 - rel_frame_vel_y
+
+    if circle_x + circle_radius < min_x or circle_x - circle_radius > max_x or circle_y + circle_radius < min_y or circle_y - circle_radius > max_y:
         return False
 
     # The key insight is that, from the frame of reference of the asteroid, the bullet's path over the previous frame covers the shape of a parallelogram
     # So we can simplify this problem down to a stationary collision check between a circle centered at the origin, and a parallelogram
-    
+
     # Fix frame of reference to circle
     # a and b are the head and tail of the bullet
-    ax = line_A[0] - circle_center[0]
-    ay = line_A[1] - circle_center[1]
-    bx = line_B[0] - circle_center[0]
-    by = line_B[1] - circle_center[1]
-    vx = (line_vel[0] - circle_vel[0]) * delta_time # Per frame velocities
-    vy = (line_vel[1] - circle_vel[1]) * delta_time
+    ax = ax0 - circle_x
+    ay = ay0 - circle_y
+    bx = bx0 - circle_x
+    by = by0 - circle_y
+    vx = (line_vel_x - circle_vel_x) * delta_time # Per frame velocities
+    vy = (line_vel_y - circle_vel_y) * delta_time
     # c and d are the head and tails of the bullet, delta_time in the past, forming the other two points of the parallelogram
     cx = ax - vx
     cy = ay - vy
