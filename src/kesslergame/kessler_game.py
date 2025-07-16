@@ -259,13 +259,13 @@ class KesslerGame:
                         else:
                             ast_idx += 1
                     for ship in liveships:
-                        if not ship.is_respawning:
-                            dx = ship.position[0] - mine.position[0]
-                            dy = ship.position[1] - mine.position[1]
-                            radius_sum = mine.blast_radius + ship.radius
-                            if dx * dx + dy * dy <= radius_sum * radius_sum:
-                                # Ship destruct function.
-                                ship.destruct(map_size=scenario.map_size)
+                        if ship.alive and not ship.is_respawning:
+                                dx = ship.position[0] - mine.position[0]
+                                dy = ship.position[1] - mine.position[1]
+                                radius_sum = mine.blast_radius + ship.radius
+                                if dx * dx + dy * dy <= radius_sum * radius_sum:
+                                    # Ship destruct function.
+                                    ship.destruct(map_size=scenario.map_size)
                     if mine_idx not in mine_remove_idxs:
                         mine_remove_idxs.append(mine_idx)
                     mine.destruct()
@@ -278,7 +278,7 @@ class KesslerGame:
                 new_asteroids.clear()
             # --- Check ship-asteroid collisions ---
             for ship in liveships:
-                if not ship.is_respawning:
+                if ship.alive and not ship.is_respawning:
                     ast_idx = 0
                     num_asts = len(asteroids)
                     while ast_idx < num_asts:
@@ -300,23 +300,23 @@ class KesslerGame:
                             break
                         else:
                             ast_idx += 1
-            # Cull ships if not alive
-            liveships = [ship for ship in liveships if ship.alive]
             # Add new asteroids from ship-asteroid collisions
             if new_asteroids:
                 asteroids.extend(new_asteroids)
                 new_asteroids.clear()
             # --- Check ship-ship collisions ---
             for ship_idx, ship1 in enumerate(liveships):
-                for ship2 in liveships[ship_idx + 1:]:
-                    if not ship2.is_respawning and not ship1.is_respawning:
-                        dx = ship1.position[0] - ship2.position[0]
-                        dy = ship1.position[1] - ship2.position[1]
-                        radius_sum = ship1.radius + ship2.radius
-                        # Most of the time no collision occurs, so use early exit to optimize collision check
-                        if abs(dx) <= radius_sum and abs(dy) <= radius_sum and dx * dx + dy * dy <= radius_sum * radius_sum:
-                            ship1.destruct(map_size=scenario.map_size)
-                            ship2.destruct(map_size=scenario.map_size)
+                if ship1.alive:
+                    for ship2 in liveships[ship_idx + 1:]:
+                        if ship2.alive:
+                            if not ship2.is_respawning and not ship1.is_respawning:
+                                dx = ship1.position[0] - ship2.position[0]
+                                dy = ship1.position[1] - ship2.position[1]
+                                radius_sum = ship1.radius + ship2.radius
+                                # Most of the time no collision occurs, so use early exit to optimize collision check
+                                if abs(dx) <= radius_sum and abs(dy) <= radius_sum and dx * dx + dy * dy <= radius_sum * radius_sum:
+                                    ship1.destruct(map_size=scenario.map_size)
+                                    ship2.destruct(map_size=scenario.map_size)
             # Cull ships if not alive
             liveships = [ship for ship in liveships if ship.alive]
 
