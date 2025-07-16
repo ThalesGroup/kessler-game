@@ -51,7 +51,7 @@ class KesslerGame:
         self.graphics_obj: Optional[KesslerGraphics] = settings.get("graphics_obj", None)
         self.realtime_multiplier: float = settings.get("realtime_multiplier", 0 if self.graphics_type==GraphicsType.NoGraphics else 1)
         self.time_limit: float = settings.get("time_limit", float("inf"))
-        self.random_ast_splits = settings.get("random_ast_splits", False)
+        self.random_ast_splits: bool = settings.get("random_ast_splits", False)
 
         # UI settings
         default_ui = {'ships': True, 'lives_remaining': True, 'accuracy': True,
