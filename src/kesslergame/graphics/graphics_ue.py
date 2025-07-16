@@ -5,7 +5,6 @@
 
 import socket
 import numpy as np
-from typing import List
 
 from ..ship import Ship
 from ..asteroid import Asteroid
@@ -47,7 +46,7 @@ class GraphicsUE(KesslerGraphics):
         start_str += 'teams:' + str(team_count)
         self.udp_sock.sendto(start_str.encode('utf-8'), self.udp_addr)
 
-    def update(self, score: Score, ships: List[Ship], asteroids: List[Asteroid], bullets: List[Bullet], mines: List[Mine]) -> None:
+    def update(self, score: Score, ships: list[Ship], asteroids: list[Asteroid], bullets: list[Bullet], mines: list[Mine]) -> None:
         update_parts = ['::frame::']
 
         for ship in ships:

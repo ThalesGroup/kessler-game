@@ -11,7 +11,8 @@ from typing import Optional
 from .bullet import Bullet
 from .mines import Mine
 from .controller import KesslerController
-from .ship_state import ShipState, ShipOwnState
+from .state_dicts import ShipState, ShipOwnState
+
 
 class Ship:
     __slots__ = (

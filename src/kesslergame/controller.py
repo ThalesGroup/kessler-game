@@ -3,8 +3,9 @@
 # NOTICE: This file is subject to the license agreement defined in file 'LICENSE', which is part of
 # this source code package.
 
-from .game_state import GameStateDict
-from .ship_state import ShipOwnState
+from .state_dicts import GameStateDict
+from .state_dicts import ShipOwnState
+
 
 class KesslerController:
     """

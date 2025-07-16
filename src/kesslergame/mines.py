@@ -5,11 +5,12 @@
 
 from typing import TYPE_CHECKING
 
-from .mine_state import MineState
+from .state_dicts import MineState
 
 if TYPE_CHECKING:
     from .ship import Ship
     from .asteroid import Asteroid
+
 
 class Mine:
     __slots__ = ('fuse_time', 'detonation_time', 'mass', 'radius', 'blast_radius', 'blast_pressure', 'owner', 'countdown_timer', 'detonating', 'position')

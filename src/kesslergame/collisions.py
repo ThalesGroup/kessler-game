@@ -54,6 +54,21 @@ def solve_quadratic(a: float, b: float, c: float) -> tuple[float, float]:
     else:
         return x2, x1
 
+def project_point_onto_segment_and_get_t(x1: float, y1: float, x2: float, y2: float, px: float, py: float) -> float:
+    """
+    Projects point P onto segment A->B, returns t in [0,1] where projection falls;
+    If out of [0,1], the closest endpoint is closer than the interior.
+    """
+    dx = x2 - x1
+    dy = y2 - y1
+    len_sq = dx * dx + dy * dy
+    if len_sq < 1e-12:
+        return math.nan
+    px_rel = px - x1
+    py_rel = py - y1
+    t = (px_rel * dx + py_rel * dy) / len_sq
+    return t
+
 def collision_time_interval(
     line_A: tuple[float, float],
     line_B: tuple[float, float],
@@ -164,20 +179,6 @@ def collision_time_interval(
     t1_mid = t_ast_center + t_diff_ast_radius
 
     # The bullet's endpoints are at n=0; so check if these collision points lie within the inside of the segment
-    def project_point_onto_segment_and_get_t(x1, y1, x2, y2, px, py) -> float:
-        """
-        Projects point P onto segment A->B, returns t in [0,1] where projection falls;
-        If out of [0,1], the closest endpoint is closer than the interior.
-        """
-        dx = x2 - x1
-        dy = y2 - y1
-        len_sq = dx * dx + dy * dy
-        if len_sq < 1e-12:
-            return 0.0
-        px_rel = px - x1
-        py_rel = py - y1
-        t = (px_rel * dx + py_rel * dy) / len_sq
-        return t
 
     # At time t0_mid, the whole segment translates by t*rv; check where the circle center projects onto segment
     a0x_t0m = a0x + rvx * t0_mid
@@ -212,6 +213,37 @@ def collision_time_interval(
         return (math.nan, math.nan)
 
     return (t0, t1)
+
+def project_origin_onto_segment_dist_sq(x1: float, y1: float, x2: float, y2: float) -> float:
+    # Given a segment from (x1, y1) to (x2, y2), project the origin (0, 0)
+    # onto this segment and return the squared distance from the origin
+    # to the closest point on the segment.
+    dx = x2 - x1
+    dy = y2 - y1
+    len_sq = dx * dx + dy * dy
+
+    # If the endpoints are basically the same point,
+    # just return squared dist to the (degenerate) endpoint.
+    if len_sq < 1e-12:
+        return x1 * x1 + y1 * y1
+
+    # Compute the projection parameter t of the origin onto the segment,
+    # where t=0 yields (x1, y1) and t=1 yields (x2, y2).
+    # Clamp t to [0, 1] to stay on the segment.
+    t = -(x1 * dx + y1 * dy) / len_sq
+    # Avoid max/min to optimize for mypyc compilation
+    if t > 1.0:
+        t = 1.0
+    elif t < 0.0:
+        t = 0.0
+    #t = max(0.0, min(1.0, t))
+
+    # Compute the closest point's coordinates.
+    px = x1 + t * dx
+    py = y1 + t * dy
+
+    # Return the squared distance from the origin to this closest point.
+    return px * px + py * py
 
 def circle_line_collision_continuous(
     line_A: tuple[float, float],
@@ -299,36 +331,6 @@ def circle_line_collision_continuous(
     #    return True
 
     # Project the point (0, 0), the center of the circle, onto each of the edges of the parallelogram
-    def project_origin_onto_segment_dist_sq(x1: float, y1: float, x2: float, y2: float) -> float:
-        # Given a segment from (x1, y1) to (x2, y2), project the origin (0, 0)
-        # onto this segment and return the squared distance from the origin
-        # to the closest point on the segment.
-        dx = x2 - x1
-        dy = y2 - y1
-        len_sq = dx * dx + dy * dy
-
-        # If the endpoints are basically the same point,
-        # just return squared dist to the (degenerate) endpoint.
-        if len_sq < 1e-12:
-            return x1 * x1 + y1 * y1
-
-        # Compute the projection parameter t of the origin onto the segment,
-        # where t=0 yields (x1, y1) and t=1 yields (x2, y2).
-        # Clamp t to [0, 1] to stay on the segment.
-        t = -(x1 * dx + y1 * dy) / len_sq
-        # Avoid max/min to optimize for mypyc compilation
-        if t > 1.0:
-            t = 1.0
-        elif t < 0.0:
-            t = 0.0
-        #t = max(0.0, min(1.0, t))
-
-        # Compute the closest point's coordinates.
-        px = x1 + t * dx
-        py = y1 + t * dy
-
-        # Return the squared distance from the origin to this closest point.
-        return px * px + py * py
 
     # Check whether any of these projected points with clamping are within the circle. If yes, there's a collision.
     if (

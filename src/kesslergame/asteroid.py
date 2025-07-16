@@ -3,7 +3,7 @@
 # NOTICE: This file is subject to the license agreement defined in file 'LICENSE', which is part of
 # this source code package.
 
-from typing import Optional, TYPE_CHECKING, Union
+from typing import TYPE_CHECKING, Union
 import random
 import math
 
@@ -11,16 +11,16 @@ if TYPE_CHECKING:
     from .ship import Ship
     from .bullet import Bullet
 from .mines import Mine
-from .asteroid_state import AsteroidState
+from .state_dicts import AsteroidState
 
 class Asteroid:
     """ Sprite that represents an asteroid. """
     __slots__ = ('size', 'max_speed', 'num_children', 'radius', 'mass', 'vx', 'vy', 'velocity', 'position', 'angle', 'turnrate', '_state')
     def __init__(self,
                  position: tuple[float, float],
-                 speed: Optional[float] = None,
-                 angle: Optional[float] = None,
-                 size: Optional[int] = None) -> None:
+                 speed: float | None = None,
+                 angle: float | None = None,
+                 size: int | None = None) -> None:
         """
         Constructor for Asteroid Sprite
 

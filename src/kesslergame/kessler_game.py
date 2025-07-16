@@ -6,7 +6,7 @@
 import time
 import math
 
-from typing import Any, TypedDict, Optional
+from typing import Any, TypedDict
 from enum import Enum
 
 from .scenario import Scenario
@@ -19,7 +19,8 @@ from .asteroid import Asteroid
 from .ship import Ship
 from .bullet import Bullet
 from .graphics import KesslerGraphics
-from .game_state import GameStateDict
+from .state_dicts import GameStateDict
+
 
 class StopReason(Enum):
     not_stopped = 0
@@ -38,8 +39,9 @@ class PerfDict(TypedDict, total=False):
     graphics_draw: float
     total_frame_time: float
 
+
 class KesslerGame:
-    def __init__(self, settings: Optional[dict[str, Any]] = None) -> None:
+    def __init__(self, settings: dict[str, Any] | None = None) -> None:
         if settings is None:
             settings = {}
         # Game settings
@@ -48,7 +50,7 @@ class KesslerGame:
         self.perf_tracker: bool = settings.get("perf_tracker", False)
         self.prints_on: bool = settings.get("prints_on", True)
         self.graphics_type: GraphicsType = settings.get("graphics_type", GraphicsType.Tkinter)
-        self.graphics_obj: Optional[KesslerGraphics] = settings.get("graphics_obj", None)
+        self.graphics_obj: KesslerGraphics | None = settings.get("graphics_obj", None)
         self.realtime_multiplier: float = settings.get("realtime_multiplier", 0 if self.graphics_type==GraphicsType.NoGraphics else 1)
         self.time_limit: float = settings.get("time_limit", float("inf"))
         self.random_ast_splits: bool = settings.get("random_ast_splits", False)
@@ -395,7 +397,7 @@ class KesslerGame:
 
 
 class TrainerEnvironment(KesslerGame):
-    def __init__(self, settings: Optional[dict[str, Any]] = None) -> None:
+    def __init__(self, settings: dict[str, Any] | None = None) -> None:
         """
         Instantiates a KesslerGame object with settings to optimize training time
         """

@@ -14,4 +14,4 @@ from ._version import __version__
 
 
 __all__ = ['KesslerGame', 'TrainerEnvironment', 'KesslerController', 'Scenario', 'Score', 'GraphicsType',
-           'KesslerGraphics', 'GamepadController']#, 'Ship', 'ShipState']
+           'KesslerGraphics', 'GamepadController']

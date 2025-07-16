@@ -9,7 +9,8 @@ from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
     from .ship import Ship
-from .bullet_state import BulletState
+from .state_dicts import BulletState
+
 
 class Bullet:
     __slots__ = ('owner', 'speed', 'length', 'mass', 'position', 'heading', 'rad_heading', 'tail', 'velocity')

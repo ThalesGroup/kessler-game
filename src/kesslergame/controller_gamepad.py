@@ -1,10 +1,10 @@
 # -*- coding: utf-8 -*-
 
-from .game_state import GameStateDict
-from .ship_state import ShipOwnState
+from .state_dicts import GameStateDict
+from .state_dicts import ShipOwnState
 from .controller import KesslerController
 from typing import NoReturn, Any, Final
-from inputs import get_gamepad  # type: ignore[import-untyped]
+from inputs import get_gamepad
 import threading
 import time
 
