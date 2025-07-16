@@ -37,6 +37,10 @@ class PerfDict(TypedDict, total=False):
     score_update: float
     graphics_draw: float
     total_frame_time: float
+    bullets_update: float
+    mines_update: float
+    asteroids_update: float
+    ships_update: float
 
 
 class KesslerGame:
@@ -182,10 +186,19 @@ class KesslerGame:
             # Update each Asteroid, Bullet, and Ship
             for bullet in bullets:
                 bullet.update(self.delta_time)
+            if self.perf_tracker:
+                perf_dict['bullets_update'] = time.perf_counter() - prev
+                prev = time.perf_counter()
             for mine in mines:
                 mine.update(self.delta_time)
+            if self.perf_tracker:
+                perf_dict['mines_update'] = time.perf_counter() - prev
+                prev = time.perf_counter()
             for asteroid in asteroids:
                 asteroid.update(self.delta_time, scenario.map_size)
+            if self.perf_tracker:
+                perf_dict['asteroids_update'] = time.perf_counter() - prev
+                prev = time.perf_counter()
             for ship in liveships:
                 new_bullet, new_mine = ship.update(self.delta_time, scenario.map_size)
                 if new_bullet is not None:
@@ -195,9 +208,9 @@ class KesslerGame:
                     mines.append(new_mine)
                     game_state['mines'].append(new_mine.state)
 
-            # Update performance tracker with
+            # Update performance tracker
             if self.perf_tracker:
-                perf_dict['physics_update'] = time.perf_counter() - prev
+                perf_dict['ships_update'] = time.perf_counter() - prev
                 prev = time.perf_counter()
 
             # --- CHECK FOR COLLISIONS ---------------------------------------------------------------------------------

@@ -15,7 +15,7 @@ from .state_dicts import AsteroidState
 
 class Asteroid:
     """ Sprite that represents an asteroid. """
-    __slots__ = ('size', 'max_speed', 'num_children', 'radius', 'mass', 'vx', 'vy', 'velocity', 'position', 'angle', 'turnrate', '_state')
+    __slots__ = ('size', 'max_speed', 'num_children', 'radius', 'mass', 'vx', 'vy', 'velocity', 'position', 'angle', 'turnrate', '_state', '_state_position')
     def __init__(self,
                  position: tuple[float, float],
                  speed: float | None = None,
@@ -80,6 +80,8 @@ class Asteroid:
             "mass": self.mass,
             "radius": self.radius
         }
+        # Pre-lookup the dictionary key
+        self._state_position = self._state["position"]
 
     @property
     def state(self) -> AsteroidState:
@@ -88,7 +90,8 @@ class Asteroid:
     def update(self, delta_time: float = 1 / 30, map_size: tuple[int, int] = (1000, 800)) -> None:
         """ Move the asteroid based on velocity"""
         self.position = ((self.position[0] + self.velocity[0] * delta_time) % map_size[0], (self.position[1] + self.velocity[1] * delta_time) % map_size[1])
-        self._state["position"] = self.position
+        # Update the state dict
+        self._state_position = self.position
         self.angle += delta_time * self.turnrate
 
     def destruct(self, impactor: Union['Bullet', 'Mine', 'Ship'], random_ast_split: bool) -> list['Asteroid']:

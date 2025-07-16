@@ -13,7 +13,7 @@ if TYPE_CHECKING:
 
 
 class Mine:
-    __slots__ = ('fuse_time', 'detonation_time', 'mass', 'radius', 'blast_radius', 'blast_pressure', 'owner', 'countdown_timer', 'detonating', 'position', '_state')
+    __slots__ = ('fuse_time', 'detonation_time', 'mass', 'radius', 'blast_radius', 'blast_pressure', 'owner', 'countdown_timer', 'detonating', 'position', '_state', '_state_remaining_time')
     def __init__(self, starting_position: tuple[float, float], owner: 'Ship') -> None:
         self.fuse_time: float = 3.0
         self.detonation_time: float = 0.25
@@ -33,10 +33,12 @@ class Mine:
             "fuse_time": self.fuse_time,
             "remaining_time": self.countdown_timer
         }
+        # Pre-lookup the dictionary key
+        self._state_remaining_time = self._state["remaining_time"]
 
     def update(self, delta_time: float = 1/30) -> None:
         self.countdown_timer -= delta_time
-        self._state["remaining_time"] = self.countdown_timer
+        self._state_remaining_time = self.countdown_timer
         if self.countdown_timer <= 1e-15:
             self.detonate()
 

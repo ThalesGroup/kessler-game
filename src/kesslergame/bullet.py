@@ -12,7 +12,7 @@ from .state_dicts import BulletState
 
 
 class Bullet:
-    __slots__ = ('owner', 'speed', 'length', 'mass', 'position', 'heading', 'rad_heading', 'tail', 'velocity', '_state')
+    __slots__ = ('owner', 'speed', 'length', 'mass', 'position', 'heading', 'rad_heading', 'tail', 'velocity', '_state', '_state_position')
     def __init__(self, starting_position: tuple[float, float], starting_heading: float, owner: 'Ship') -> None:
         self.owner = owner
         self.speed: float = 800.0  # m/s
@@ -32,18 +32,14 @@ class Bullet:
             "heading": self.heading,
             "mass": self.mass
         }
-
-    def update_state(self) -> None:
-        self._state["position"] = self.position
-        self._state["velocity"] = self.velocity
-        self._state["heading"] = self.heading
-        self._state["mass"] = self.mass
+        # Pre-lookup the dictionary key
+        self._state_position = self._state["position"]
 
     def update(self, delta_time: float = 1/30) -> None:
         # Update the position:
         self.position = (self.position[0] + self.velocity[0] * delta_time, self.position[1] + self.velocity[1] * delta_time)
         self.tail = (self.tail[0] + self.velocity[0] * delta_time, self.tail[1] + self.velocity[1] * delta_time)
-        self.update_state()
+        self._state_position = self.position
 
     def destruct(self) -> None:
         pass
