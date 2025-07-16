@@ -14,8 +14,8 @@ from .state_dicts import ShipState, ShipOwnState
 
 class Ship:
     __slots__ = (
-        'controller', 'thrust', 'turn_rate', 'id', 'speed', 'position',
-        'velocity', 'heading', 'lives', 'deaths', 'team', 'team_name',
+        'controller', 'thrust', 'turn_rate', 'id', 'speed', 'x', 'y',
+        'vx', 'vy', 'heading', 'lives', 'deaths', 'team', 'team_name',
         'fire', 'drop_mine', 'thrust_range', 'turn_rate_range', 'max_speed',
         'drag', 'radius', 'mass', '_respawning', '_respawn_time', '_fire_limiter',
         '_fire_time', '_mine_limiter', '_mine_deploy_time', 'mines_remaining',
@@ -50,8 +50,8 @@ class Ship:
         # State info
         self.id: int = ship_id
         self.speed: float = 0.0
-        self.position: tuple[float, float] = position
-        self.velocity: tuple[float, float] = (0.0, 0.0)
+        self.x, self.y = position
+        self.vx, self.vy = (0.0, 0.0)
         self.heading: float = angle
         self.lives: int = lives
         self.deaths: int = 0
@@ -174,6 +174,13 @@ class Ship:
         self._ownstate_mine_cooldown = self.mine_wait_time
         self._ownstate_respawn_time_left = self.respawn_time_left
 
+    @property
+    def position(self) -> tuple[float, float]:
+        return (self.x, self.y)
+
+    @property
+    def velocity(self) -> tuple[float, float]:
+        return (self.vx, self.vy)
 
     @property
     def state(self) -> ShipState:
@@ -294,11 +301,12 @@ class Ship:
 
         # Use speed magnitude to get velocity vector
         rad_heading = math.radians(self.heading)
-        self.velocity = (math.cos(rad_heading) * self.speed,
-                         math.sin(rad_heading) * self.speed)
+        self.vx = math.cos(rad_heading) * self.speed
+        self.vy = math.sin(rad_heading) * self.speed
 
         # Update the position based off the velocities
-        self.position = ((self.position[0] + self.velocity[0] * delta_time) % map_size[0], (self.position[1] + self.velocity[1] * delta_time) % map_size[1])
+        self.x = (self.x + self.vx * delta_time) % map_size[0]
+        self.y = (self.y + self.vy * delta_time) % map_size[1]
 
         # Update the state dict
         self.update_state()
@@ -326,9 +334,9 @@ class Ship:
         self._respawning = self._respawn_time
 
         # Set location and physical parameters
-        self.position = position
+        self.x, self.y = position
         self.speed = 0.0
-        self.velocity = (0.0, 0.0)
+        self.vx, self.vy = (0.0, 0.0)
         self.heading = heading
 
     def deploy_mine(self) -> Mine | None:

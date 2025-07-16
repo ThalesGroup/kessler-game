@@ -15,7 +15,7 @@ from .state_dicts import AsteroidState
 
 class Asteroid:
     """ Sprite that represents an asteroid. """
-    __slots__ = ('size', 'max_speed', 'num_children', 'radius', 'mass', 'vx', 'vy', 'velocity', 'position', 'angle', 'turnrate', '_state', '_state_position')
+    __slots__ = ('size', 'max_speed', 'num_children', 'radius', 'mass', 'x', 'y', 'vx', 'vy', 'velocity', 'angle', 'turnrate', '_state', '_state_position')
     def __init__(self,
                  position: tuple[float, float],
                  speed: float | None = None,
@@ -63,10 +63,9 @@ class Asteroid:
 
         self.vx = starting_speed * math.cos(math.radians(starting_angle))
         self.vy = starting_speed * math.sin(math.radians(starting_angle))
-        self.velocity: tuple[float, float] = (self.vx, self.vy)
 
         # Set position as specified
-        self.position: tuple[float, float] = position
+        self.x, self.y = position
 
         # Random rotations for use in display or future use with complex hit box
         self.angle: float = random.uniform(0.0, 360.0)
@@ -86,12 +85,21 @@ class Asteroid:
     @property
     def state(self) -> AsteroidState:
         return self._state
+    
+    @property
+    def position(self) -> tuple[float, float]:
+        return (self.x, self.y)
+
+    @property
+    def velocity(self) -> tuple[float, float]:
+        return (self.vx, self.vy)
 
     def update(self, delta_time: float = 1 / 30, map_size: tuple[int, int] = (1000, 800)) -> None:
         """ Move the asteroid based on velocity"""
-        self.position = ((self.position[0] + self.velocity[0] * delta_time) % map_size[0], (self.position[1] + self.velocity[1] * delta_time) % map_size[1])
+        self.x = (self.x + self.vx * delta_time) % map_size[0]
+        self.y = (self.y + self.vy * delta_time) % map_size[1]
         # Update the state dict
-        self._state_position = self.position
+        self._state_position = (self.x, self.y)
         self.angle += delta_time * self.turnrate
 
     def destruct(self, impactor: Union['Bullet', 'Mine', 'Ship'], random_ast_split: bool) -> list['Asteroid']:
@@ -104,15 +112,15 @@ class Asteroid:
         split_angle_bound: float = 30.0
         if self.size != 1:
             if isinstance(impactor, Mine):
-                delta_x = impactor.position[0] - self.position[0]
-                delta_y = impactor.position[1] - self.position[1]
+                delta_x = impactor.position[0] - self.x
+                delta_y = impactor.position[1] - self.y
                 dist = math.sqrt(delta_x * delta_x + delta_y * delta_y)
                 F = impactor.calculate_blast_force(dist=dist, obj=self)
                 a = F / self.mass
                 # calculate "impulse" based on acc
                 if dist != 0.0:
-                    cos_theta = (self.position[0] - impactor.position[0]) / dist
-                    sin_theta = (self.position[1] - impactor.position[1]) / dist
+                    cos_theta = (self.x - impactor.position[0]) / dist
+                    sin_theta = (self.y - impactor.position[1]) / dist
                     vfx = self.vx + a * cos_theta
                     vfy = self.vy + a * sin_theta
 

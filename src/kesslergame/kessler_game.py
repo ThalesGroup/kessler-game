@@ -258,8 +258,8 @@ class KesslerGame:
                 # Cull any bullets past the map edge
                 # It is important we do this after the asteroid-bullet collision checks occur,
                 # in the case of bullets leaving the map but might hit an asteroid on the edge
-                if not ((0.0 <= bullet.position[0] <= scenario.map_size[0] and 0.0 <= bullet.position[1] <= scenario.map_size[1])
-                        or (0.0 <= bullet.tail[0] <= scenario.map_size[0] and 0.0 <= bullet.tail[1] <= scenario.map_size[1])):
+                if not ((0.0 <= bullet.x <= scenario.map_size[0] and 0.0 <= bullet.y <= scenario.map_size[1])
+                        or (0.0 <= bullet.x + bullet.tail_delta_x <= scenario.map_size[0] and 0.0 <= bullet.y + bullet.tail_delta_y <= scenario.map_size[1])):
                     should_remove_bullet = True
                 # O(1) removal of bullet
                 if should_remove_bullet:
@@ -290,8 +290,8 @@ class KesslerGame:
                     num_asts = len(asteroids)
                     while ast_idx < num_asts:
                         asteroid = asteroids[ast_idx]
-                        dx = asteroid.position[0] - mine.position[0]
-                        dy = asteroid.position[1] - mine.position[1]
+                        dx = asteroid.x - mine.x
+                        dy = asteroid.y - mine.y
                         radius_sum = mine.blast_radius + asteroid.radius
                         if dx * dx + dy * dy <= radius_sum * radius_sum:
                             mine.owner.asteroids_hit += 1
@@ -309,8 +309,8 @@ class KesslerGame:
                             ast_idx += 1
                     for ship in liveships:
                         if ship.alive and not ship.is_respawning:
-                                dx = ship.position[0] - mine.position[0]
-                                dy = ship.position[1] - mine.position[1]
+                                dx = ship.x - mine.x
+                                dy = ship.y - mine.y
                                 radius_sum = mine.blast_radius + ship.radius
                                 if dx * dx + dy * dy <= radius_sum * radius_sum:
                                     # Ship destruct function.
@@ -341,8 +341,8 @@ class KesslerGame:
                     num_asts = len(asteroids)
                     while ast_idx < num_asts:
                         asteroid = asteroids[ast_idx]
-                        dx = ship.position[0] - asteroid.position[0]
-                        dy = ship.position[1] - asteroid.position[1]
+                        dx = ship.x - asteroid.x
+                        dy = ship.y - asteroid.y
                         radius_sum = ship.radius + asteroid.radius
                         # Most of the time no collision occurs, so use early exit to optimize collision check
                         if abs(dx) <= radius_sum and abs(dy) <= radius_sum and dx * dx + dy * dy <= radius_sum * radius_sum:
@@ -375,8 +375,8 @@ class KesslerGame:
                     for ship2 in liveships[ship_idx + 1:]:
                         if ship2.alive:
                             if not ship2.is_respawning and not ship1.is_respawning:
-                                dx = ship1.position[0] - ship2.position[0]
-                                dy = ship1.position[1] - ship2.position[1]
+                                dx = ship1.x - ship2.x
+                                dy = ship1.y - ship2.y
                                 radius_sum = ship1.radius + ship2.radius
                                 # Most of the time no collision occurs, so use early exit to optimize collision check
                                 if abs(dx) <= radius_sum and abs(dy) <= radius_sum and dx * dx + dy * dy <= radius_sum * radius_sum:

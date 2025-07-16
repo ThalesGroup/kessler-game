@@ -13,7 +13,7 @@ if TYPE_CHECKING:
 
 
 class Mine:
-    __slots__ = ('fuse_time', 'detonation_time', 'mass', 'radius', 'blast_radius', 'blast_pressure', 'owner', 'countdown_timer', 'detonating', 'position', '_state', '_state_remaining_time')
+    __slots__ = ('fuse_time', 'detonation_time', 'mass', 'radius', 'blast_radius', 'blast_pressure', 'owner', 'countdown_timer', 'detonating', 'x', 'y', '_state', '_state_remaining_time')
     def __init__(self, starting_position: tuple[float, float], owner: 'Ship') -> None:
         self.fuse_time: float = 3.0
         self.detonation_time: float = 0.25
@@ -25,7 +25,7 @@ class Mine:
         self.owner = owner
         self.countdown_timer: float = self.fuse_time
         self.detonating: bool = False
-        self.position: tuple[float, float] = starting_position
+        self.x, self.y = starting_position
 
         self._state: MineState = {
             "position": self.position,
@@ -52,6 +52,10 @@ class Mine:
     @property
     def state(self) -> MineState:
         return self._state
+
+    @property
+    def position(self) -> tuple[float, float]:
+        return (self.x, self.y)
 
     def calculate_blast_force(self, dist: float, obj: 'Asteroid') -> float:
         """
