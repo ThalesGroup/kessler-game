@@ -185,22 +185,15 @@ class KesslerGame:
             for mine in mines:
                 mine.update(self.delta_time)
             for asteroid in asteroids:
-                asteroid.update(self.delta_time)
+                asteroid.update(self.delta_time, scenario.map_size)
             for ship in liveships:
-                new_bullet, new_mine = ship.update(self.delta_time)
+                new_bullet, new_mine = ship.update(self.delta_time, scenario.map_size)
                 if new_bullet is not None:
                     bullets.append(new_bullet)
                     game_state['bullets'].append(new_bullet.state)
                 if new_mine is not None:
                     mines.append(new_mine)
                     game_state['mines'].append(new_mine.state)
-
-            # Wrap ships and asteroids to other side of map
-            for ship in liveships:
-                ship.position = (ship.position[0] % scenario.map_size[0], ship.position[1] % scenario.map_size[1])
-
-            for asteroid in asteroids:
-                asteroid.position = (asteroid.position[0] % scenario.map_size[0], asteroid.position[1] % scenario.map_size[1])
 
             # Update performance tracker with
             if self.perf_tracker:

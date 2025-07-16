@@ -194,7 +194,7 @@ class Ship:
     def shoot(self) -> None:
         self.fire = True
 
-    def update(self, delta_time: float = 1 / 30) -> tuple[Bullet | None, Mine | None]:
+    def update(self, delta_time: float = 1 / 30, map_size: tuple[int, int] = (1000, 800)) -> tuple[Bullet | None, Mine | None]:
         """
         Update our position and other particulars.
         """
@@ -266,7 +266,7 @@ class Ship:
                          math.sin(rad_heading) * self.speed)
 
         # Update the position based off the velocities
-        self.position = (self.position[0] + self.velocity[0] * delta_time, self.position[1] + self.velocity[1] * delta_time)
+        self.position = ((self.position[0] + self.velocity[0] * delta_time) % map_size[0], (self.position[1] + self.velocity[1] * delta_time) % map_size[1])
 
         # Update the state dict
         self.update_state()

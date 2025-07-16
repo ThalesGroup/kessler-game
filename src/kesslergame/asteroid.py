@@ -85,9 +85,9 @@ class Asteroid:
     def state(self) -> AsteroidState:
         return self._state
 
-    def update(self, delta_time: float = 1/30) -> None:
+    def update(self, delta_time: float = 1 / 30, map_size: tuple[int, int] = (1000, 800)) -> None:
         """ Move the asteroid based on velocity"""
-        self.position = (self.position[0] + self.velocity[0] * delta_time, self.position[1] + self.velocity[1] * delta_time)
+        self.position = ((self.position[0] + self.velocity[0] * delta_time) % map_size[0], (self.position[1] + self.velocity[1] * delta_time) % map_size[1])
         self._state["position"] = self.position
         self.angle += delta_time * self.turnrate
 
