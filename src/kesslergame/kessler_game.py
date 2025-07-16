@@ -45,7 +45,7 @@ class KesslerGame:
         # Game settings
         self.frequency: float = settings.get("frequency", 30.0)
         self.time_step: float = 1.0 / settings.get("frequency", 30.0)
-        self.perf_tracker: bool = settings.get("perf_tracker", True)
+        self.perf_tracker: bool = settings.get("perf_tracker", False)
         self.prints_on: bool = settings.get("prints_on", True)
         self.graphics_type: GraphicsType = settings.get("graphics_type", GraphicsType.Tkinter)
         self.graphics_obj: Optional[KesslerGraphics] = settings.get("graphics_obj", None)
