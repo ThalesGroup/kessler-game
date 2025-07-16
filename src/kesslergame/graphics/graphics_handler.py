@@ -4,7 +4,6 @@
 # this source code package.
 
 from enum import Enum
-from typing import Optional, Dict, List
 from .graphics_base import KesslerGraphics
 from ..scenario import Scenario
 from ..ship import Ship
@@ -12,6 +11,7 @@ from ..asteroid import Asteroid
 from ..bullet import Bullet
 from ..mines import Mine
 from ..score import Score
+
 
 class GraphicsType(Enum):
     NoGraphics = 0
@@ -22,12 +22,12 @@ class GraphicsType(Enum):
 
 
 class GraphicsHandler:
-    def __init__(self, type: GraphicsType = GraphicsType.NoGraphics, scenario: Optional[Scenario] = None, UI_settings: Optional[Dict[str, bool]] = None, graphics_obj: Optional[KesslerGraphics] = None) -> None:
+    def __init__(self, type: GraphicsType = GraphicsType.NoGraphics, scenario: Scenario | None = None, UI_settings: dict[str, bool] | None = None, graphics_obj: KesslerGraphics | None = None) -> None:
         """
         Create a graphics handler utilizing the assigned graphics engine defined from GraphicsType
         """
         self.type = type
-        self.graphics: Optional[KesslerGraphics]
+        self.graphics: KesslerGraphics | None
         if graphics_obj is not None:
             self.graphics = graphics_obj
             if not issubclass(graphics_obj.__class__, KesslerGraphics):
@@ -56,7 +56,7 @@ class GraphicsHandler:
             assert scenario is not None
             self.graphics.start(scenario)
 
-    def update(self, score: Score, ships: List[Ship], asteroids: List[Asteroid], bullets: List[Bullet], mines: List[Mine]) -> None:
+    def update(self, score: Score, ships: list[Ship], asteroids: list[Asteroid], bullets: list[Bullet], mines: list[Mine]) -> None:
         """
         Update the graphics draw with new simulation data each simulation time-step
         """

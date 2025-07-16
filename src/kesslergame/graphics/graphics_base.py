@@ -3,10 +3,7 @@
 # NOTICE: This file is subject to the license agreement defined in file 'LICENSE', which is part of
 # this source code package.
 
-#import os
 from tkinter import *
-from typing import List
-#from PIL import Image, ImageTk  # type: ignore[import-untyped]
 
 from ..ship import Ship
 from ..asteroid import Asteroid
@@ -20,7 +17,7 @@ class KesslerGraphics:
     def start(self, scenario: Scenario) -> None:
         raise NotImplementedError('Your derived KesslerGraphics must include a start() method.')
 
-    def update(self, score: Score, ships: List[Ship], asteroids: List[Asteroid], bullets: List[Bullet], mines: List[Mine]) -> None:
+    def update(self, score: Score, ships: list[Ship], asteroids: list[Asteroid], bullets: list[Bullet], mines: list[Mine]) -> None:
         raise NotImplementedError('Your derived KesslerGraphics must include an update() method.')
 
     def close(self) -> None:

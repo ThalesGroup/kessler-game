@@ -3,7 +3,7 @@
 # NOTICE: This file is subject to the license agreement defined in file 'LICENSE', which is part of
 # this source code package.
 
-from typing import Any, Optional
+from typing import Any
 import random
 from math import isclose
 
@@ -42,8 +42,8 @@ def nudge_asteroid_away_from_border(asteroid_dict: dict[str, Any], map_size: tup
     return asteroid_dict
 
 class Scenario:
-    def __init__(self, name: str = "Unnamed", num_asteroids: int = 0, asteroid_states: Optional[list[dict[str, Any]]] = None,
-                 ship_states: Optional[list[dict[str, Any]]] = None, map_size: Optional[tuple[int, int]] = None, seed: Optional[int] = None,
+    def __init__(self, name: str = "Unnamed", num_asteroids: int = 0, asteroid_states: list[dict[str, Any]] | None = None,
+                 ship_states: list[dict[str, Any]] | None = None, map_size: tuple[int, int] | None = None, seed: int | None = None,
                  time_limit: float = float("inf"), ammo_limit_multiplier: float = 0.0, stop_if_no_ammo: bool = False) -> None:
         """
         Specify the starting state of the environment, including map dimensions and optional features
@@ -62,7 +62,7 @@ class Scenario:
         :param stop_if_no_ammo: Optional flag for stopping the scenario if all ships run out of ammo
         """
         # Protected variable for managing the name, through getter/setter interface
-        self._name: Optional[str] = None
+        self._name: str | None = None
 
         # Store name as string using setter
         self.name = name
