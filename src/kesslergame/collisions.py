@@ -65,6 +65,13 @@ def collision_time_interval(
     """
     Returns the time interval [t0, t1] where the moving segment (A,B) and moving circle intersect.
     Returns (nan, nan) if there is no interception.
+
+    Conceptually, we use the frame of reference of the asteroid, and use positions and velocities relative from it.
+    Therefore, we pretend that the asteroid lies on the origin, and with velocity 0.
+    We first find the start/end times of the bullet head and bullet tail each individually colliding with the asteroid
+    Next, we find the start/end times of somewhere on the middle of the bullet colliding with the asteroid, by solving for tangency
+    If the middle of the bullet is ever tangent with the asteroid, that will be guaranteed to be either earlier,
+    later, or both, compared to the times found for the bullet head/tail
     """
 
     ax, ay = line_A
@@ -90,9 +97,10 @@ def collision_time_interval(
     # Segment vector and length
     seg_dx = b0x - a0x
     seg_dy = b0y - a0y
-    seg_len = math.hypot(seg_dx, seg_dy)  # Will be 12.0
+    seg_len = math.hypot(seg_dx, seg_dy)  # Will be 12.0, the bullet length
+
     # For normalization later
-    if seg_len == 0.:
+    if seg_len == 0.0:
         # Degenerate segment, treat as point
         # We'll just reduce to point vs circle, i.e., treat both A and B as A
         seg_dx = seg_dy = 0.0
@@ -355,6 +363,7 @@ def circle_line_collision_continuous(
     return False
 
 def circle_line_collision_discrete(line_A: tuple[float, float], line_B: tuple[float, float], center: tuple[float, float], radius: float) -> bool:
+    # Unused
     # Accurate version of the discrete collision check
     
     # Quick rejection check:
@@ -406,6 +415,7 @@ def circle_line_collision_discrete(line_A: tuple[float, float], line_B: tuple[fl
     return dist_sq <= radius * radius
 
 def circle_line_collision_old(line_A: tuple[float, float], line_B: tuple[float, float], center: tuple[float, float], radius: float) -> bool:
+    # Unused
     # Old collision check, which was discrete, and also had false positives:
     
     # Check if circle edge is within the outer bounds of the line segment (offset for radius)
