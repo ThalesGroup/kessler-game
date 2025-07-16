@@ -3,12 +3,13 @@
 # NOTICE: This file is subject to the license agreement defined in file 'LICENSE', which is part of
 # this source code package.
 
-from typing import Any, TYPE_CHECKING
+from typing import TYPE_CHECKING
+
+from .mine_state import MineState
 
 if TYPE_CHECKING:
     from .ship import Ship
     from .asteroid import Asteroid
-
 
 class Mine:
     __slots__ = ('fuse_time', 'detonation_time', 'mass', 'radius', 'blast_radius', 'blast_pressure', 'owner', 'countdown_timer', 'detonating', 'position')
@@ -38,7 +39,7 @@ class Mine:
         pass
 
     @property
-    def state(self) -> dict[str, Any]:
+    def state(self) -> MineState:
         return {
             "position": self.position,
             "mass": self.mass,

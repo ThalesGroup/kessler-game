@@ -3,7 +3,7 @@
 # NOTICE: This file is subject to the license agreement defined in file 'LICENSE', which is part of
 # this source code package.
 
-from typing import Any, Optional, TYPE_CHECKING, Union
+from typing import Optional, TYPE_CHECKING, Union
 import random
 import math
 
@@ -11,10 +11,11 @@ if TYPE_CHECKING:
     from .ship import Ship
     from .bullet import Bullet
 from .mines import Mine
+from .asteroid_state import AsteroidState
 
 class Asteroid:
     """ Sprite that represents an asteroid. """
-    __slots__ = ('size', 'max_speed', 'num_children', 'radius', 'mass', 'vx', 'vy', 'velocity', 'position', 'angle', 'turnrate')
+    __slots__ = ('size', 'max_speed', 'num_children', 'radius', 'mass', 'vx', 'vy', 'velocity', 'position', 'angle', 'turnrate', '_state')
     def __init__(self,
                  position: tuple[float, float],
                  speed: Optional[float] = None,
@@ -71,15 +72,20 @@ class Asteroid:
         self.angle: float = random.uniform(0.0, 360.0)
         self.turnrate: float = random.uniform(-100, 100)
 
-    @property
-    def state(self) -> dict[str, Any]:
-        return {
+        # Precompute static portion of state
+        self._state: AsteroidState = {
             "position": self.position,
             "velocity": self.velocity,
             "size": self.size,
             "mass": self.mass,
             "radius": self.radius
         }
+
+    @property
+    def state(self) -> AsteroidState:
+        # Only update the position in the precomputed dict
+        self._state["position"] = self.position
+        return self._state
 
     def update(self, delta_time: float = 1/30) -> None:
         """ Move the asteroid based on velocity"""

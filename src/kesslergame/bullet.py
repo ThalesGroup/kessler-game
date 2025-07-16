@@ -3,13 +3,13 @@
 # NOTICE: This file is subject to the license agreement defined in file 'LICENSE', which is part of
 # this source code package.
 
-from typing import Any
 import math
 
 from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
     from .ship import Ship
+from .bullet_state import BulletState
 
 class Bullet:
     __slots__ = ('owner', 'speed', 'length', 'mass', 'position', 'heading', 'rad_heading', 'tail', 'velocity')
@@ -35,7 +35,7 @@ class Bullet:
         pass
 
     @property
-    def state(self) -> dict[str, Any]:
+    def state(self) -> BulletState:
         return {
             "position": self.position,
             "velocity": self.velocity,

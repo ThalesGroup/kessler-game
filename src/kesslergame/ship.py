@@ -6,12 +6,12 @@
 import math
 import warnings
 import numpy as np
-from typing import Any, Optional
+from typing import Optional
 
 from .bullet import Bullet
 from .mines import Mine
 from .controller import KesslerController
-
+from .ship_state import ShipState, ShipOwnState
 
 class Ship:
     __slots__ = (
@@ -85,7 +85,7 @@ class Ship:
 
 
     @property
-    def state(self) -> dict[str, Any]:
+    def state(self) -> ShipState:
         return {
             "position": self.position,
             "velocity": self.velocity,
@@ -101,7 +101,7 @@ class Ship:
         }
 
     @property
-    def ownstate(self) -> dict[str, Any]:
+    def ownstate(self) -> ShipOwnState:
         return {**self.state,
                 "bullets_remaining": self.bullets_remaining,
                 "mines_remaining": self.mines_remaining,

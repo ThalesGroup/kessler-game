@@ -26,14 +26,14 @@ else:
 mypyc_modules = [
     "src/kesslergame/asteroid.py",
     "src/kesslergame/bullet.py",
+    "src/kesslergame/mines.py",
+    "src/kesslergame/ship.py",
     "src/kesslergame/collisions.py",
 #    "src/kesslergame/controller.py", DO NOT compile the controller.py, because adding the ship_id attribute from the derived class gets really messy and buggy
 #    "src/kesslergame/controller_gamepad.py",
     "src/kesslergame/kessler_game.py",
-    "src/kesslergame/mines.py",
     "src/kesslergame/scenario.py",
     "src/kesslergame/score.py",
-    "src/kesslergame/ship.py",
     "src/kesslergame/team.py",
     "src/kesslergame/graphics/graphics_base.py",
     "src/kesslergame/graphics/graphics_handler.py",

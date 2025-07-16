@@ -19,7 +19,7 @@ from .asteroid import Asteroid
 from .ship import Ship
 from .bullet import Bullet
 from .graphics import KesslerGraphics
-
+from .game_state import GameStateDict
 
 class StopReason(Enum):
     not_stopped = 0
@@ -121,7 +121,7 @@ class KesslerGame:
             for idx, ship in enumerate(liveships):
                 # Generate game_state info to send to controller
                 # It is important we regenerate this for each controller, so they do not tamper it for the next controller
-                game_state: dict[str, Any] = {
+                game_state: GameStateDict = {
                     'asteroids': [asteroid.state for asteroid in asteroids],
                     'ships': [ship.state for ship in liveships],
                     'bullets': [bullet.state for bullet in bullets],
