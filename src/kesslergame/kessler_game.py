@@ -473,9 +473,9 @@ class KesslerGame:
                 perf_dict['total_frame_time'] += time.perf_counter() - step_start
 
             # Hold simulation so that it runs at realtime ratio if specified, else let it pass
-            if self.realtime_multiplier != 0:
+            if self.realtime_multiplier != 0.0:
                 time_dif = time.perf_counter() - step_start
-                while time_dif < (self.delta_time / self.realtime_multiplier):
+                while time_dif < self.delta_time / self.realtime_multiplier:
                     time_dif = time.perf_counter() - step_start
 
         ############################################

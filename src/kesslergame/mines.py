@@ -37,7 +37,7 @@ class Mine:
     def update(self, delta_time: float = 1/30) -> None:
         self.countdown_timer -= delta_time
         self._state["remaining_time"] = self.countdown_timer
-        if self.countdown_timer <= 1e-15:
+        if self.countdown_timer <= 1e-12:
             self.detonate()
 
     def detonate(self) -> None:

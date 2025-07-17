@@ -15,7 +15,7 @@ from .state_dicts import AsteroidState
 
 class Asteroid:
     """ Sprite that represents an asteroid. """
-    __slots__ = ('size', 'max_speed', 'num_children', 'radius', 'mass', 'x', 'y', 'vx', 'vy', 'angle', 'turnrate', '_state', '_position')
+    __slots__ = ('size', 'num_children', 'radius', 'mass', 'x', 'y', 'vx', 'vy', 'angle', 'turnrate', '_state', '_position')
     def __init__(self,
                  position: tuple[float, float],
                  speed: float | None = None,
@@ -41,7 +41,7 @@ class Asteroid:
 
         # Set max speed based off of scaling factor
         speed_scaler: float = 2.0 + (4.0 - self.size) / 4.0
-        self.max_speed: float = 60.0 * speed_scaler
+        max_speed: float = 60.0 * speed_scaler
 
         # Number of child asteroids spawned when this asteroid is destroyed
         self.num_children: int = 3
@@ -52,17 +52,12 @@ class Asteroid:
         self.mass: float = 0.25 * math.pi * self.radius * self.radius
 
         # Use optional angle and speed arguments otherwise generate random angle and speed
-        starting_angle: float = angle if angle is not None else random.random() * 360.0
-        starting_speed: float = speed if speed is not None else random.random() * self.max_speed - self.max_speed / 2.0
+        starting_angle_rad: float = math.radians(angle) if angle is not None else random.random() * 2.0 * math.pi
+        starting_speed: float = speed if speed is not None else random.random() * max_speed - max_speed / 2.0
 
         # Set velocity based on starting angle and speed
-        # self.velocity = [
-        #     -starting_speed * math.sin(math.radians(starting_angle)),
-        #     starting_speed * math.cos(math.radians(starting_angle))
-        # ]
-
-        self.vx = starting_speed * math.cos(math.radians(starting_angle))
-        self.vy = starting_speed * math.sin(math.radians(starting_angle))
+        self.vx = starting_speed * math.cos(starting_angle_rad)
+        self.vy = starting_speed * math.sin(starting_angle_rad)
 
         # Set position as specified
         self.x, self.y = position
@@ -104,7 +99,6 @@ class Asteroid:
 
     def destruct(self, impactor: Union['Bullet', 'Mine', 'Ship'], random_ast_split: bool) -> list['Asteroid']:
         """ Spawn child asteroids"""
-
         # Split angle is the angle off of the new velocity vector for the two asteroids to the sides, the center child
         # asteroid continues on the new velocity path
         # If random_ast_split, the bound is the range within which uniform random angles will be selected, otherwise the

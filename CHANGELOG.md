@@ -9,6 +9,9 @@
 - Optimize creation of game_state and ship_state by reusing dictionaries instead of recreating them
 - Optimize creation of game_state by sharing the same dictionary between controllers by default, and only recreating in a competition setting
 - Fix rare bug where the asteroid would wrap every frame and oscillate along the map border
+- Optimize game_state speed by maintaining the same dictionary instead of recreating one for each game object each update
+- Use lists instead of tuples for positions/velocities that change, to dramatically optimize game_state update speed
+- Fix mine detonation off-by-one at 60 FPS and higher, due to floating point error accumulating over time, and the EPS checked against being way too small
 
 ## [2.3.0] - 15 July 2025
 
