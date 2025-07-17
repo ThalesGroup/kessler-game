@@ -109,8 +109,8 @@ class Asteroid:
                 delta_x = impactor.x - self.x
                 delta_y = impactor.y - self.y
                 dist = math.sqrt(delta_x * delta_x + delta_y * delta_y)
-                F = impactor.calculate_blast_force(dist=dist, obj=self)
-                a = F / self.mass
+                force = impactor.calculate_blast_force(dist=dist, obj=self)
+                a = force / self.mass
                 # calculate "impulse" based on acc
                 if dist != 0.0:
                     cos_theta = (self.x - impactor.x) / dist
