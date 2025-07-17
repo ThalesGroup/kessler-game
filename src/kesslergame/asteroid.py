@@ -106,15 +106,15 @@ class Asteroid:
         split_angle_bound: float = 30.0
         if self.size != 1:
             if isinstance(impactor, Mine):
-                delta_x = impactor.position[0] - self.x
-                delta_y = impactor.position[1] - self.y
+                delta_x = impactor.x - self.x
+                delta_y = impactor.y - self.y
                 dist = math.sqrt(delta_x * delta_x + delta_y * delta_y)
                 F = impactor.calculate_blast_force(dist=dist, obj=self)
                 a = F / self.mass
                 # calculate "impulse" based on acc
                 if dist != 0.0:
-                    cos_theta = (self.x - impactor.position[0]) / dist
-                    sin_theta = (self.y - impactor.position[1]) / dist
+                    cos_theta = (self.x - impactor.x) / dist
+                    sin_theta = (self.y - impactor.y) / dist
                     vfx = self.vx + a * cos_theta
                     vfy = self.vy + a * sin_theta
 
@@ -137,11 +137,8 @@ class Asteroid:
                 # asteroid and the bullet mass is significantly smaller than the asteroid. If this changes, these calculations
                 # may need to change
 
-                impactor_vx = impactor.velocity[0]
-                impactor_vy = impactor.velocity[1]
-
-                vfx = (1.0 / (impactor.mass + self.mass)) * (impactor.mass * impactor_vx + self.mass * self.vx)
-                vfy = (1.0 / (impactor.mass + self.mass)) * (impactor.mass * impactor_vy + self.mass * self.vy)
+                vfx = (1.0 / (impactor.mass + self.mass)) * (impactor.mass * impactor.vx + self.mass * self.vx)
+                vfy = (1.0 / (impactor.mass + self.mass)) * (impactor.mass * impactor.vy + self.mass * self.vy)
 
                 # Calculate speed of resultant asteroid(s) based on velocity vector
                 v = math.sqrt(vfx * vfx + vfy * vfy)

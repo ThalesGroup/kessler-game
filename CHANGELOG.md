@@ -1,17 +1,23 @@
 # Changelog
 
 ## [2.4.0] - NEXT VERSION 2025
-- Fixed building mypyc compiled wheels, so compiled modules are now actually being run to provide a 4X+ speed benefit over interpreted
-- Use cibuildwheel to automate building mypyc compiled wheels, and upload to pypi and the Github release
+- Fixed building MyPyC compiled wheels, so compiled modules are now actually being run to provide a 4-10X+ speed benefit over interpreted
+- Use cibuildwheel to automate building MyPyC compiled wheels, and upload to pypi and the Github release
 - Wait until all asteroid collision checks are finished before appending new asteroids
 - Change bullet-asteroid collision detection to take earlier collision in time, instead of whichever asteroid is first in the list
-- Optimize removal of asteroids and other game objects from O(n) to O(1)
+- Optimize removal of asteroids and other game objects from O(n) to O(1), by swapping item to delete with last element, and popping
 - Optimize creation of game_state and ship_state by reusing dictionaries instead of recreating them
 - Optimize creation of game_state by sharing the same dictionary between controllers by default, and only recreating in a competition setting
 - Fix rare bug where the asteroid would wrap every frame and oscillate along the map border
 - Optimize game_state speed by maintaining the same dictionary instead of recreating one for each game object each update
+- Added competition_safe_mode setting, defaulting to False. Having it off is 5X faster than having it on, but any mutation of gamestate will mess it up for all future frames, and for both controllers. Having it on is slower, but is still plenty fast enough to run real-time for a competition setting where guaranteed fairness and integrity is crucial
+- Define TypedDicts for game_state dictionaries for better type checking and MyPyC optimization
+- Renamed "sim_frame" in game_state to "frame", to be consistent with "time" and for simplicity
+- Internally use x, y, vx, vy components instead of creating and recreating tuples each time
 - Use lists instead of tuples for positions/velocities that change, to dramatically optimize game_state update speed
 - Fix mine detonation off-by-one at 60 FPS and higher, due to floating point error accumulating over time, and the EPS checked against being way too small
+- Changed perf tracking's default setting to false, since it is rarely necessary and slows down the game measurably
+- Update PerfDict to return the aggregated times for each category over all frames, instead of one for each frame which is hard to parse and analyze
 
 ## [2.3.0] - 15 July 2025
 
