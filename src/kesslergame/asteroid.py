@@ -15,7 +15,7 @@ from .state_dicts import AsteroidState
 
 class Asteroid:
     """ Sprite that represents an asteroid. """
-    __slots__ = ('size', 'max_speed', 'num_children', 'radius', 'mass', 'x', 'y', 'vx', 'vy', 'velocity', 'angle', 'turnrate', '_state', '_state_position')
+    __slots__ = ('size', 'max_speed', 'num_children', 'radius', 'mass', 'x', 'y', 'vx', 'vy', 'angle', 'turnrate', '_state', '_position')
     def __init__(self,
                  position: tuple[float, float],
                  speed: float | None = None,
@@ -66,6 +66,7 @@ class Asteroid:
 
         # Set position as specified
         self.x, self.y = position
+        self._position: list[float] = list(position)
 
         # Random rotations for use in display or future use with complex hit box
         self.angle: float = random.uniform(0.0, 360.0)
@@ -73,22 +74,20 @@ class Asteroid:
 
         # Precompute static portion of state
         self._state: AsteroidState = {
-            "position": self.position,
+            "position": self._position,
             "velocity": self.velocity,
             "size": self.size,
             "mass": self.mass,
             "radius": self.radius
         }
-        # Pre-lookup the dictionary key
-        self._state_position = self._state["position"]
 
     @property
     def state(self) -> AsteroidState:
         return self._state
     
     @property
-    def position(self) -> tuple[float, float]:
-        return (self.x, self.y)
+    def position(self) -> list[float]:
+        return self._position
 
     @property
     def velocity(self) -> tuple[float, float]:
@@ -98,8 +97,9 @@ class Asteroid:
         """ Move the asteroid based on velocity"""
         self.x = (self.x + self.vx * delta_time) % map_size[0]
         self.y = (self.y + self.vy * delta_time) % map_size[1]
-        # Update the state dict
-        self._state_position = (self.x, self.y)
+        # Update the state dict without a dict lookup, using the mutable list storing position
+        self._position[0] = self.x
+        self._position[1] = self.y
         self.angle += delta_time * self.turnrate
 
     def destruct(self, impactor: Union['Bullet', 'Mine', 'Ship'], random_ast_split: bool) -> list['Asteroid']:
@@ -175,7 +175,7 @@ class Asteroid:
                     theta - angle_offset
                 ]
 
-            return [Asteroid(position=self.position, size=self.size - 1, speed=v, angle=angle) for angle in angles]
+            return [Asteroid(position=(self.x, self.y), size=self.size - 1, speed=v, angle=angle) for angle in angles]
 
                 # Old method of doing random splits
                 # return [Asteroid(position=self.position, size=self.size-1) for _ in range(self.num_children)]

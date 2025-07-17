@@ -21,13 +21,7 @@ class Ship:
         '_fire_time', '_mine_limiter', '_mine_deploy_time', 'mines_remaining',
         'bullets_remaining', 'bullets_shot', 'mines_dropped', 'bullets_hit',
         'mines_hit', 'asteroids_hit', 'custom_sprite_path', '_state', '_ownstate',
-        '_state_position', '_state_velocity', '_state_speed', '_state_heading',
-        '_state_is_respawning', '_state_lives_remaining', '_state_deaths',
-        '_ownstate_position', '_ownstate_velocity', '_ownstate_speed', '_ownstate_heading',
-        '_ownstate_is_respawning', '_ownstate_lives_remaining', '_ownstate_deaths',
-        '_ownstate_bullets_remaining', '_ownstate_mines_remaining', '_ownstate_can_fire',
-        '_ownstate_fire_cooldown', '_ownstate_can_deploy_mine', '_ownstate_mine_cooldown',
-        '_ownstate_respawn_time_left'
+        '_position', '_velocity'
     )
     def __init__(self, ship_id: int,
                  position: tuple[float, float],
@@ -51,7 +45,9 @@ class Ship:
         self.id: int = ship_id
         self.speed: float = 0.0
         self.x, self.y = position
+        self._position: list[float] = list(position) # Mutable
         self.vx, self.vy = (0.0, 0.0)
+        self._velocity: list[float] = [self.vx, self.vy]
         self.heading: float = angle
         self.lives: int = lives
         self.deaths: int = 0
@@ -90,8 +86,8 @@ class Ship:
         self.asteroids_hit: int = 0  # Number of asteroids hit (including ship collision)
 
         self._state: ShipState = {
-            "position": self.position,
-            "velocity": self.velocity,
+            "position": self._position,
+            "velocity": self._velocity,
             "speed": self.speed,
             "heading": self.heading,
             "mass": self.mass,
@@ -102,14 +98,6 @@ class Ship:
             "lives_remaining": self.lives,
             "deaths": self.deaths,
         }
-        # Pre-lookup dict keys
-        self._state_position = self._state["position"]
-        self._state_velocity = self._state["velocity"]
-        self._state_speed = self._state["speed"]
-        self._state_heading = self._state["heading"]
-        self._state_is_respawning = self._state["is_respawning"]
-        self._state_lives_remaining = self._state["lives_remaining"]
-        self._state_deaths = self._state["deaths"]
 
         self._ownstate: ShipOwnState = {
             **self._state,
@@ -128,51 +116,46 @@ class Ship:
             "max_speed": self.max_speed,
             "drag": self.drag,
         }
-        # Pre-lookup frequently-updated dict keys
-        self._ownstate_position = self._ownstate["position"]
-        self._ownstate_velocity = self._ownstate["velocity"]
-        self._ownstate_speed = self._ownstate["speed"]
-        self._ownstate_heading = self._ownstate["heading"]
-        self._ownstate_is_respawning = self._ownstate["is_respawning"]
-        self._ownstate_lives_remaining = self._ownstate["lives_remaining"]
-        self._ownstate_deaths = self._ownstate["deaths"]
-
-        self._ownstate_bullets_remaining = self._ownstate["bullets_remaining"]
-        self._ownstate_mines_remaining = self._ownstate["mines_remaining"]
-        self._ownstate_can_fire = self._ownstate["can_fire"]
-        self._ownstate_fire_cooldown = self._ownstate["fire_cooldown"]
-        self._ownstate_can_deploy_mine = self._ownstate["can_deploy_mine"]
-        self._ownstate_mine_cooldown = self._ownstate["mine_cooldown"]
-        self._ownstate_respawn_time_left = self._ownstate["respawn_time_left"]
 
     def update_state(self) -> None:
         """Update both shared and own state dictionaries."""
-        # Update shared state
-        self._state_position = self.position
-        self._state_velocity = self.velocity
-        self._state_speed = self.speed
-        self._state_heading = self.heading
-        self._state_is_respawning = self.is_respawning
-        self._state_lives_remaining = self.lives
-        self._state_deaths = self.deaths
+        # Use mutability to update the position and velocity lists without doing a dict lookup
+        self._position[0] = self.x
+        self._position[1] = self.y
+        self._velocity[0] = self.vx
+        self._velocity[1] = self.vy
 
-        # Update ownstate mirror of ship state
-        self._ownstate_position = self.position
-        self._ownstate_velocity = self.velocity
-        self._ownstate_speed = self.speed
-        self._ownstate_heading = self.heading
-        self._ownstate_is_respawning = self.is_respawning
-        self._ownstate_lives_remaining = self.lives
-        self._ownstate_deaths = self.deaths
+        self._state.update({
+#            "position": self._position,
+#            "velocity": self._velocity,
+            "speed": self.speed,
+            "heading": self.heading,
+            "mass": self.mass,
+            "radius": self.radius,
+            "id": self.id,
+            "team": self.team,
+            "is_respawning": self.is_respawning,
+            "lives_remaining": self.lives,
+            "deaths": self.deaths,
+        })
 
-        # Update ownstate-specific fields
-        self._ownstate_bullets_remaining = self.bullets_remaining
-        self._ownstate_mines_remaining = self.mines_remaining
-        self._ownstate_can_fire = self.can_fire
-        self._ownstate_fire_cooldown = self.fire_wait_time
-        self._ownstate_can_deploy_mine = self.can_deploy_mine
-        self._ownstate_mine_cooldown = self.mine_wait_time
-        self._ownstate_respawn_time_left = self.respawn_time_left
+        self._ownstate.update({
+            **self._state,
+            "bullets_remaining": self.bullets_remaining,
+            "mines_remaining": self.mines_remaining,
+            "can_fire": self.can_fire,
+            "fire_cooldown": self.fire_wait_time,
+            "fire_rate": self.fire_rate,
+            "can_deploy_mine": self.can_deploy_mine,
+            "mine_cooldown": self.mine_wait_time,
+            "mine_deploy_rate": self.mine_deploy_rate,
+            "respawn_time_left": self.respawn_time_left,
+            "respawn_time": self.respawn_time,
+            "thrust_range": self.thrust_range,
+            "turn_rate_range": self.turn_rate_range,
+            "max_speed": self.max_speed,
+            "drag": self.drag,
+        })
 
     @property
     def position(self) -> tuple[float, float]:

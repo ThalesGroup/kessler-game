@@ -9,7 +9,7 @@ from .graphics import GraphicsType, KesslerGraphics
 
 
 class AsteroidState(TypedDict):
-    position: tuple[float, float]
+    position: list[float]
     velocity: tuple[float, float]
     size: int
     mass: float
@@ -17,7 +17,7 @@ class AsteroidState(TypedDict):
 
 
 class BulletState(TypedDict):
-    position: tuple[float, float]
+    position: list[float]
     velocity: tuple[float, float]
     heading: float
     mass: float
@@ -31,8 +31,8 @@ class MineState(TypedDict):
 
 
 class ShipState(TypedDict):
-    position: tuple[float, float]
-    velocity: tuple[float, float]
+    position: list[float]
+    velocity: list[float]
     speed: float
     heading: float
     mass: float

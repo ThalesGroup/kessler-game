@@ -69,7 +69,7 @@ class KesslerGame:
                                 'controller_name': True, 'scale': 1.0}
         self.UI_settings = cast(UISettingsDict, UI_settings)
         
-    def run(self, scenario: Scenario, controllers: list[KesslerController]) -> tuple[Score, list[PerfDict]]:
+    def run(self, scenario: Scenario, controllers: list[KesslerController]) -> tuple[Score, PerfDict]:
         """
         Run an entire scenario from start to finish and return score and stop reason
         """
@@ -104,7 +104,18 @@ class KesslerGame:
         graphics = GraphicsHandler(type=self.graphics_type, scenario=scenario, UI_settings=self.UI_settings, graphics_obj=self.graphics_obj)
 
         # Initialize list of dictionary for performance tracking (will remain empty if perf_tracker is false
-        perf_list: list[PerfDict] = []
+        perf_dict: PerfDict = {
+            'controller_times': [0.0] * len(ships),
+            'total_controller_time': 0.0,
+            'bullets_update': 0.0,
+            'mines_update': 0.0,
+            'asteroids_update': 0.0,
+            'ships_update': 0.0,
+            'collisions_check': 0.0,
+            'score_update': 0.0,
+            'graphics_draw': 0.0,
+            'total_frame_time': 0.0
+        }
 
         ######################
         # MAIN SCENARIO LOOP #
@@ -127,30 +138,33 @@ class KesslerGame:
             'random_asteroid_splits': self.random_ast_splits,
             'competition_safe_mode': self.competition_safe_mode
         }
+        # Pre-lookup dictionary keys for mutable objects
+        game_state_asteroids = game_state['asteroids']
+        game_state_ships = game_state['ships']
+        game_state_bullets = game_state['bullets']
+        game_state_mines = game_state['mines']
 
         while stop_reason == StopReason.not_stopped:
             # Get perf time at the start of time step evaluation and initialize performance tracker
             step_start = time.perf_counter()
-            perf_dict: PerfDict = {}
 
             # --- CALL CONTROLLER FOR EACH SHIP ------------------------------------------------------------------------
 
             # Initialize controller time recording in performance tracker
             if self.perf_tracker:
-                perf_dict['controller_times'] = []
                 t_start = time.perf_counter()
 
             # Loop through each controller/ship combo and apply their actions
-            for idx, ship in enumerate(liveships):
+            for ship_idx, ship in enumerate(liveships):
                 # Generate game_state info to send to controller
                 game_state_to_controller: GameStateDict
                 if self.competition_safe_mode:
                     # Send a copy of the mutable game state dict, so competitors do not accidentally or maliciously modify it
                     game_state_to_controller = {
-                        'asteroids': [AsteroidState(**asteroid) for asteroid in game_state['asteroids']],
-                        'ships': [ShipState(**ship) for ship in game_state['ships']],
-                        'bullets': [BulletState(**bullet) for bullet in game_state['bullets']],
-                        'mines': [MineState(**mine) for mine in game_state['mines']],
+                        'asteroids': [AsteroidState(**asteroid) for asteroid in game_state_asteroids],
+                        'ships': [ShipState(**ship) for ship in game_state_ships],
+                        'bullets': [BulletState(**bullet) for bullet in game_state_bullets],
+                        'mines': [MineState(**mine) for mine in game_state_mines],
                         'map_size': game_state['map_size'],
                         'time': game_state['time'],
                         'delta_time': game_state['delta_time'],
@@ -158,7 +172,7 @@ class KesslerGame:
                         'frame': game_state['frame'],
                         'time_limit': game_state['time_limit'],
                         'random_asteroid_splits': game_state['random_asteroid_splits'],
-                        'competition_safe_mode': game_state['competition_safe_mode'],
+                        'competition_safe_mode': game_state['competition_safe_mode']
                     }
                 else:
                     game_state_to_controller = game_state
@@ -167,18 +181,18 @@ class KesslerGame:
                 ship.turn_rate = 0.0
                 ship.fire = False
                 # Evaluate each controller letting control be applied
-                if controllers[idx].ship_id != ship.id:
+                if controllers[ship_idx].ship_id != ship.id:
                     raise RuntimeError("Controller and ship ID do not match")
-                ship.thrust, ship.turn_rate, ship.fire, ship.drop_mine = controllers[idx].actions(ship.ownstate, game_state_to_controller)
+                ship.thrust, ship.turn_rate, ship.fire, ship.drop_mine = controllers[ship_idx].actions(ship.ownstate, game_state_to_controller)
 
                 # Update controller evaluation time if performance tracking
                 if self.perf_tracker:
                     controller_time = time.perf_counter() - t_start if ship.alive else 0.00
-                    perf_dict['controller_times'].append(controller_time)
+                    perf_dict['controller_times'][ship_idx] += controller_time
                     t_start = time.perf_counter()
 
             if self.perf_tracker:
-                perf_dict['total_controller_time'] = time.perf_counter() - step_start
+                perf_dict['total_controller_time'] += time.perf_counter() - step_start
                 prev = time.perf_counter()
 
             # --- UPDATE STATE INFORMATION OF EACH OBJECT --------------------------------------------------------------
@@ -187,30 +201,30 @@ class KesslerGame:
             for bullet in bullets:
                 bullet.update(self.delta_time)
             if self.perf_tracker:
-                perf_dict['bullets_update'] = time.perf_counter() - prev
+                perf_dict['bullets_update'] += time.perf_counter() - prev
                 prev = time.perf_counter()
             for mine in mines:
                 mine.update(self.delta_time)
             if self.perf_tracker:
-                perf_dict['mines_update'] = time.perf_counter() - prev
+                perf_dict['mines_update'] += time.perf_counter() - prev
                 prev = time.perf_counter()
             for asteroid in asteroids:
                 asteroid.update(self.delta_time, scenario.map_size)
             if self.perf_tracker:
-                perf_dict['asteroids_update'] = time.perf_counter() - prev
+                perf_dict['asteroids_update'] += time.perf_counter() - prev
                 prev = time.perf_counter()
             for ship in liveships:
                 new_bullet, new_mine = ship.update(self.delta_time, scenario.map_size)
                 if new_bullet is not None:
                     bullets.append(new_bullet)
-                    game_state['bullets'].append(new_bullet.state)
+                    game_state_bullets.append(new_bullet.state)
                 if new_mine is not None:
                     mines.append(new_mine)
-                    game_state['mines'].append(new_mine.state)
+                    game_state_mines.append(new_mine.state)
 
             # Update performance tracker
             if self.perf_tracker:
-                perf_dict['ships_update'] = time.perf_counter() - prev
+                perf_dict['ships_update'] += time.perf_counter() - prev
                 prev = time.perf_counter()
 
             # --- CHECK FOR COLLISIONS ---------------------------------------------------------------------------------
@@ -255,7 +269,6 @@ class KesslerGame:
                     asteroids[ast_idx_to_remove] = asteroids[-1]
                     asteroids.pop()
                     # Mirror the change in the game_state dict
-                    game_state_asteroids = game_state['asteroids']
                     game_state_asteroids[ast_idx_to_remove] = game_state_asteroids[-1]
                     game_state_asteroids.pop()
                 # Cull any bullets past the map edge
@@ -271,7 +284,6 @@ class KesslerGame:
                     bullets.pop()
                     num_buls -= 1
                     # Mirror the change in the game_state dict
-                    game_state_bullets = game_state['bullets']
                     game_state_bullets[bul_idx] = game_state_bullets[-1]
                     game_state_bullets.pop()
                 else:
@@ -280,7 +292,7 @@ class KesslerGame:
             # Add the new asteroids from the bullet-asteroid collisions
             if new_asteroids:
                 asteroids.extend(new_asteroids)
-                game_state['asteroids'].extend([asteroid.state for asteroid in new_asteroids]) # Mirror change in game_state dict
+                game_state_asteroids.extend([asteroid.state for asteroid in new_asteroids]) # Mirror change in game_state dict
                 new_asteroids.clear()
             
             # --- Check mine-asteroid and mine-ship effects ---
@@ -304,7 +316,6 @@ class KesslerGame:
                             asteroids.pop()
                             num_asts -= 1
                             # Mirror the change in the game_state dict
-                            game_state_asteroids = game_state['asteroids']
                             game_state_asteroids[ast_idx] = game_state_asteroids[-1]
                             game_state_asteroids.pop()
                             # Don't advance ast_idx, must check the swapped-in asteroid
@@ -312,19 +323,18 @@ class KesslerGame:
                             ast_idx += 1
                     for ship in liveships:
                         if ship.alive and not ship.is_respawning:
-                                dx = ship.x - mine.x
-                                dy = ship.y - mine.y
-                                radius_sum = mine.blast_radius + ship.radius
-                                if dx * dx + dy * dy <= radius_sum * radius_sum:
-                                    # Ship destruct function.
-                                    ship.destruct(map_size=scenario.map_size)
+                            dx = ship.x - mine.x
+                            dy = ship.y - mine.y
+                            radius_sum = mine.blast_radius + ship.radius
+                            if dx * dx + dy * dy <= radius_sum * radius_sum:
+                                # Ship destruct function.
+                                ship.destruct(map_size=scenario.map_size)
                     mine.destruct()
                     # Swap and pop the mine
                     mines[mine_idx] = mines[-1]
                     mines.pop()
                     num_mines -= 1
                     # Mirror the change in the game_state dict
-                    game_state_mines = game_state['mines']
                     game_state_mines[mine_idx] = game_state_mines[-1]
                     game_state_mines.pop()
                     # Don't advance mine_idx, must check the swapped-in mine
@@ -334,7 +344,7 @@ class KesslerGame:
             # Add new asteroids from mine-asteroid collisions
             if new_asteroids:
                 asteroids.extend(new_asteroids)
-                game_state['asteroids'].extend([asteroid.state for asteroid in new_asteroids]) # Mirror change in game_state dict
+                game_state_asteroids.extend([asteroid.state for asteroid in new_asteroids]) # Mirror change in game_state dict
                 new_asteroids.clear()
             
             # --- Check ship-asteroid collisions ---
@@ -355,7 +365,6 @@ class KesslerGame:
                             asteroids.pop()
                             num_asts -= 1
                             # Mirror the change in the game_state dict
-                            game_state_asteroids = game_state['asteroids']
                             game_state_asteroids[ast_idx] = game_state_asteroids[-1]
                             game_state_asteroids.pop()
                             # Ship destruct function. Add one to asteroids_hit
@@ -369,7 +378,7 @@ class KesslerGame:
             # Add new asteroids from ship-asteroid collisions
             if new_asteroids:
                 asteroids.extend(new_asteroids)
-                game_state['asteroids'].extend([asteroid.state for asteroid in new_asteroids]) # Mirror change in game_state dict
+                game_state_asteroids.extend([asteroid.state for asteroid in new_asteroids]) # Mirror change in game_state dict
                 new_asteroids.clear()
             
             # --- Check ship-ship collisions ---
@@ -390,7 +399,7 @@ class KesslerGame:
 
             # Update performance tracker with collisions timing
             if self.perf_tracker:
-                perf_dict['collisions_check'] = time.perf_counter() - prev
+                perf_dict['collisions_check'] += time.perf_counter() - prev
                 prev = time.perf_counter()
 
             # --- UPDATE SCORE CLASS -----------------------------------------------------------------------------------
@@ -401,7 +410,7 @@ class KesslerGame:
 
             # Update performance tracker with score timing
             if self.perf_tracker:
-                perf_dict['score_update'] = time.perf_counter() - prev
+                perf_dict['score_update'] += time.perf_counter() - prev
                 prev = time.perf_counter()
 
 
@@ -410,7 +419,7 @@ class KesslerGame:
 
             # Update performance tracker with graphics timing
             if self.perf_tracker:
-                perf_dict['graphics_draw'] = time.perf_counter() - prev
+                perf_dict['graphics_draw'] += time.perf_counter() - prev
                 prev = time.perf_counter()
 
             # --- CHECK STOP CONDITIONS --------------------------------------------------------------------------------
@@ -441,8 +450,7 @@ class KesslerGame:
             # --- FINISHING TIME STEP ----------------------------------------------------------------------------------
             # Get overall time step compute time
             if self.perf_tracker:
-                perf_dict['total_frame_time'] = time.perf_counter() - step_start
-                perf_list.append(perf_dict)
+                perf_dict['total_frame_time'] += time.perf_counter() - step_start
 
             # Hold simulation so that it runs at realtime ratio if specified, else let it pass
             if self.realtime_multiplier != 0:
@@ -461,7 +469,7 @@ class KesslerGame:
         score.finalize(sim_time, stop_reason, ships)
 
         # Return the score and stop condition
-        return score, perf_list
+        return score, perf_dict
 
 
 class TrainerEnvironment(KesslerGame):
