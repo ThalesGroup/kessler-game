@@ -258,12 +258,10 @@ class KesslerGame:
             num_buls = len(bullets)
             should_remove_bullet: bool = False
             while bul_idx < num_buls:
-                should_remove_bullet = False
                 bullet = bullets[bul_idx]
-
+                should_remove_bullet = False
                 ast_idx_to_remove: int = -1
                 earliest_collision_time: float = math.inf
-
                 for ast_idx, asteroid in enumerate(asteroids):
                     # Iterate through all asteroids, and if multiple collisions occur, find the one that occurs first
                     if circle_line_collision_continuous(
