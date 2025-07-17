@@ -12,20 +12,22 @@ from .state_dicts import BulletState
 
 
 class Bullet:
-    __slots__ = ('owner', 'speed', 'length', 'mass', 'x', 'y', 'vx', 'vy', 'heading', 'rad_heading', 'tail_delta_x', 'tail_delta_y', '_state', '_position')
-    def __init__(self, position: tuple[float, float], starting_heading: float, owner: 'Ship') -> None:
+    __slots__ = ('owner', 'speed', 'length', 'mass', 'x', 'y', 'vx', 'vy', 'heading', 'tail_delta_x', 'tail_delta_y', '_state', '_position')
+    def __init__(self, position: tuple[float, float], heading: float, owner: 'Ship') -> None:
         self.owner: Ship = owner
         self.speed: float = 800.0  # m/s
-        self.length: float = 12.0
-        self.mass: float = 1.0  # mass units - kg?
+        self.length: float = 12.0 # m
+        self.mass: float = 1.0  # kg
         self.x, self.y = position
-        self._position: list[float] = [self.x, self.y] # Mutable!
-        self.heading: float = starting_heading
-        self.rad_heading: float = math.radians(starting_heading)
-        cos_heading: float = math.cos(self.rad_heading)
-        sin_heading: float = math.sin(self.rad_heading)
-        self.tail_delta_x, self.tail_delta_y = (-self.length * cos_heading, -self.length * sin_heading)
-        self.vx, self.vy = (self.speed * cos_heading, self.speed * sin_heading)
+        self._position: list[float] = [self.x, self.y] # It is important that this is a mutable list, even though conceptually it is a tuple
+        self.heading: float = heading
+        rad_heading: float = math.radians(heading)
+        cos_heading: float = math.cos(rad_heading)
+        sin_heading: float = math.sin(rad_heading)
+        self.tail_delta_x = -self.length * cos_heading
+        self.tail_delta_y = -self.length * sin_heading
+        self.vx = self.speed * cos_heading
+        self.vy = self.speed * sin_heading
 
         self._state: BulletState = {
             "position": self._position,

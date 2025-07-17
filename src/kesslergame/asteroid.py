@@ -66,13 +66,13 @@ class Asteroid:
 
         # Set position as specified
         self.x, self.y = position
+        # It is important that this is a mutable list, even though conceptually it is a tuple
         self._position: list[float] = list(position)
 
         # Random rotations for use in display or future use with complex hit box
         self.angle: float = random.uniform(0.0, 360.0)
         self.turnrate: float = random.uniform(-100, 100)
 
-        # Precompute static portion of state
         self._state: AsteroidState = {
             "position": self._position,
             "velocity": self.velocity,

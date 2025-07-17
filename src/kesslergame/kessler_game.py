@@ -18,7 +18,7 @@ from .mines import Mine
 from .asteroid import Asteroid
 from .ship import Ship
 from .bullet import Bullet
-from .state_dicts import GameStateDict, AsteroidState, BulletState, MineState, ShipState, SettingsDict, UISettingsDict
+from .state_dicts import GameStateDict, SettingsDict, UISettingsDict
 
 
 class StopReason(Enum):
@@ -33,14 +33,11 @@ class PerfDict(TypedDict, total=False):
     controller_times: list[float]
     total_controller_time: float
     physics_update: float
+    physics_update: float
     collisions_check: float
     score_update: float
     graphics_draw: float
     total_frame_time: float
-    bullets_update: float
-    mines_update: float
-    asteroids_update: float
-    ships_update: float
 
 
 class KesslerGame:
@@ -159,12 +156,52 @@ class KesslerGame:
                 # Generate game_state info to send to controller
                 game_state_to_controller: GameStateDict
                 if self.competition_safe_mode:
-                    # Send a copy of the mutable game state dict, so competitors do not accidentally or maliciously modify it
+                    # Send a deep-ish copy of everything mutable in the game_state dict, so competitors do not accidentally or maliciously modify it
                     game_state_to_controller = {
-                        'asteroids': [AsteroidState(**asteroid) for asteroid in game_state_asteroids],
-                        'ships': [ShipState(**ship) for ship in game_state_ships],
-                        'bullets': [BulletState(**bullet) for bullet in game_state_bullets],
-                        'mines': [MineState(**mine) for mine in game_state_mines],
+                        'asteroids': [
+                            {
+                                'position': asteroid['position'][:], # Mutable, need to copy
+                                'velocity': asteroid['velocity'],
+                                'size': asteroid['size'],
+                                'mass': asteroid['mass'],
+                                'radius': asteroid['radius'],
+                            }
+                            for asteroid in game_state_asteroids
+                        ],
+                        'ships': [
+                            {
+                                'position': ship['position'][:], # Mutable, need to copy
+                                'velocity': ship['velocity'][:], # Mutable, need to copy
+                                'speed': ship['speed'],
+                                'heading': ship['heading'],
+                                'mass': ship['mass'],
+                                'radius': ship['radius'],
+                                'id': ship['id'],
+                                'team': ship['team'],
+                                'is_respawning': ship['is_respawning'],
+                                'lives_remaining': ship['lives_remaining'],
+                                'deaths': ship['deaths'],
+                            }
+                            for ship in game_state_ships
+                        ],
+                        'bullets': [
+                            {
+                                'position': bullet['position'][:], # Mutable, need to copy
+                                'velocity': bullet['velocity'],
+                                'heading': bullet['heading'],
+                                'mass': bullet['mass'],
+                            }
+                            for bullet in game_state_bullets
+                        ],
+                        'mines': [
+                            {
+                                'position': mine['position'],  # tuple, safe to reuse
+                                'mass': mine['mass'],
+                                'fuse_time': mine['fuse_time'],
+                                'remaining_time': mine['remaining_time'],
+                            }
+                            for mine in game_state_mines
+                        ],
                         'map_size': game_state['map_size'],
                         'time': game_state['time'],
                         'delta_time': game_state['delta_time'],
@@ -172,7 +209,7 @@ class KesslerGame:
                         'frame': game_state['frame'],
                         'time_limit': game_state['time_limit'],
                         'random_asteroid_splits': game_state['random_asteroid_splits'],
-                        'competition_safe_mode': game_state['competition_safe_mode']
+                        'competition_safe_mode': game_state['competition_safe_mode'],
                     }
                 else:
                     game_state_to_controller = game_state
@@ -200,19 +237,10 @@ class KesslerGame:
             # Update each Asteroid, Bullet, and Ship
             for bullet in bullets:
                 bullet.update(self.delta_time)
-            if self.perf_tracker:
-                perf_dict['bullets_update'] += time.perf_counter() - prev
-                prev = time.perf_counter()
             for mine in mines:
                 mine.update(self.delta_time)
-            if self.perf_tracker:
-                perf_dict['mines_update'] += time.perf_counter() - prev
-                prev = time.perf_counter()
             for asteroid in asteroids:
                 asteroid.update(self.delta_time, scenario.map_size)
-            if self.perf_tracker:
-                perf_dict['asteroids_update'] += time.perf_counter() - prev
-                prev = time.perf_counter()
             for ship in liveships:
                 new_bullet, new_mine = ship.update(self.delta_time, scenario.map_size)
                 if new_bullet is not None:
@@ -224,7 +252,7 @@ class KesslerGame:
 
             # Update performance tracker
             if self.perf_tracker:
-                perf_dict['ships_update'] += time.perf_counter() - prev
+                perf_dict['physics_update'] += time.perf_counter() - prev
                 prev = time.perf_counter()
 
             # --- CHECK FOR COLLISIONS ---------------------------------------------------------------------------------
@@ -402,16 +430,14 @@ class KesslerGame:
                 perf_dict['collisions_check'] += time.perf_counter() - prev
                 prev = time.perf_counter()
 
-            # --- UPDATE SCORE CLASS -----------------------------------------------------------------------------------
-            if self.perf_tracker:
+                # --- UPDATE SCORE CLASS -----------------------------------------------------------------------------------
                 score.update(ships, sim_time, perf_dict['controller_times'])
-            else:
-                score.update(ships, sim_time)
 
-            # Update performance tracker with score timing
-            if self.perf_tracker:
+                # Update performance tracker with score timing
                 perf_dict['score_update'] += time.perf_counter() - prev
                 prev = time.perf_counter()
+            else:
+                score.update(ships, sim_time)
 
 
             # --- UPDATE GRAPHICS --------------------------------------------------------------------------------------
