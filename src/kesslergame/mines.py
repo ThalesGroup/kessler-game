@@ -33,12 +33,10 @@ class Mine:
             "fuse_time": self.fuse_time,
             "remaining_time": self.countdown_timer
         }
-        # Pre-lookup the dictionary key
-        self._state_remaining_time = self._state["remaining_time"]
 
     def update(self, delta_time: float = 1/30) -> None:
         self.countdown_timer -= delta_time
-        self._state_remaining_time = self.countdown_timer
+        self._state["remaining_time"] = self.countdown_timer
         if self.countdown_timer <= 1e-15:
             self.detonate()
 

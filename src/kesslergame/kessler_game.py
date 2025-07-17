@@ -33,7 +33,6 @@ class PerfDict(TypedDict, total=False):
     controller_times: list[float]
     total_controller_time: float
     physics_update: float
-    physics_update: float
     collisions_check: float
     score_update: float
     graphics_draw: float
@@ -104,10 +103,7 @@ class KesslerGame:
         perf_dict: PerfDict = {
             'controller_times': [0.0] * len(ships),
             'total_controller_time': 0.0,
-            'bullets_update': 0.0,
-            'mines_update': 0.0,
-            'asteroids_update': 0.0,
-            'ships_update': 0.0,
+            'physics_update': 0.0,
             'collisions_check': 0.0,
             'score_update': 0.0,
             'graphics_draw': 0.0,
