@@ -53,7 +53,7 @@ class KesslerGame:
         self.realtime_multiplier: float = settings.get("realtime_multiplier", 0.0 if self.graphics_type==GraphicsType.NoGraphics else 1.0)
         self.time_limit: float = settings.get("time_limit", float("inf"))
         self.random_ast_splits: bool = settings.get("random_ast_splits", False)
-        self.competition_safe_mode: bool = settings.get("competition_safe_mode", False)
+        self.competition_safe_mode: bool = settings.get("competition_safe_mode", True)
 
         # UI settings
         default_ui: UISettingsDict = {'ships': True, 'lives_remaining': True, 'accuracy': True,
