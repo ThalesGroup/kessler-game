@@ -151,59 +151,150 @@ class MineView:
 
 
 class ShipView:
-    def __init__(self, data: list[float | int]):
-        # []
+    def __init__(self, data: list):
+        # [x, y, vx, vy, speed, heading, mass, radius, id, team, is_respawning, lives_remaining, deaths]
         self._data = data
 
     @property
-    def position(self) -> list[float]:
+    def x(self) -> float:
         return self._data[0]
 
     @property
-    def velocity(self) -> list[float]:
+    def y(self) -> float:
         return self._data[1]
 
     @property
-    def speed(self) -> float:
+    def position(self) -> tuple[float, float]:
+        return (self.x, self.y)
+
+    @property
+    def vx(self) -> float:
         return self._data[2]
 
     @property
-    def heading(self) -> float:
+    def vy(self) -> float:
         return self._data[3]
 
     @property
-    def mass(self) -> float:
+    def velocity(self) -> tuple[float, float]:
+        return (self.vx, self.vy)
+
+    @property
+    def speed(self) -> float:
         return self._data[4]
 
     @property
-    def radius(self) -> float:
+    def heading(self) -> float:
         return self._data[5]
 
     @property
-    def id(self) -> int:
+    def mass(self) -> float:
         return self._data[6]
 
     @property
-    def team(self) -> int:
+    def radius(self) -> float:
         return self._data[7]
 
     @property
+    def id(self) -> int:
+        return int(self._data[8])
+
+    @property
+    def team(self) -> int:
+        return int(self._data[9])
+
+    @property
     def is_respawning(self) -> bool:
-        return self._data[8]
+        return bool(self._data[10])
 
     @property
     def lives_remaining(self) -> int:
-        return self._data[9]
+        return int(self._data[11])
 
     @property
     def deaths(self) -> int:
-        return self._data[10]
+        return int(self._data[12])
 
     def __getitem__(self, key: str):
         return getattr(self, key)
 
     def __repr__(self):
-        return f"<ShipView id={self.id} team={self.team} pos={self.position}>"
+        return (f"<ShipView id={self.id} team={self.team} pos={self.position} "
+                f"vel={self.velocity} speed={self.speed:.2f} heading={self.heading:.1f} "
+                f"lives={self.lives_remaining} deaths={self.deaths} respawning={self.is_respawning}>")
+
+
+class ShipOwnView(ShipView):
+    def __init__(self, data: list):
+        # Extend ShipView list with the following:
+        # [bullets_remaining: int, mines_remaining: int, can_fire: bool, fire_cooldown: float, fire_rate: float,
+        #  can_deploy_mine: bool, mine_cooldown: float, mine_deploy_rate: float, respawn_time_left: float, respawn_time: float,
+        #  thrust_min: float, thrust_max: float, turn_rate_min: float, turn_rate_max: float, max_speed: float, drag: float]
+        super().__init__(data)
+        self._own_data = data
+
+    @property
+    def bullets_remaining(self) -> int:
+        return int(self._own_data[13])
+
+    @property
+    def mines_remaining(self) -> int:
+        return int(self._own_data[14])
+
+    @property
+    def can_fire(self) -> bool:
+        return bool(self._own_data[15])
+
+    @property
+    def fire_cooldown(self) -> float:
+        return self._own_data[16]
+
+    @property
+    def fire_rate(self) -> float:
+        return self._own_data[17]
+
+    @property
+    def can_deploy_mine(self) -> bool:
+        return bool(self._own_data[18])
+
+    @property
+    def mine_cooldown(self) -> float:
+        return self._own_data[19]
+
+    @property
+    def mine_deploy_rate(self) -> float:
+        return self._own_data[20]
+
+    @property
+    def respawn_time_left(self) -> float:
+        return self._own_data[21]
+
+    @property
+    def respawn_time(self) -> float:
+        return self._own_data[22]
+
+    @property
+    def thrust_range(self) -> tuple[float, float]:
+        return (self._own_data[23], self._own_data[24])
+
+    @property
+    def turn_rate_range(self) -> tuple[float, float]:
+        return (self._own_data[25], self._own_data[26])
+
+    @property
+    def max_speed(self) -> float:
+        return self._own_data[27]
+
+    @property
+    def drag(self) -> float:
+        return self._own_data[28]
+
+    def __repr__(self):
+        base_repr = super().__repr__()
+        return (f"{base_repr[:-1]} bullets={self.bullets_remaining} mines={self.mines_remaining} "
+                f"can_fire={self.can_fire} fire_cd={self.fire_cooldown:.2f} can_deploy_mine={self.can_deploy_mine} "
+                f"mine_cd={self.mine_cooldown:.2f} respawn_left={self.respawn_time_left:.2f} "
+                f"max_speed={self.max_speed:.2f} drag={self.drag:.2f}>")
 
 
 class GameState:
@@ -233,8 +324,6 @@ class GameState:
         self.random_asteroid_splits = random_asteroid_splits
         self.competition_safe_mode = competition_safe_mode
 
-        self.frame_rate = 1.0 / delta_time if delta_time != 0 else float('inf')
-
     @property
     def asteroids(self) -> list[AsteroidView]:
         return [AsteroidView(data) for data in self._asteroid_data]
@@ -250,6 +339,16 @@ class GameState:
     @property
     def ships(self) -> list[ShipView]:
         return [ShipView(data) for data in self._ship_data]
+
+    def remove_asteroid(self, index: int) -> None:
+        """Remove asteroid at index using swap-and-pop (O(1))."""
+        last_index = len(self.asteroids) - 1
+        if index < 0 or index > last_index:
+            raise IndexError(f"Invalid asteroid index: {index}")
+        # Swap the element at index with the end
+        self.asteroids[index] = self.asteroids[last_index]
+        # Pop the last element
+        self.asteroids.pop()
 
     def __getitem__(self, key: str):
         return {
@@ -280,3 +379,105 @@ class GameState:
                 f"  Bullets:   {len(self._bullet_data)}\n"
                 f"  Mines:     {len(self._mine_data)}\n")
 
+
+def run_tests():
+    print("=== Testing AsteroidView ===")
+    asteroid_data = [100.0, 200.0, 1.5, -0.5, 3, 150.0, 24.0]
+    asteroid = AsteroidView(asteroid_data)
+    print(asteroid)
+    print("Position:", asteroid.position)
+    print("Velocity:", asteroid.velocity)
+    print("Size:", asteroid.size)
+    print("Mass via __getitem__:", asteroid["mass"])
+    print()
+
+    print("=== Testing BulletView ===")
+    bullet_data = [300.0, 400.0, 5.0, 5.5, 45.0, 10.0, 0.0, 0.0, 20.0]
+    bullet = BulletView(bullet_data)
+    print(bullet)
+    print("Position:", bullet.position)
+    print("Velocity:", bullet.velocity)
+    print("Heading:", bullet.heading)
+    print("Mass via __getitem__:", bullet["mass"])
+    print()
+
+    print("=== Testing MineView ===")
+    mine_data = [500.0, 600.0, 50.0, 10.0, 7.5]
+    mine = MineView(mine_data)
+    print(mine)
+    print("Position:", mine.position)
+    print("Mass:", mine.mass)
+    print("Fuse Time:", mine.fuse_time)
+    print("Remaining Time via __getitem__:", mine["remaining_time"])
+    print()
+
+    print("=== Testing ShipView ===")
+    ship_data = [
+        700.0, 800.0,       # position x,y
+        2.0, 3.0,           # velocity x,y
+        3.6,                # speed
+        90.0,               # heading
+        100.0,              # mass
+        15.0,               # radius
+        1,                  # id
+        2,                  # team
+        False,              # is_respawning
+        3,                  # lives_remaining
+        1                   # deaths
+    ]
+    ship = ShipView(ship_data)
+    print(ship)
+    print("Position:", ship.position)
+    print("Velocity:", ship.velocity)
+    print("Is respawning:", ship.is_respawning)
+    print("Lives remaining:", ship.lives_remaining)
+    print("ID via __getitem__:", ship["id"])
+    print()
+
+    print("=== Testing ShipOwnView ===")
+    ship_own_data = ship_data + [
+        10,                 # bullets_remaining
+        2,                  # mines_remaining
+        True,               # can_fire
+        0.5,                # fire_cooldown
+        1.0,                # fire_rate
+        True,               # can_deploy_mine
+        0.3,                # mine_cooldown
+        1.2,                # mine_deploy_rate
+        5.0,                # respawn_time_left
+        10.0,               # respawn_time
+        0.1, 0.5,           # thrust_range (min, max)
+        5.0, 10.0,          # turn_rate_range (min, max)
+        20.0,               # max_speed
+        0.05                # drag
+    ]
+    ship_own = ShipOwnView(ship_own_data)
+    print(ship_own)
+    print("Bullets remaining:", ship_own.bullets_remaining)
+    print("Can fire:", ship_own.can_fire)
+    print("Thrust range:", ship_own.thrust_range)
+    print("Drag via __getitem__:", ship_own["drag"])
+    print()
+
+    print("=== Testing GameState ===")
+    gs = GameState(
+        asteroids=[asteroid_data],
+        ships=[ship_data],
+        bullets=[bullet_data],
+        mines=[mine_data],
+        map_size=(1024, 768),
+        time=123.45,
+        delta_time=1/30,
+        frame=1234,
+        time_limit=300.0,
+        random_asteroid_splits=True,
+        competition_safe_mode=False,
+    )
+    print(gs)
+    print(str(gs))
+    print("Asteroids in game state:", len(gs.asteroids))
+    print("First asteroid position:", gs.asteroids[0].position)
+    print()
+
+if __name__ == "__main__":
+    run_tests()
