@@ -156,10 +156,10 @@ class KesslerGame:
                     # Must recreate GameState object, so competitors do not accidentally or maliciously modify the true game state
                     game_state_to_controller = GameState(
                         # Game entities
-                        ships=[ship.state for ship in liveships],
-                        asteroids=[asteroid.state for asteroid in asteroids],
-                        bullets=[bullet.state for bullet in bullets],
-                        mines=[mine.state for mine in mines],
+                        ships=[ship.state.copy() for ship in liveships],
+                        asteroids=[asteroid.state.copy() for asteroid in asteroids],
+                        bullets=[bullet.state.copy() for bullet in bullets],
+                        mines=[mine.state.copy() for mine in mines],
                         # Environment
                         map_size=scenario.map_size,
                         time_limit=time_limit,

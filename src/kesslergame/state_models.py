@@ -708,7 +708,7 @@ class GameState:
                 f"  Bullets:   {len(self._bullet_data)}\n"
                 f"  Mines:     {len(self._mine_data)}\n")
 
-    def to_dict(self) -> GameStateDict:
+    def dict(self) -> GameStateDict:
         """Return a plain dictionary representation of the game state."""
         return {
             "ships": [ShipView(ship_data).dict() for ship_data in self._ship_data],
@@ -724,10 +724,6 @@ class GameState:
             "random_asteroid_splits": self._random_asteroid_splits,
             "competition_safe_mode": self._competition_safe_mode,
         }
-    
-    def dict(self) -> str:
-        """Return a pretty-printed JSON string representation of the game state."""
-        return json.dumps(self.to_dict(), indent=4)
     
     def fast_compact(self) -> GameStateCompactDict:
         """Return a minimal raw list-based version of the game state for fast serialization. Recommended for agent training."""
