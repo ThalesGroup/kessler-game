@@ -3,7 +3,75 @@
 # NOTICE: This file is subject to the license agreement defined in file 'LICENSE', which is part of
 # this source code package.
 
-from typing import Literal, overload, cast, Iterator, Any
+import json
+from typing import Literal, overload, cast, Iterator, Any, TypedDict
+
+class AsteroidStateDict(TypedDict):
+    position: tuple[float, float]
+    velocity: tuple[float, float]
+    size: int
+    mass: float
+    radius: float
+
+
+class BulletStateDict(TypedDict):
+    position: tuple[float, float]
+    velocity: tuple[float, float]
+    heading: float
+    mass: float
+
+
+class MineStateDict(TypedDict):
+    position: tuple[float, float]
+    mass: float
+    fuse_time: float
+    remaining_time: float
+
+
+class ShipStateDict(TypedDict):
+    position: tuple[float, float]
+    velocity: tuple[float, float]
+    speed: float
+    heading: float
+    mass: float
+    radius: float
+    id: int
+    team: int
+    is_respawning: bool
+    lives_remaining: int
+    deaths: int
+
+
+class ShipOwnStateDict(ShipStateDict):
+    bullets_remaining: int
+    mines_remaining: int
+    can_fire: bool
+    fire_cooldown: float
+    fire_rate: float
+    can_deploy_mine: bool
+    mine_cooldown: float
+    mine_deploy_rate: float
+    respawn_time_left: float
+    respawn_time: float
+    thrust_range: tuple[float, float]
+    turn_rate_range: tuple[float, float]
+    max_speed: float
+    drag: float
+
+
+class GameStateDict(TypedDict):
+    ships: list[ShipStateDict]
+    asteroids: list[AsteroidStateDict]
+    bullets: list[BulletStateDict]
+    mines: list[MineStateDict]
+    map_size: tuple[int, int]
+    time_limit: float
+    time: float
+    frame: int
+    delta_time: float
+    frame_rate: float
+    random_asteroid_splits: bool
+    competition_safe_mode: bool
 
 
 class AsteroidView:
@@ -46,6 +114,15 @@ class AsteroidView:
     @property
     def radius(self) -> float:
         return self._data[6]
+
+    def dict(self) -> AsteroidStateDict:
+        return {
+            "position": (self.x, self.y),
+            "velocity": (self.vx, self.vy),
+            "size": self.size,
+            "mass": self.mass,
+            "radius": self.radius,
+        }
 
     @overload
     def __getitem__(self, key: Literal["x", "y", "vx", "vy", "mass", "radius"]) -> float: ...
@@ -116,6 +193,14 @@ class BulletView:
     def length(self) -> float:
         return self._data[8]
 
+    def dict(self) -> BulletStateDict:
+        return {
+            "position": (self.x, self.y),
+            "velocity": (self.vx, self.vy),
+            "heading": self.heading,
+            "mass": self.mass,
+        }
+
     @overload
     def __getitem__(self, key: Literal["x", "y", "vx", "vy", "tail_dx", "tail_dy", "heading", "mass", "length"]) -> float: ...
     
@@ -159,6 +244,14 @@ class MineView:
     @property
     def remaining_time(self) -> float:
         return self._data[4]
+
+    def dict(self) -> MineStateDict:
+        return {
+            "position": self.position,
+            "mass": self.mass,
+            "fuse_time": self.fuse_time,
+            "remaining_time": self.remaining_time,
+        }
 
     @overload
     def __getitem__(self, key: Literal["x", "y", "mass", "fuse_time", "remaining_time"]) -> float: ...
@@ -237,6 +330,21 @@ class ShipView:
     @property
     def deaths(self) -> int:
         return int(self._data[12])
+
+    def dict(self) -> ShipStateDict:
+        return {
+            "position": (self.x, self.y),
+            "velocity": (self.vx, self.vy),
+            "speed": self.speed,
+            "heading": self.heading,
+            "mass": self.mass,
+            "radius": self.radius,
+            "id": self.id,
+            "team": self.team,
+            "is_respawning": self.is_respawning,
+            "lives_remaining": self.lives_remaining,
+            "deaths": self.deaths,
+        }
 
     @overload
     def __getitem__(self, key: Literal[
@@ -573,6 +681,27 @@ class GameState:
                 f"  Ships:     {len(self._ship_data)}\n"
                 f"  Bullets:   {len(self._bullet_data)}\n"
                 f"  Mines:     {len(self._mine_data)}\n")
+
+    def to_dict(self) -> GameStateDict:
+        """Return a plain dictionary representation of the game state."""
+        return {
+            "ships": [ShipView(ship_data).dict() for ship_data in self._ship_data],
+            "asteroids": [AsteroidView(asteroid_data).dict() for asteroid_data in self._asteroid_data],
+            "bullets": [BulletView(bullet_data).dict() for bullet_data in self._bullet_data],
+            "mines": [MineView(mine_data).dict() for mine_data in self._mine_data],
+            "map_size": self._map_size,
+            "time_limit": self._time_limit,
+            "time": self._time,
+            "frame": self._frame,
+            "delta_time": self._delta_time,
+            "frame_rate": self._frame_rate,
+            "random_asteroid_splits": self._random_asteroid_splits,
+            "competition_safe_mode": self._competition_safe_mode,
+        }
+    
+    def dict(self) -> str:
+        """Return a pretty-printed JSON string representation of the game state."""
+        return json.dumps(self.to_dict(), indent=4)
 
 
 def run_tests() -> None:
