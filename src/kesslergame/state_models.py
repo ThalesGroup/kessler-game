@@ -297,32 +297,80 @@ class ShipOwnView(ShipView):
                 f"max_speed={self.max_speed:.2f} drag={self.drag:.2f}>")
 
 
+class ShipState:
+    """
+    Wrapper around a single ship's data list, exposing a dict-like interface.
+
+    Behaves like a read-only dictionary mapping property names to values, and
+    internally wraps a ShipOwnView (which extends ShipView).
+    """
+
+    def __init__(self, ship: list[float | int]):
+        self._ship_data = ship
+        self._view = ShipOwnView(ship)
+
+    def __getitem__(self, key: str):
+        """Allow dict-style access to view attributes."""
+        if hasattr(self._view, key):
+            return getattr(self._view, key)
+        raise KeyError(f"Key '{key}' not found in ship state.")
+
+    def __repr__(self) -> str:
+        return repr(self._view)
+
+    def keys(self) -> list[str]:
+        """Returns all accessible attribute names."""
+        return [k for k in dir(self._view) if not k.startswith("_") and not callable(getattr(self._view, k))]
+
+    def items(self) -> list[tuple[str, float | int | bool | tuple]]:
+        """Returns all (key, value) pairs."""
+        return [(k, getattr(self._view, k)) for k in self.keys()]
+
+    def get_raw(self) -> list[float | int]:
+        """Return the underlying ship list (mutable)."""
+        return self._ship_data
+
+    def __contains__(self, key: str) -> bool:
+        return hasattr(self._view, key)
+
+    def __len__(self) -> int:
+        return len(self.keys())
+
+    def __iter__(self):
+        return iter(self.keys())
+
+
 class GameState:
     def __init__(self,
+                 ships: list[list[float | int]],
                  asteroids: list[list[float]],
                  bullets: list[list[float]],
                  mines: list[list[float]],
-                 ships: list[list[float | int]],
                  map_size: tuple[int, int],
-                 time: float,
-                 delta_time: float,
-                 frame: int,
                  time_limit: float,
+                 time: float,
+                 frame: int,
+                 delta_time: float,
+                 frame_rate: float,
                  random_asteroid_splits: bool,
                  competition_safe_mode: bool):
-        
+        # Game entities
+        self._ship_data = ships
         self._asteroid_data = asteroids
         self._bullet_data = bullets
         self._mine_data = mines
-        self._ship_data = ships
-
+        # Environment
         self.map_size = map_size
-        self.time = time
-        self.delta_time = delta_time
-        self.frame = frame
         self.time_limit = time_limit
+        # Simulation timing
+        self.time = time
+        self.frame = frame
+        self.delta_time = delta_time
+        self.frame_rate = frame_rate
+        # Game settings
         self.random_asteroid_splits = random_asteroid_splits
         self.competition_safe_mode = competition_safe_mode
+
 
     @property
     def asteroids(self) -> list[AsteroidView]:

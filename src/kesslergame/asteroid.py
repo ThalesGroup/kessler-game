@@ -11,7 +11,6 @@ if TYPE_CHECKING:
     from .ship import Ship
     from .bullet import Bullet
 from .mines import Mine
-from .state_dicts import AsteroidState
 
 class Asteroid:
     """ Sprite that represents an asteroid. """
@@ -68,16 +67,17 @@ class Asteroid:
         self.angle: float = random.uniform(0.0, 360.0)
         self.turnrate: float = random.uniform(-100, 100)
 
-        self._state: AsteroidState = {
-            "position": self._position,
-            "velocity": self.velocity,
-            "size": self.size,
-            "mass": self.mass,
-            "radius": self.radius
-        }
+        # [x: float, y: float, vx: float, vy: float, size: int, mass: float, radius: float]
+        self._state: list[float | int] = [
+            self.x, self.y,
+            self.vx, self.vy,
+            self.size,
+            self.mass,
+            self.radius
+        ]
 
     @property
-    def state(self) -> AsteroidState:
+    def state(self) -> list[float | int]:
         return self._state
     
     @property

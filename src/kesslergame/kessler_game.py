@@ -19,6 +19,7 @@ from .asteroid import Asteroid
 from .ship import Ship
 from .bullet import Bullet
 from .state_dicts import GameStateDict, SettingsDict, UISettingsDict
+from .state_models import GameState, ShipState
 
 
 class StopReason(Enum):
@@ -117,25 +118,24 @@ class KesslerGame:
         new_asteroids: list[Asteroid] = []
 
         # Maintain game_state dict to send to teams
-        game_state: GameStateDict = {
-            'asteroids': [asteroid.state for asteroid in asteroids],
-            'ships': [ship.state for ship in liveships],
-            'bullets': [bullet.state for bullet in bullets],
-            'mines': [mine.state for mine in mines],
-            'map_size': scenario.map_size,
-            'time': sim_time,
-            'delta_time': self.delta_time,
-            'frame_rate': self.frequency,
-            'frame': sim_frame,
-            'time_limit': time_limit,
-            'random_asteroid_splits': self.random_ast_splits,
-            'competition_safe_mode': self.competition_safe_mode
-        }
-        # Pre-lookup dictionary keys for mutable objects
-        game_state_asteroids = game_state['asteroids']
-        game_state_ships = game_state['ships']
-        game_state_bullets = game_state['bullets']
-        game_state_mines = game_state['mines']
+        game_state: GameState = GameState(
+            # Game entities
+            ships=[ship.state for ship in liveships],
+            asteroids=[asteroid.state for asteroid in asteroids],
+            bullets=[bullet.state for bullet in bullets],
+            mines=[mine.state for mine in mines],
+            # Environment
+            map_size=scenario.map_size,
+            time_limit=time_limit,
+            # Simulation timing
+            time=sim_time,
+            frame=sim_frame,
+            delta_time=self.delta_time,
+            frame_rate=self.frequency,
+            # Game settings
+            random_asteroid_splits=self.random_ast_splits,
+            competition_safe_mode=self.competition_safe_mode
+        )
 
         while stop_reason == StopReason.not_stopped:
             # Get perf time at the start of time step evaluation and initialize performance tracker
@@ -150,73 +150,33 @@ class KesslerGame:
             # Loop through each controller/ship combo and apply their actions
             for ship_idx, ship in enumerate(liveships):
                 # Generate game_state info to send to controller
-                game_state_to_controller: GameStateDict
+                game_state_to_controller: GameState
                 if self.competition_safe_mode:
-                    # Send a deep-ish copy of everything mutable in the game_state dict, so competitors do not accidentally or maliciously modify it
-                    game_state_to_controller = {
-                        'asteroids': [
-                            {
-                                'position': asteroid['position'][:], # Mutable, need to copy
-                                'velocity': asteroid['velocity'],
-                                'size': asteroid['size'],
-                                'mass': asteroid['mass'],
-                                'radius': asteroid['radius'],
-                            }
-                            for asteroid in game_state_asteroids
-                        ],
-                        'ships': [
-                            {
-                                'position': ship['position'][:], # Mutable, need to copy
-                                'velocity': ship['velocity'][:], # Mutable, need to copy
-                                'speed': ship['speed'],
-                                'heading': ship['heading'],
-                                'mass': ship['mass'],
-                                'radius': ship['radius'],
-                                'id': ship['id'],
-                                'team': ship['team'],
-                                'is_respawning': ship['is_respawning'],
-                                'lives_remaining': ship['lives_remaining'],
-                                'deaths': ship['deaths'],
-                            }
-                            for ship in game_state_ships
-                        ],
-                        'bullets': [
-                            {
-                                'position': bullet['position'][:], # Mutable, need to copy
-                                'velocity': bullet['velocity'],
-                                'heading': bullet['heading'],
-                                'mass': bullet['mass'],
-                            }
-                            for bullet in game_state_bullets
-                        ],
-                        'mines': [
-                            {
-                                'position': mine['position'],  # tuple, safe to reuse
-                                'mass': mine['mass'],
-                                'fuse_time': mine['fuse_time'],
-                                'remaining_time': mine['remaining_time'],
-                            }
-                            for mine in game_state_mines
-                        ],
-                        'map_size': game_state['map_size'],
-                        'time': game_state['time'],
-                        'delta_time': game_state['delta_time'],
-                        'frame_rate': game_state['frame_rate'],
-                        'frame': game_state['frame'],
-                        'time_limit': game_state['time_limit'],
-                        'random_asteroid_splits': game_state['random_asteroid_splits'],
-                        'competition_safe_mode': game_state['competition_safe_mode'],
-                    }
+                    # Must recreate GameState object, so competitors do not accidentally or maliciously modify the true game state
+                    game_state_to_controller = GameState(
+                        # Game entities
+                        ships=[ship.state for ship in liveships],
+                        asteroids=[asteroid.state for asteroid in asteroids],
+                        bullets=[bullet.state for bullet in bullets],
+                        mines=[mine.state for mine in mines],
+                        # Environment
+                        map_size=scenario.map_size,
+                        time_limit=time_limit,
+                        # Simulation timing
+                        time=sim_time,
+                        frame=sim_frame,
+                        delta_time=self.delta_time,
+                        frame_rate=self.frequency,
+                        # Game settings
+                        random_asteroid_splits=self.random_ast_splits,
+                        competition_safe_mode=self.competition_safe_mode
+                    )
                 else:
                     game_state_to_controller = game_state
-                # Reset controls on ship to defaults
-                ship.thrust = 0.0
-                ship.turn_rate = 0.0
-                ship.fire = False
                 # Evaluate each controller letting control be applied
                 if controllers[ship_idx].ship_id != ship.id:
                     raise RuntimeError("Controller and ship ID do not match")
-                ship.thrust, ship.turn_rate, ship.fire, ship.drop_mine = controllers[ship_idx].actions(ship.ownstate, game_state_to_controller)
+                ship.thrust, ship.turn_rate, ship.fire, ship.drop_mine = controllers[ship_idx].actions(ShipState(ship.ownstate), game_state_to_controller)
 
                 # Update controller evaluation time if performance tracking
                 if self.perf_tracker:

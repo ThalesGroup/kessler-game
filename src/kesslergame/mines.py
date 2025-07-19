@@ -20,23 +20,25 @@ class Mine:
         self.mass: float = 25.0  # kg
         self.radius: float = 12.0 # m
         self.blast_radius: float = 150.0 # m
-        self.blast_pressure: float = 2000.0 # Pascal? Sure let's go with that :)
+        self.blast_pressure: float = 2000.0 # Pascals. I think.
 
         self.owner = owner
         self.countdown_timer: float = self.fuse_time
         self.detonating: bool = False
         self.x, self.y = starting_position
 
-        self._state: MineState = {
-            "position": self.position,
-            "mass": self.mass,
-            "fuse_time": self.fuse_time,
-            "remaining_time": self.countdown_timer
-        }
+        # [x: float, y: float, mass: float, fuse_time: float, remaining_time: float]
+        self._state: list[float] = [
+            self.x, self.y,
+            self.mass,
+            self.fuse_time,
+            self.countdown_timer
+        ]
 
     def update(self, delta_time: float = 1 / 30) -> None:
         self.countdown_timer -= delta_time
-        self._state["remaining_time"] = self.countdown_timer
+        # Sync the mutable state
+        self._state[4] = self.countdown_timer
         if self.countdown_timer <= 1e-12:
             self.detonate()
 
@@ -48,7 +50,7 @@ class Mine:
         pass
 
     @property
-    def state(self) -> MineState:
+    def state(self) -> list[float]:
         return self._state
 
     @property

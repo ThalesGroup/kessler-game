@@ -29,26 +29,29 @@ class Bullet:
         self.vx = self.speed * cos_heading
         self.vy = self.speed * sin_heading
 
-        self._state: BulletState = {
-            "position": self._position,
-            "velocity": self.velocity,
-            "heading": self.heading,
-            "mass": self.mass
-        }
+        # [x: float, y: float, vx: float, vy: float, tail_dx: float, tail_dy: float, heading: float, mass: float, length: float]
+        self._state: list[float] = [
+            self.x, self.y,
+            self.vx, self.vy,
+            self.tail_delta_x, self.tail_delta_y,
+            self.heading,
+            self.mass,
+            self.length
+        ]
 
     def update(self, delta_time: float = 1/30) -> None:
         # Update the position:
         self.x += self.vx * delta_time
         self.y += self.vy * delta_time
-        # Take advantage of mutability and quickly update the position
-        self._position[0] = self.x
-        self._position[1] = self.y
+        # Keep _state in sync
+        self._state[0] = self.x
+        self._state[1] = self.y
 
     def destruct(self) -> None:
         pass
 
     @property
-    def state(self) -> BulletState:
+    def state(self) -> list[float]:
         return self._state
 
     @property

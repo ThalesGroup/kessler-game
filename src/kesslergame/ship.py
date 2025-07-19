@@ -9,7 +9,6 @@ import warnings
 from .bullet import Bullet
 from .mines import Mine
 from .controller import KesslerController
-from .state_dicts import ShipState, ShipOwnState
 
 
 class Ship:
@@ -85,77 +84,75 @@ class Ship:
         self.mines_hit: int = 0      # Number of asteroids hit by mines
         self.asteroids_hit: int = 0  # Number of asteroids hit (including ship collision)
 
-        self._state: ShipState = {
-            "position": self._position,
-            "velocity": self._velocity,
-            "speed": self.speed,
-            "heading": self.heading,
-            "mass": self.mass,
-            "radius": self.radius,
-            "id": self.id,
-            "team": self.team,
-            "is_respawning": self.is_respawning,
-            "lives_remaining": self.lives,
-            "deaths": self.deaths,
-        }
+        # [x, y, vx, vy, speed, heading, mass, radius, id, team, is_respawning, lives_remaining, deaths]
+        self._state: list[float | int] = [
+            self.x, self.y,
+            self.vx, self.vy,
+            self.speed,
+            self.heading,
+            self.mass,
+            self.radius,
+            self.id,
+            self.team,
+            int(self.is_respawning),
+            self.lives,
+            self.deaths
+        ]
 
-        self._ownstate: ShipOwnState = {
-            **self._state,
-            "bullets_remaining": self.bullets_remaining,
-            "mines_remaining": self.mines_remaining,
-            "can_fire": self.can_fire,
-            "fire_cooldown": self.fire_wait_time,
-            "fire_rate": self.fire_rate,
-            "can_deploy_mine": self.can_deploy_mine,
-            "mine_cooldown": self.mine_wait_time,
-            "mine_deploy_rate": self.mine_deploy_rate,
-            "respawn_time_left": self.respawn_time_left,
-            "respawn_time": self.respawn_time,
-            "thrust_range": self.thrust_range,
-            "turn_rate_range": self.turn_rate_range,
-            "max_speed": self.max_speed,
-            "drag": self.drag,
-        }
+        # Extends the shared state with more internal values
+        self._ownstate: list[float | int] = self._state + [
+            self.bullets_remaining,
+            self.mines_remaining,
+            int(self.can_fire),
+            self.fire_wait_time,
+            self.fire_rate,
+            int(self.can_deploy_mine),
+            self.mine_wait_time,
+            self.mine_deploy_rate,
+            self.respawn_time_left,
+            self.respawn_time,
+            self.thrust_range[0],
+            self.thrust_range[1],
+            self.turn_rate_range[0],
+            self.turn_rate_range[1],
+            self.max_speed,
+            self.drag,
+        ]
 
     def update_state(self) -> None:
-        """Update both shared and own state dictionaries."""
-        # Use mutability to update the position and velocity lists without doing a dict lookup
-        self._position[0] = self.x
-        self._position[1] = self.y
-        self._velocity[0] = self.vx
-        self._velocity[1] = self.vy
+        """Update flat state and ownstate lists."""
+        self._state[0] = self.x
+        self._state[1] = self.y
+        self._state[2] = self.vx
+        self._state[3] = self.vy
+        self._state[4] = self.speed
+        self._state[5] = self.heading
+        self._state[6] = self.mass
+        self._state[7] = self.radius
+        self._state[8] = self.id
+        self._state[9] = self.team
+        self._state[10] = int(self.is_respawning)
+        self._state[11] = self.lives
+        self._state[12] = self.deaths
 
-        self._state.update({
-#            "position": self._position,
-#            "velocity": self._velocity,
-            "speed": self.speed,
-            "heading": self.heading,
-            "mass": self.mass,
-            "radius": self.radius,
-            "id": self.id,
-            "team": self.team,
-            "is_respawning": self.is_respawning,
-            "lives_remaining": self.lives,
-            "deaths": self.deaths,
-        })
-
-        self._ownstate.update({
-            **self._state,
-            "bullets_remaining": self.bullets_remaining,
-            "mines_remaining": self.mines_remaining,
-            "can_fire": self.can_fire,
-            "fire_cooldown": self.fire_wait_time,
-            "fire_rate": self.fire_rate,
-            "can_deploy_mine": self.can_deploy_mine,
-            "mine_cooldown": self.mine_wait_time,
-            "mine_deploy_rate": self.mine_deploy_rate,
-            "respawn_time_left": self.respawn_time_left,
-            "respawn_time": self.respawn_time,
-            "thrust_range": self.thrust_range,
-            "turn_rate_range": self.turn_rate_range,
-            "max_speed": self.max_speed,
-            "drag": self.drag,
-        })
+        # Extend the state list with the ownstate fields
+        self._ownstate[0:13] = self._state  # Shared part
+        self._ownstate[13] = self.bullets_remaining
+        self._ownstate[14] = self.mines_remaining
+        self._ownstate[15] = int(self.can_fire)
+        self._ownstate[16] = self.fire_wait_time
+        self._ownstate[17] = self.fire_rate
+        self._ownstate[18] = int(self.can_deploy_mine)
+        self._ownstate[19] = self.mine_wait_time
+        self._ownstate[20] = self.mine_deploy_rate
+        self._ownstate[21] = self.respawn_time_left
+        self._ownstate[22] = self.respawn_time
+        self._ownstate[23] = self.thrust_range[0]
+        self._ownstate[24] = self.thrust_range[1]
+        self._ownstate[25] = self.turn_rate_range[0]
+        self._ownstate[26] = self.turn_rate_range[1]
+        self._ownstate[27] = self.max_speed
+        self._ownstate[28] = self.drag
 
     @property
     def position(self) -> tuple[float, float]:
@@ -166,11 +163,11 @@ class Ship:
         return (self.vx, self.vy)
 
     @property
-    def state(self) -> ShipState:
+    def state(self) -> list[float | int]:
         return self._state
 
     @property
-    def ownstate(self) -> ShipOwnState:
+    def ownstate(self) -> list[float | int]:
         return self._ownstate
 
     @property
