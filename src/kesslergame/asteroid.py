@@ -45,6 +45,9 @@ class Asteroid:
         # Number of child asteroids spawned when this asteroid is destroyed
         self.num_children: int = 3
 
+        # Set position as specified
+        self.x, self.y = position
+
         # Set collision radius based on size # TODO May need to change once size can be visualized
         self.radius: float = self.size * 8.0
 
@@ -57,9 +60,6 @@ class Asteroid:
         # Set velocity based on starting angle and speed
         self.vx = starting_speed * math.cos(starting_angle_rad)
         self.vy = starting_speed * math.sin(starting_angle_rad)
-
-        # Set position as specified
-        self.x, self.y = position
 
         # Random rotations for use in display or future use with complex hit box
         self.angle: float = random.uniform(0.0, 360.0)

@@ -134,8 +134,8 @@ class AsteroidView:
 
     def dict(self) -> AsteroidStateDict:
         return {
-            "position": (self.x, self.y),
-            "velocity": (self.vx, self.vy),
+            "position": self.position,
+            "velocity": self.velocity,
             "size": self.size,
             "mass": self.mass,
             "radius": self.radius,
@@ -199,6 +199,10 @@ class BulletView:
         return (self.tail_dx, self.tail_dy)
 
     @property
+    def tail(self) -> tuple[float, float]:
+        return (self.x + self.tail_dx, self.y + self.tail_dy)
+
+    @property
     def heading(self) -> float:
         return self._data[6]
 
@@ -212,9 +216,9 @@ class BulletView:
 
     def dict(self) -> BulletStateDict:
         return {
-            "position": (self.x, self.y),
-            "velocity": (self.vx, self.vy),
-            "tail_delta": (self.x + self.tail_dx, self.y + self.tail_dy),
+            "position": self.position,
+            "velocity": self.velocity,
+            "tail_delta": self.tail_delta,
             "heading": self.heading,
             "mass": self.mass,
             "length": self.length
@@ -352,8 +356,8 @@ class ShipView:
 
     def dict(self) -> ShipStateDict:
         return {
-            "position": (self.x, self.y),
-            "velocity": (self.vx, self.vy),
+            "position": self.position,
+            "velocity": self.velocity,
             "speed": self.speed,
             "heading": self.heading,
             "mass": self.mass,
