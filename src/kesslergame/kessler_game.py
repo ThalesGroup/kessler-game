@@ -204,10 +204,12 @@ class KesslerGame:
                 new_bullet, new_mine = ship.update(self.delta_time, scenario.map_size)
                 if new_bullet is not None:
                     bullets.append(new_bullet)
-                    game_state.add_bullet(new_bullet.state)
+                    if self.competition_safe_mode:
+                        game_state.add_bullet(new_bullet.state)
                 if new_mine is not None:
                     mines.append(new_mine)
-                    game_state.add_mine(new_mine.state)
+                    if self.competition_safe_mode:
+                        game_state.add_mine(new_mine.state)
 
             # Update performance tracker
             if self.perf_tracker:
@@ -254,7 +256,8 @@ class KesslerGame:
                     asteroids[ast_idx_to_remove] = asteroids[-1]
                     asteroids.pop()
                     # Mirror the change in the game_state dict
-                    game_state.remove_asteroid(ast_idx_to_remove)
+                    if self.competition_safe_mode:
+                        game_state.remove_asteroid(ast_idx_to_remove)
                 # Cull any bullets past the map edge
                 # It is important we do this after the asteroid-bullet collision checks occur,
                 # in the case of bullets leaving the map but might hit an asteroid on the edge
@@ -268,14 +271,16 @@ class KesslerGame:
                     bullets.pop()
                     num_buls -= 1
                     # Mirror the change in the game_state dict
-                    game_state.remove_bullet(bul_idx)
+                    if self.competition_safe_mode:
+                        game_state.remove_bullet(bul_idx)
                 else:
                     bul_idx += 1
 
             # Add the new asteroids from the bullet-asteroid collisions
             if new_asteroids:
                 asteroids.extend(new_asteroids)
-                game_state.add_asteroids([asteroid.state for asteroid in new_asteroids]) # Mirror change in game_state dict
+                if self.competition_safe_mode:
+                    game_state.add_asteroids([asteroid.state for asteroid in new_asteroids]) # Mirror change in game_state dict
                 new_asteroids.clear()
             
             # --- Check mine-asteroid and mine-ship effects ---
@@ -300,7 +305,8 @@ class KesslerGame:
                             asteroids.pop()
                             num_asts -= 1
                             # Mirror the change in the game_state dict
-                            game_state.remove_asteroid(ast_idx)
+                            if self.competition_safe_mode:
+                                game_state.remove_asteroid(ast_idx)
                             # Don't advance ast_idx, must check the swapped-in asteroid
                         else:
                             ast_idx += 1
@@ -319,7 +325,8 @@ class KesslerGame:
                     mines.pop()
                     num_mines -= 1
                     # Mirror the change in the game_state dict
-                    game_state.remove_mine(mine_idx)
+                    if self.competition_safe_mode:
+                        game_state.remove_mine(mine_idx)
                     # Don't advance mine_idx, must check the swapped-in mine
                 else:
                     mine_idx += 1
@@ -327,7 +334,8 @@ class KesslerGame:
             # Add new asteroids from mine-asteroid collisions
             if new_asteroids:
                 asteroids.extend(new_asteroids)
-                game_state.add_asteroids([asteroid.state for asteroid in new_asteroids]) # Mirror change in game_state dict
+                if self.competition_safe_mode:
+                    game_state.add_asteroids([asteroid.state for asteroid in new_asteroids]) # Mirror change in game_state dict
                 new_asteroids.clear()
             
             # --- Check ship-asteroid collisions ---
@@ -348,7 +356,8 @@ class KesslerGame:
                             asteroids.pop()
                             num_asts -= 1
                             # Mirror the change in the game_state dict
-                            game_state.remove_asteroid(ast_idx)
+                            if self.competition_safe_mode:
+                                game_state.remove_asteroid(ast_idx)
                             # Ship destruct function. Add one to asteroids_hit
                             ship.asteroids_hit += 1
                             ship.destruct(map_size=scenario.map_size)
@@ -361,7 +370,8 @@ class KesslerGame:
             # Add new asteroids from ship-asteroid collisions
             if new_asteroids:
                 asteroids.extend(new_asteroids)
-                game_state.add_asteroids([asteroid.state for asteroid in new_asteroids]) # Mirror change in game_state dict
+                if self.competition_safe_mode:
+                    game_state.add_asteroids([asteroid.state for asteroid in new_asteroids]) # Mirror change in game_state dict
                 new_asteroids.clear()
             
             # --- Check ship-ship collisions ---
@@ -381,7 +391,8 @@ class KesslerGame:
             # Cull ships if not alive
             if cull_ships:
                 liveships = [ship for ship in liveships if ship.alive]
-                game_state.update_ships([ship.state for ship in liveships])
+                if self.competition_safe_mode:
+                    game_state.update_ships([ship.state for ship in liveships])
 
             # Update performance tracker with collisions timing
             if self.perf_tracker:
@@ -408,9 +419,10 @@ class KesslerGame:
 
             # --- CHECK STOP CONDITIONS --------------------------------------------------------------------------------
             sim_time += self.delta_time
-            game_state.time = sim_time
             sim_frame += 1
-            game_state.frame = sim_frame
+            if self.competition_safe_mode:
+                game_state.time = sim_time
+                game_state.frame = sim_frame
 
             if not asteroids:
                 # No asteroids remain

@@ -3,8 +3,8 @@
 # NOTICE: This file is subject to the license agreement defined in file 'LICENSE', which is part of
 # this source code package.
 
-import json
-from typing import Literal, overload, cast, Iterator, Any, TypedDict
+from typing import Literal, overload, cast, Iterator, TypedDict
+
 
 class AsteroidStateDict(TypedDict):
     position: tuple[float, float]
@@ -517,9 +517,39 @@ class ShipState:
         """Returns all (key, value) pairs."""
         return [(k, getattr(self._view, k)) for k in self.keys()]
 
-    def get_raw(self) -> list[float | int]:
+    def fast_compact(self) -> list[float | int]:
         """Return the underlying ship list (mutable)."""
         return self._ship_data
+
+    def dict(self) -> ShipOwnStateDict:
+        """Return a plain dictionary representation of this ship's own state."""
+        return {
+            "position": self._view.position,
+            "velocity": self._view.velocity,
+            "speed": self._view.speed,
+            "heading": self._view.heading,
+            "mass": self._view.mass,
+            "radius": self._view.radius,
+            "id": self._view.id,
+            "team": self._view.team,
+            "is_respawning": self._view.is_respawning,
+            "lives_remaining": self._view.lives_remaining,
+            "deaths": self._view.deaths,
+            "bullets_remaining": self._view.bullets_remaining,
+            "mines_remaining": self._view.mines_remaining,
+            "can_fire": self._view.can_fire,
+            "fire_cooldown": self._view.fire_cooldown,
+            "fire_rate": self._view.fire_rate,
+            "can_deploy_mine": self._view.can_deploy_mine,
+            "mine_cooldown": self._view.mine_cooldown,
+            "mine_deploy_rate": self._view.mine_deploy_rate,
+            "respawn_time_left": self._view.respawn_time_left,
+            "respawn_time": self._view.respawn_time,
+            "thrust_range": self._view.thrust_range,
+            "turn_rate_range": self._view.turn_rate_range,
+            "max_speed": self._view.max_speed,
+            "drag": self._view.drag,
+        }
 
     def __contains__(self, key: str) -> bool:
         return hasattr(self._view, key)
