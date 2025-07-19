@@ -17,8 +17,10 @@ class AsteroidStateDict(TypedDict):
 class BulletStateDict(TypedDict):
     position: tuple[float, float]
     velocity: tuple[float, float]
+    tail_delta: tuple[float, float]
     heading: float
     mass: float
+    length: float
 
 
 class MineStateDict(TypedDict):
@@ -64,6 +66,21 @@ class GameStateDict(TypedDict):
     asteroids: list[AsteroidStateDict]
     bullets: list[BulletStateDict]
     mines: list[MineStateDict]
+    map_size: tuple[int, int]
+    time_limit: float
+    time: float
+    frame: int
+    delta_time: float
+    frame_rate: float
+    random_asteroid_splits: bool
+    competition_safe_mode: bool
+
+
+class GameStateCompactDict(TypedDict):
+    ships: list[list[float | int | bool]]
+    asteroids: list[list[float | int]]
+    bullets: list[list[float]]
+    mines: list[list[float]]
     map_size: tuple[int, int]
     time_limit: float
     time: float
@@ -197,8 +214,10 @@ class BulletView:
         return {
             "position": (self.x, self.y),
             "velocity": (self.vx, self.vy),
+            "tail_delta": (self.x + self.tail_dx, self.y + self.tail_dy),
             "heading": self.heading,
             "mass": self.mass,
+            "length": self.length
         }
 
     @overload
@@ -702,6 +721,23 @@ class GameState:
     def dict(self) -> str:
         """Return a pretty-printed JSON string representation of the game state."""
         return json.dumps(self.to_dict(), indent=4)
+    
+    def fast_compact(self) -> GameStateCompactDict:
+        """Return a minimal raw list-based version of the game state for fast serialization. Recommended for agent training."""
+        return {
+            "ships": self._ship_data,
+            "asteroids": self._asteroid_data,
+            "bullets": self._bullet_data,
+            "mines": self._mine_data,
+            "map_size": self._map_size,
+            "time_limit": self._time_limit,
+            "time": self._time,
+            "frame": self._frame,
+            "delta_time": self._delta_time,
+            "frame_rate": self._frame_rate,
+            "random_asteroid_splits": self._random_asteroid_splits,
+            "competition_safe_mode": self._competition_safe_mode,
+        }
 
 
 def run_tests() -> None:
