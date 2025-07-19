@@ -625,6 +625,9 @@ class GameState:
     def add_mine(self, mine_data: list[float]) -> None:
         self._mine_data.append(mine_data)
 
+    def update_ships(self, ships_data: list[list[float | int | bool]]) -> None:
+        self._ship_data = ships_data
+
     def remove_asteroid(self, index: int) -> None:
         """Remove asteroid at index using swap-and-pop O(1)"""
         last_index = len(self._asteroid_data) - 1

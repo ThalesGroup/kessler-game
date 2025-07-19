@@ -75,6 +75,7 @@ class KesslerGame:
         # INITIALIZATION #
         ##################
         # Initialize objects lists from scenario
+        #scenario = cast(Scenario, scenario)
         asteroids: list[Asteroid] = scenario.asteroids()
         ships: list[Ship] = scenario.ships() # Keep full list of ships (dead or alive) for score reporting
         liveships: list[Ship] = list(ships) # Maintain a parallel list of just live ships
@@ -191,6 +192,8 @@ class KesslerGame:
             # --- UPDATE STATE INFORMATION OF EACH OBJECT --------------------------------------------------------------
 
             # Update each Asteroid, Bullet, and Ship
+            # Because the game_state stores a mutable reference to the internal states of the ship/asteroid/bullet/mine,
+            # these updates automatically reflect in the game_state
             for bullet in bullets:
                 bullet.update(self.delta_time)
             for mine in mines:
@@ -276,6 +279,7 @@ class KesslerGame:
                 new_asteroids.clear()
             
             # --- Check mine-asteroid and mine-ship effects ---
+            cull_ships: bool = False
             mine_idx = 0
             num_mines = len(mines)
             while mine_idx < num_mines:
@@ -308,6 +312,7 @@ class KesslerGame:
                             if dx * dx + dy * dy <= radius_sum * radius_sum:
                                 # Ship destruct function.
                                 ship.destruct(map_size=scenario.map_size)
+                                cull_ships = True
                     mine.destruct()
                     # Swap and pop the mine
                     mines[mine_idx] = mines[-1]
@@ -347,6 +352,7 @@ class KesslerGame:
                             # Ship destruct function. Add one to asteroids_hit
                             ship.asteroids_hit += 1
                             ship.destruct(map_size=scenario.map_size)
+                            cull_ships = True
                             # Stop checking this ship's collisions
                             break
                         else:
@@ -371,8 +377,11 @@ class KesslerGame:
                                 if abs(dx) <= radius_sum and abs(dy) <= radius_sum and dx * dx + dy * dy <= radius_sum * radius_sum:
                                     ship1.destruct(map_size=scenario.map_size)
                                     ship2.destruct(map_size=scenario.map_size)
+                                    cull_ships = True
             # Cull ships if not alive
-            liveships = [ship for ship in liveships if ship.alive]
+            if cull_ships:
+                liveships = [ship for ship in liveships if ship.alive]
+                game_state.update_ships([ship.state for ship in liveships])
 
             # Update performance tracker with collisions timing
             if self.perf_tracker:
