@@ -3,8 +3,7 @@
 # NOTICE: This file is subject to the license agreement defined in file 'LICENSE', which is part of
 # this source code package.
 
-from .state_dicts import GameStateDict, ShipOwnState
-from .game_state import GameState
+from .state_models import GameState, ShipState
 
 
 class KesslerController:
@@ -14,7 +13,7 @@ class KesslerController:
     game_state dictionary. This action method then sets the thrust, turn_rate, and fire commands on the ship object.
     """
 
-    def actions(self, ship_state: ShipOwnState, game_state: GameState) -> tuple[float, float, bool, bool]:
+    def actions(self, ship_state: ShipState, game_state: GameState) -> tuple[float, float, bool, bool]:
         """
         Method processed each time step by this controller.
         """

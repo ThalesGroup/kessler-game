@@ -1,7 +1,6 @@
 # -*- coding: utf-8 -*-
 
-from .state_dicts import GameStateDict
-from .state_dicts import ShipOwnState
+from .state_models import GameState, ShipState
 from .controller import KesslerController
 from typing import NoReturn, Any, Final
 from inputs import get_gamepad
@@ -19,7 +18,7 @@ class GamepadController(KesslerController):
         # can only toggle pausing every 0.5 seconds
         self.pause_time_buffer = 0.5
 
-    def actions(self, ship_state: ShipOwnState, game_state: GameStateDict) -> tuple[float, float, bool, bool]:
+    def actions(self, ship_state: ShipState, game_state: GameState) -> tuple[float, float, bool, bool]:
         """
         Read in the current gamepad state, and create the appropriate actions
         """

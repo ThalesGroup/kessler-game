@@ -3,6 +3,8 @@
 # NOTICE: This file is subject to the license agreement defined in file 'LICENSE', which is part of
 # this source code package.
 
+from typing import Literal, overload, cast, Iterator, Any
+
 
 class AsteroidView:
     def __init__(self, data: list[float]):
@@ -45,10 +47,19 @@ class AsteroidView:
     def radius(self) -> float:
         return self._data[6]
 
-    def __getitem__(self, key: str):
-        return getattr(self, key)
+    @overload
+    def __getitem__(self, key: Literal["x", "y", "vx", "vy", "mass", "radius"]) -> float: ...
+    
+    @overload
+    def __getitem__(self, key: Literal["size"]) -> int: ...
 
-    def __repr__(self):
+    @overload
+    def __getitem__(self, key: Literal["position", "velocity"]) -> tuple[float, float]: ...
+
+    def __getitem__(self, key: str) -> float | int | tuple[float, float]:
+        return cast(float | int | tuple[float, float], getattr(self, key))
+
+    def __repr__(self) -> str:
         return f"<AsteroidView pos={self.position} vel={self.velocity} size={self.size} mass={self.mass} radius={self.radius}>"
 
 
@@ -105,10 +116,16 @@ class BulletView:
     def length(self) -> float:
         return self._data[8]
 
-    def __getitem__(self, key: str):
-        return getattr(self, key)
+    @overload
+    def __getitem__(self, key: Literal["x", "y", "vx", "vy", "tail_dx", "tail_dy", "heading", "mass", "length"]) -> float: ...
+    
+    @overload
+    def __getitem__(self, key: Literal["position", "velocity", "tail_delta"]) -> tuple[float, float]: ...
 
-    def __repr__(self):
+    def __getitem__(self, key: str) -> float | tuple[float, float]:
+        return cast(float | tuple[float, float], getattr(self, key))
+
+    def __repr__(self) -> str:
         return (f"<BulletView pos={self.position} vel={self.velocity} "
                 f"tail_delta={self.tail_delta} "
                 f"heading={self.heading:.1f} mass={self.mass} length={self.length}>")
@@ -143,15 +160,21 @@ class MineView:
     def remaining_time(self) -> float:
         return self._data[4]
 
-    def __getitem__(self, key: str):
-        return getattr(self, key)
+    @overload
+    def __getitem__(self, key: Literal["x", "y", "mass", "fuse_time", "remaining_time"]) -> float: ...
+    
+    @overload
+    def __getitem__(self, key: Literal["position"]) -> tuple[float, float]: ...
 
-    def __repr__(self):
+    def __getitem__(self, key: str) -> float | tuple[float, float]:
+        return cast(float | tuple[float, float], getattr(self, key))
+
+    def __str__(self) -> str:
         return f"<MineView pos={self.position} remaining={self.remaining_time:.2f}>"
 
 
 class ShipView:
-    def __init__(self, data: list):
+    def __init__(self, data: list[float | int]):
         # [x, y, vx, vy, speed, heading, mass, radius, id, team, is_respawning, lives_remaining, deaths]
         self._data = data
 
@@ -215,17 +238,33 @@ class ShipView:
     def deaths(self) -> int:
         return int(self._data[12])
 
-    def __getitem__(self, key: str):
-        return getattr(self, key)
+    @overload
+    def __getitem__(self, key: Literal[
+        "x", "y", "vx", "vy", "speed", "heading", "mass", "radius"
+    ]) -> float: ...
 
-    def __repr__(self):
+    @overload
+    def __getitem__(self, key: Literal[
+        "id", "team", "lives_remaining", "deaths"
+    ]) -> int: ...
+
+    @overload
+    def __getitem__(self, key: Literal["is_respawning"]) -> bool: ...
+
+    @overload
+    def __getitem__(self, key: Literal["position", "velocity"]) -> tuple[float, float]: ...
+
+    def __getitem__(self, key: str) -> float | int | bool | tuple[float, float]:
+        return cast(float | int | bool | tuple[float, float], getattr(self, key))
+
+    def __str__(self) -> str:
         return (f"<ShipView id={self.id} team={self.team} pos={self.position} "
                 f"vel={self.velocity} speed={self.speed:.2f} heading={self.heading:.1f} "
                 f"lives={self.lives_remaining} deaths={self.deaths} respawning={self.is_respawning}>")
 
 
 class ShipOwnView(ShipView):
-    def __init__(self, data: list):
+    def __init__(self, data: list[float | int | bool]):
         # Extend ShipView list with the following:
         # [bullets_remaining: int, mines_remaining: int, can_fire: bool, fire_cooldown: float, fire_rate: float,
         #  can_deploy_mine: bool, mine_cooldown: float, mine_deploy_rate: float, respawn_time_left: float, respawn_time: float,
@@ -289,12 +328,30 @@ class ShipOwnView(ShipView):
     def drag(self) -> float:
         return self._own_data[28]
 
-    def __repr__(self):
-        base_repr = super().__repr__()
-        return (f"{base_repr[:-1]} bullets={self.bullets_remaining} mines={self.mines_remaining} "
-                f"can_fire={self.can_fire} fire_cd={self.fire_cooldown:.2f} can_deploy_mine={self.can_deploy_mine} "
-                f"mine_cd={self.mine_cooldown:.2f} respawn_left={self.respawn_time_left:.2f} "
-                f"max_speed={self.max_speed:.2f} drag={self.drag:.2f}>")
+    @overload
+    def __getitem__(self, key: Literal[
+        "x", "y", "vx", "vy", "speed", "heading", "mass", "radius",
+        "fire_cooldown", "fire_rate", "mine_cooldown", "mine_deploy_rate",
+        "respawn_time_left", "respawn_time", "max_speed", "drag"
+    ]) -> float: ...
+
+    @overload
+    def __getitem__(self, key: Literal[
+        "id", "team", "lives_remaining", "deaths", "bullets_remaining", "mines_remaining"
+    ]) -> int: ...
+
+    @overload
+    def __getitem__(self, key: Literal[
+        "is_respawning", "can_fire", "can_deploy_mine"
+    ]) -> bool: ...
+
+    @overload
+    def __getitem__(self, key: Literal[
+        "position", "velocity", "thrust_range", "turn_rate_range"
+    ]) -> tuple[float, float]: ...
+
+    def __getitem__(self, key: str) -> float | int | bool | tuple[float, float]:
+        return cast(float | int | bool | tuple[float, float], getattr(self, key))
 
 
 class ShipState:
@@ -309,10 +366,10 @@ class ShipState:
         self._ship_data = ship
         self._view = ShipOwnView(ship)
 
-    def __getitem__(self, key: str):
+    def __getitem__(self, key: str) -> float | int | bool | tuple[float, float]:
         """Allow dict-style access to view attributes."""
         if hasattr(self._view, key):
-            return getattr(self._view, key)
+            return cast(float | int | bool | tuple[float, float], getattr(self._view, key))
         raise KeyError(f"Key '{key}' not found in ship state.")
 
     def __repr__(self) -> str:
@@ -320,9 +377,12 @@ class ShipState:
 
     def keys(self) -> list[str]:
         """Returns all accessible attribute names."""
-        return [k for k in dir(self._view) if not k.startswith("_") and not callable(getattr(self._view, k))]
+        return [
+            k for k in dir(self._view)
+            if not k.startswith("_") and not callable(getattr(self._view, k))
+        ]
 
-    def items(self) -> list[tuple[str, float | int | bool | tuple]]:
+    def items(self) -> list[tuple[str, float | int | bool | tuple[float, float]]]:
         """Returns all (key, value) pairs."""
         return [(k, getattr(self._view, k)) for k in self.keys()]
 
@@ -336,14 +396,13 @@ class ShipState:
     def __len__(self) -> int:
         return len(self.keys())
 
-    def __iter__(self):
+    def __iter__(self) -> Iterator[str]:
         return iter(self.keys())
-
 
 class GameState:
     def __init__(self,
                  ships: list[list[float | int]],
-                 asteroids: list[list[float]],
+                 asteroids: list[list[float | int]],
                  bullets: list[list[float]],
                  mines: list[list[float]],
                  map_size: tuple[int, int],
@@ -360,17 +419,20 @@ class GameState:
         self._bullet_data = bullets
         self._mine_data = mines
         # Environment
-        self.map_size = map_size
-        self.time_limit = time_limit
+        self._map_size = map_size
+        self._time_limit = time_limit
         # Simulation timing
-        self.time = time
-        self.frame = frame
-        self.delta_time = delta_time
-        self.frame_rate = frame_rate
+        self._time = time
+        self._frame = frame
+        self._delta_time = delta_time
+        self._frame_rate = frame_rate
         # Game settings
-        self.random_asteroid_splits = random_asteroid_splits
-        self.competition_safe_mode = competition_safe_mode
+        self._random_asteroid_splits = random_asteroid_splits
+        self._competition_safe_mode = competition_safe_mode
 
+    @property
+    def ships(self) -> list[ShipView]:
+        return [ShipView(data) for data in self._ship_data]
 
     @property
     def asteroids(self) -> list[AsteroidView]:
@@ -385,34 +447,119 @@ class GameState:
         return [MineView(data) for data in self._mine_data]
 
     @property
-    def ships(self) -> list[ShipView]:
-        return [ShipView(data) for data in self._ship_data]
+    def time(self) -> float:
+        return self._time
+
+    @time.setter
+    def time(self, value: float) -> None:
+        self._time = value
+
+    @property
+    def frame(self) -> int:
+        return self._frame
+
+    @frame.setter
+    def frame(self, value: int) -> None:
+        self._frame = value
+
+    @property
+    def delta_time(self) -> float:
+        return self._delta_time
+
+    @property
+    def frame_rate(self) -> float:
+        return self._frame_rate
+
+    @property
+    def map_size(self) -> tuple[int, int]:
+        return self._map_size
+
+    @property
+    def time_limit(self) -> float:
+        return self._time_limit
+
+    @property
+    def random_asteroid_splits(self) -> bool:
+        return self._random_asteroid_splits
+
+    @property
+    def competition_safe_mode(self) -> bool:
+        return self._competition_safe_mode
+
+    def add_asteroid(self, asteroid_data: list[float | int]) -> None:
+        self._asteroid_data.append(asteroid_data)
+
+    def add_asteroids(self, asteroid_list: list[list[float | int]]) -> None:
+        self._asteroid_data.extend(asteroid_list)
+
+    def add_bullet(self, bullet_data: list[float]) -> None:
+        self._bullet_data.append(bullet_data)
+
+    def add_mine(self, mine_data: list[float]) -> None:
+        self._mine_data.append(mine_data)
 
     def remove_asteroid(self, index: int) -> None:
-        """Remove asteroid at index using swap-and-pop (O(1))."""
-        last_index = len(self.asteroids) - 1
+        """Remove asteroid at index using swap-and-pop O(1)"""
+        last_index = len(self._asteroid_data) - 1
         if index < 0 or index > last_index:
             raise IndexError(f"Invalid asteroid index: {index}")
         # Swap the element at index with the end
-        self.asteroids[index] = self.asteroids[last_index]
+        self._asteroid_data[index], self._asteroid_data[last_index] = self._asteroid_data[last_index], self._asteroid_data[index]
         # Pop the last element
-        self.asteroids.pop()
+        self._asteroid_data.pop()
 
-    def __getitem__(self, key: str):
-        return {
-            "asteroids": self.asteroids,
-            "bullets": self.bullets,
-            "mines": self.mines,
-            "ships": self.ships,
-            "map_size": self.map_size,
-            "time": self.time,
-            "delta_time": self.delta_time,
-            "frame_rate": self.frame_rate,
-            "frame": self.frame,
-            "time_limit": self.time_limit,
-            "random_asteroid_splits": self.random_asteroid_splits,
-            "competition_safe_mode": self.competition_safe_mode
-        }[key]
+    def remove_bullet(self, index: int) -> None:
+        """Remove bullet at index using swap-and-pop O(1)"""
+        last_index = len(self._bullet_data) - 1
+        if index < 0 or index > last_index:
+            raise IndexError(f"Invalid bullet index: {index}")
+        self._bullet_data[index], self._bullet_data[last_index] = self._bullet_data[last_index], self._bullet_data[index]
+        self._bullet_data.pop()
+
+    def remove_mine(self, index: int) -> None:
+        """Remove mine at index using swap-and-pop O(1)"""
+        last_index = len(self._mine_data) - 1
+        if index < 0 or index > last_index:
+            raise IndexError(f"Invalid mine index: {index}")
+        self._mine_data[index], self._mine_data[last_index] = self._mine_data[last_index], self._mine_data[index]
+        self._mine_data.pop()
+
+    def remove_ship(self, index: int) -> None:
+        """Remove ship at index using swap-and-pop O(1)"""
+        last_index = len(self._ship_data) - 1
+        if index < 0 or index > last_index:
+            raise IndexError(f"Invalid ship index: {index}")
+        self._ship_data[index], self._ship_data[last_index] = self._ship_data[last_index], self._ship_data[index]
+        self._ship_data.pop()
+
+    def __getitem__(self, key: str) -> list[AsteroidView] | list[BulletView] | list[MineView] | list[ShipView] | tuple[int, int] | float | int | bool:
+        match key:
+            case "asteroids":
+                return self.asteroids
+            case "bullets":
+                return self.bullets
+            case "mines":
+                return self.mines
+            case "ships":
+                return self.ships
+            case "map_size":
+                return self.map_size
+            case "time":
+                return self.time
+            case "delta_time":
+                return self.delta_time
+            case "frame_rate":
+                return self.frame_rate
+            case "frame":
+                return self.frame
+            case "time_limit":
+                return self.time_limit
+            case "random_asteroid_splits":
+                return self.random_asteroid_splits
+            case "competition_safe_mode":
+                return self.competition_safe_mode
+            case _:
+                raise KeyError(f"Key '{key}' not found in GameState")
 
     def __repr__(self) -> str:
         return (f"<GameState frame={self.frame} time={self.time:.2f}s "
@@ -428,7 +575,7 @@ class GameState:
                 f"  Mines:     {len(self._mine_data)}\n")
 
 
-def run_tests():
+def run_tests() -> None:
     print("=== Testing AsteroidView ===")
     asteroid_data = [100.0, 200.0, 1.5, -0.5, 3, 150.0, 24.0]
     asteroid = AsteroidView(asteroid_data)
@@ -516,6 +663,7 @@ def run_tests():
         map_size=(1024, 768),
         time=123.45,
         delta_time=1/30,
+        frame_rate=30,
         frame=1234,
         time_limit=300.0,
         random_asteroid_splits=True,
