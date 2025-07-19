@@ -8,18 +8,16 @@ from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
     from .ship import Ship
-from .state_dicts import BulletState
 
 
 class Bullet:
-    __slots__ = ('owner', 'speed', 'length', 'mass', 'x', 'y', 'vx', 'vy', 'heading', 'tail_delta_x', 'tail_delta_y', '_state', '_position')
+    __slots__ = ('owner', 'speed', 'length', 'mass', 'x', 'y', 'vx', 'vy', 'heading', 'tail_delta_x', 'tail_delta_y', '_state')
     def __init__(self, position: tuple[float, float], heading: float, owner: 'Ship') -> None:
         self.owner: Ship = owner
         self.speed: float = 800.0  # m/s
         self.length: float = 12.0 # m
         self.mass: float = 1.0  # kg
         self.x, self.y = position
-        self._position: list[float] = [self.x, self.y] # It is important that this is a mutable list, even though conceptually it is a tuple
         self.heading: float = heading
         rad_heading: float = math.radians(heading)
         cos_heading: float = math.cos(rad_heading)
@@ -55,8 +53,8 @@ class Bullet:
         return self._state
 
     @property
-    def position(self) -> list[float]:
-        return self._position
+    def position(self) -> tuple[float, float]:
+        return (self.x, self.y)
 
     @property
     def velocity(self) -> tuple[float, float]:

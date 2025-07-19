@@ -19,8 +19,7 @@ class Ship:
         'drag', 'radius', 'mass', '_respawning', '_respawn_time', '_fire_limiter',
         '_fire_time', '_mine_limiter', '_mine_deploy_time', 'mines_remaining',
         'bullets_remaining', 'bullets_shot', 'mines_dropped', 'bullets_hit',
-        'mines_hit', 'asteroids_hit', 'custom_sprite_path', '_state', '_ownstate',
-        '_position', '_velocity'
+        'mines_hit', 'asteroids_hit', 'custom_sprite_path', '_state', '_ownstate'
     )
     def __init__(self, ship_id: int,
                  position: tuple[float, float],
@@ -44,9 +43,7 @@ class Ship:
         self.id: int = ship_id
         self.speed: float = 0.0
         self.x, self.y = position
-        self._position: list[float] = list(position) # Mutable
         self.vx, self.vy = (0.0, 0.0)
-        self._velocity: list[float] = [self.vx, self.vy]
         self.heading: float = angle
         self.lives: int = lives
         self.deaths: int = 0
@@ -84,8 +81,8 @@ class Ship:
         self.mines_hit: int = 0      # Number of asteroids hit by mines
         self.asteroids_hit: int = 0  # Number of asteroids hit (including ship collision)
 
-        # [x, y, vx, vy, speed, heading, mass, radius, id, team, is_respawning, lives_remaining, deaths]
-        self._state: list[float | int] = [
+        # [x: float, y: float, vx: float, vy: float, speed: float, heading: float, mass: float, radius: float, id: int, team: int, is_respawning: bool, lives_remaining: int, deaths: int]
+        self._state: list[float | int | bool] = [
             self.x, self.y,
             self.vx, self.vy,
             self.speed,
@@ -94,19 +91,19 @@ class Ship:
             self.radius,
             self.id,
             self.team,
-            int(self.is_respawning),
+            self.is_respawning,
             self.lives,
             self.deaths
         ]
 
         # Extends the shared state with more internal values
-        self._ownstate: list[float | int] = self._state + [
+        self._ownstate: list[float | int | bool] = self._state + [
             self.bullets_remaining,
             self.mines_remaining,
-            int(self.can_fire),
+            self.can_fire,
             self.fire_wait_time,
             self.fire_rate,
-            int(self.can_deploy_mine),
+            self.can_deploy_mine,
             self.mine_wait_time,
             self.mine_deploy_rate,
             self.respawn_time_left,
@@ -131,7 +128,7 @@ class Ship:
         self._state[7] = self.radius
         self._state[8] = self.id
         self._state[9] = self.team
-        self._state[10] = int(self.is_respawning)
+        self._state[10] = self.is_respawning
         self._state[11] = self.lives
         self._state[12] = self.deaths
 
@@ -139,10 +136,10 @@ class Ship:
         self._ownstate[0:13] = self._state  # Shared part
         self._ownstate[13] = self.bullets_remaining
         self._ownstate[14] = self.mines_remaining
-        self._ownstate[15] = int(self.can_fire)
+        self._ownstate[15] = self.can_fire
         self._ownstate[16] = self.fire_wait_time
         self._ownstate[17] = self.fire_rate
-        self._ownstate[18] = int(self.can_deploy_mine)
+        self._ownstate[18] = self.can_deploy_mine
         self._ownstate[19] = self.mine_wait_time
         self._ownstate[20] = self.mine_deploy_rate
         self._ownstate[21] = self.respawn_time_left

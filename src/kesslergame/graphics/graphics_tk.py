@@ -16,7 +16,7 @@ from ..mines import Mine
 from ..score import Score
 from ..scenario import Scenario
 from ..team import Team
-from ..state_dicts import UISettingsDict
+from ..settings_dicts import UISettingsDict
 
 class GraphicsTK(KesslerGraphics):
     def __init__(self, UI_settings: UISettingsDict | None = None) -> None:

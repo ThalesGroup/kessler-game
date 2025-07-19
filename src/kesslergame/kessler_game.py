@@ -18,7 +18,7 @@ from .mines import Mine
 from .asteroid import Asteroid
 from .ship import Ship
 from .bullet import Bullet
-from .state_dicts import GameStateDict, SettingsDict, UISettingsDict
+from .settings_dicts import SettingsDict, UISettingsDict
 from .state_models import GameState, ShipState
 
 

@@ -14,7 +14,7 @@ from .mines import Mine
 
 class Asteroid:
     """ Sprite that represents an asteroid. """
-    __slots__ = ('size', 'num_children', 'radius', 'mass', 'x', 'y', 'vx', 'vy', 'angle', 'turnrate', '_state', '_position')
+    __slots__ = ('size', 'num_children', 'radius', 'mass', 'x', 'y', 'vx', 'vy', 'angle', 'turnrate', '_state')
     def __init__(self,
                  position: tuple[float, float],
                  speed: float | None = None,
@@ -60,8 +60,6 @@ class Asteroid:
 
         # Set position as specified
         self.x, self.y = position
-        # It is important that this is a mutable list, even though conceptually it is a tuple
-        self._position: list[float] = list(position)
 
         # Random rotations for use in display or future use with complex hit box
         self.angle: float = random.uniform(0.0, 360.0)
@@ -81,8 +79,8 @@ class Asteroid:
         return self._state
     
     @property
-    def position(self) -> list[float]:
-        return self._position
+    def position(self) -> tuple[float, float]:
+        return (self.x, self.y)
 
     @property
     def velocity(self) -> tuple[float, float]:
@@ -93,8 +91,8 @@ class Asteroid:
         self.x = (self.x + self.vx * delta_time) % map_size[0]
         self.y = (self.y + self.vy * delta_time) % map_size[1]
         # Update the state dict without a dict lookup, using the mutable list storing position
-        self._position[0] = self.x
-        self._position[1] = self.y
+        self._state[0] = self.x
+        self._state[1] = self.y
         self.angle += delta_time * self.turnrate
 
     def destruct(self, impactor: Union['Bullet', 'Mine', 'Ship'], random_ast_split: bool) -> list['Asteroid']:
@@ -165,10 +163,8 @@ class Asteroid:
                     theta,
                     theta - angle_offset
                 ]
-
             return [Asteroid(position=(self.x, self.y), size=self.size - 1, speed=v, angle=angle) for angle in angles]
-
-                # Old method of doing random splits
-                # return [Asteroid(position=self.position, size=self.size-1) for _ in range(self.num_children)]
+            # Old method of doing random splits
+            # return [Asteroid(position=self.position, size=self.size-1) for _ in range(self.num_children)]
         else:
             return []

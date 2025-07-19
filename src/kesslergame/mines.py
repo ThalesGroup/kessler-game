@@ -5,15 +5,13 @@
 
 from typing import TYPE_CHECKING
 
-from .state_dicts import MineState
-
 if TYPE_CHECKING:
     from .ship import Ship
     from .asteroid import Asteroid
 
 
 class Mine:
-    __slots__ = ('fuse_time', 'detonation_time', 'mass', 'radius', 'blast_radius', 'blast_pressure', 'owner', 'countdown_timer', 'detonating', 'x', 'y', '_state', '_state_remaining_time')
+    __slots__ = ('fuse_time', 'detonation_time', 'mass', 'radius', 'blast_radius', 'blast_pressure', 'owner', 'countdown_timer', 'detonating', 'x', 'y', '_state')
     def __init__(self, starting_position: tuple[float, float], owner: 'Ship') -> None:
         self.fuse_time: float = 3.0 # s
         self.detonation_time: float = 0.25 # s

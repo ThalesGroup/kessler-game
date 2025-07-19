@@ -15,7 +15,7 @@ if TYPE_CHECKING:
     from ..bullet import Bullet
     from ..mines import Mine
     from ..score import Score
-    from ..state_dicts import UISettingsDict
+    from ..settings_dicts import UISettingsDict
 
 
 class GraphicsType(Enum):
