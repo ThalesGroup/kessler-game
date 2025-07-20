@@ -277,31 +277,19 @@ class KesslerGame:
                     bullet.destruct()
                     bullets_to_cull.append(bul_idx)
 
-            # Remove bullets in O(1) with swap-and-pop
-            bul_idx = 0
-            num_bullets = len(bullets)
-            while bul_idx < num_bullets:
-                if bul_idx in bullets_to_cull:
-                    bullets[bul_idx] = bullets[-1]
-                    bullets.pop()
-                    num_bullets -= 1
-                    if not self.competition_safe_mode:
-                        game_state.remove_bullet(bul_idx)
-                else:
-                    bul_idx += 1
+            # Remove bullets in O(1) using swap-and-pop based on collected indices
+            for bul_idx in sorted(bullets_to_cull, reverse=True):
+                bullets[bul_idx] = bullets[-1]
+                bullets.pop()
+                if not self.competition_safe_mode:
+                    game_state.remove_bullet(bul_idx)
 
-            # Remove asteroids in O(1) with swap-and-pop
-            ast_idx = 0
-            num_asteroids = len(asteroids)
-            while ast_idx < num_asteroids:
-                if ast_idx in asteroids_to_cull:
-                    asteroids[ast_idx] = asteroids[-1]
-                    asteroids.pop()
-                    num_asteroids -= 1
-                    if not self.competition_safe_mode:
-                        game_state.remove_asteroid(ast_idx)
-                else:
-                    ast_idx += 1
+            # Remove asteroids in O(1) using swap-and-pop based on collected indices
+            for ast_idx in sorted(asteroids_to_cull, reverse=True):
+                asteroids[ast_idx] = asteroids[-1]
+                asteroids.pop()
+                if not self.competition_safe_mode:
+                    game_state.remove_asteroid(ast_idx)
 
             # Add new asteroids
             if new_asteroids:
@@ -309,61 +297,83 @@ class KesslerGame:
                 if not self.competition_safe_mode:
                     game_state.add_asteroids([a.state for a in new_asteroids])
                 new_asteroids.clear()
-            
-            # --- Check mine-asteroid and mine-ship effects ---
-            cull_ships: bool = False
-            mine_idx = 0
-            num_mines = len(mines)
-            while mine_idx < num_mines:
-                mine = mines[mine_idx]
-                if mine.detonating:
-                    ast_idx = 0
-                    num_asts = len(asteroids)
-                    while ast_idx < num_asts:
-                        asteroid = asteroids[ast_idx]
-                        dx = asteroid.x - mine.x
-                        dy = asteroid.y - mine.y
-                        radius_sum = mine.blast_radius + asteroid.radius
-                        if dx * dx + dy * dy <= radius_sum * radius_sum:
-                            mine.owner.asteroids_hit += 1
-                            mine.owner.mines_hit += 1
-                            new_asteroids.extend(asteroid.destruct(impactor=mine, random_ast_split=self.random_ast_splits))
-                            asteroids[ast_idx] = asteroids[-1]
-                            asteroids.pop()
-                            num_asts -= 1
-                            # Mirror the change in the game_state dict
-                            if not self.competition_safe_mode:
-                                game_state.remove_asteroid(ast_idx)
-                            # Don't advance ast_idx, must check the swapped-in asteroid
-                        else:
-                            ast_idx += 1
-                    for ship in liveships:
-                        if ship.alive and not ship.is_respawning:
-                            dx = ship.x - mine.x
-                            dy = ship.y - mine.y
-                            radius_sum = mine.blast_radius + ship.radius
-                            if dx * dx + dy * dy <= radius_sum * radius_sum:
-                                # Ship destruct function.
-                                ship.destruct(map_size=scenario.map_size)
-                                cull_ships = True
-                    mine.destruct()
-                    # Swap and pop the mine
-                    mines[mine_idx] = mines[-1]
-                    mines.pop()
-                    num_mines -= 1
-                    # Mirror the change in the game_state dict
-                    if not self.competition_safe_mode:
-                        game_state.remove_mine(mine_idx)
-                    # Don't advance mine_idx, must check the swapped-in mine
-                else:
-                    mine_idx += 1
 
-            # Add new asteroids from mine-asteroid collisions
-            if new_asteroids:
-                asteroids.extend(new_asteroids)
-                if not self.competition_safe_mode:
-                    game_state.add_asteroids([asteroid.state for asteroid in new_asteroids]) # Mirror change in game_state dict
-                new_asteroids.clear()
+
+
+            # --- MINE-ASTEROID AND MINE-SHIP COLLISIONS ---
+            detonating_mines: list[Mine] = [mine for mine in mines if mine.detonating]
+            # If no mines are detonating, skip everything
+            if detonating_mines:
+                # Track which asteroids will be destroyed and by which mine
+                asteroids_to_cull.clear()
+                # For each asteroid, find the nearest mine within blast range
+                for ast_idx, asteroid in enumerate(asteroids):
+                    closest_mine: Mine | None = None
+                    closest_sq_dist: float = float('inf')
+                    for mine in detonating_mines:
+                        dx: float = asteroid.x - mine.x
+                        dy: float = asteroid.y - mine.y
+                        radius_sum: float = mine.blast_radius + asteroid.radius
+                        sq_dist: float = dx * dx + dy * dy
+                        if sq_dist <= radius_sum * radius_sum and sq_dist < closest_sq_dist:
+                            closest_sq_dist = sq_dist
+                            closest_mine = mine
+                    if closest_mine is not None:
+                        closest_mine.owner.asteroids_hit += 1
+                        closest_mine.owner.mines_hit += 1
+                        new_asteroids.extend(asteroid.destruct(impactor=closest_mine, random_ast_split=self.random_ast_splits))
+                        asteroids_to_cull.append(ast_idx)
+
+                # For each live, non-respawning ship, apply damage only from the closest mine within range
+                cull_ships: bool = False
+                for ship in liveships:
+                    if not ship.alive or ship.is_respawning:
+                        continue
+                    closest_mine: Mine | None = None
+                    closest_sq_dist: float = float('inf')
+                    for mine in detonating_mines:
+                        dx: float = ship.x - mine.x
+                        dy: float = ship.y - mine.y
+                        radius_sum: float = mine.blast_radius + ship.radius
+                        sq_dist: float = dx * dx + dy * dy
+                        if sq_dist <= radius_sum * radius_sum and sq_dist < closest_sq_dist:
+                            closest_sq_dist = sq_dist
+                            closest_mine = mine
+                    if closest_mine is not None:
+                        ship.destruct(map_size=scenario.map_size)
+                        cull_ships = True  # Flagged for any ship culling logic elsewhere
+
+                # Remove all destroyed asteroids using swap-and-pop
+                for ast_idx in sorted(asteroids_to_cull, reverse=True):
+                    asteroids[ast_idx] = asteroids[-1]
+                    asteroids.pop()
+                    if not self.competition_safe_mode:
+                        game_state.remove_asteroid(ast_idx)
+
+                # Remove all detonated mines using swap-and-pop
+                mine_idx: int = 0
+                num_mines: int = len(mines)
+                while mine_idx < num_mines:
+                    if mines[mine_idx].detonating:
+                        mines[mine_idx].destruct()
+                        mines[mine_idx] = mines[-1]
+                        mines.pop()
+                        num_mines -= 1
+                        if not self.competition_safe_mode:
+                            game_state.remove_mine(mine_idx)
+                        # Don't increment index — need to check swapped-in mine
+                    else:
+                        mine_idx += 1
+
+                # Add any new asteroids generated by mine explosions
+                if new_asteroids:
+                    asteroids.extend(new_asteroids)
+                    if not self.competition_safe_mode:
+                        game_state.add_asteroids([asteroid.state for asteroid in new_asteroids])
+                    new_asteroids.clear()
+            
+
+
             
             # --- Check ship-asteroid collisions ---
             for ship in liveships:
