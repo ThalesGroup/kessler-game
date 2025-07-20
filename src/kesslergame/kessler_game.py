@@ -301,6 +301,7 @@ class KesslerGame:
 
 
             # --- MINE-ASTEROID AND MINE-SHIP COLLISIONS ---
+            cull_ships: bool = False
             detonating_mines: list[Mine] = [mine for mine in mines if mine.detonating]
             # If no mines are detonating, skip everything
             if detonating_mines:
@@ -327,7 +328,6 @@ class KesslerGame:
                         asteroids_to_cull.append(ast_idx)
 
                 # For each live, non-respawning ship, apply damage only from the closest mine within range
-                cull_ships: bool = False
                 for ship in liveships:
                     if not ship.alive or ship.is_respawning:
                         continue
