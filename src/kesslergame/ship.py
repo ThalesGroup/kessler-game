@@ -6,7 +6,7 @@
 import math
 import warnings
 import numpy as np
-from typing import Dict, Any, List, Tuple, Optional
+from typing import Any, Optional
 
 from .bullet import Bullet
 from .mines import Mine
@@ -24,7 +24,7 @@ class Ship:
         'mines_hit', 'asteroids_hit', 'custom_sprite_path'
     )
     def __init__(self, ship_id: int,
-                 position: Tuple[float, float],
+                 position: tuple[float, float],
                  angle: float = 90.0,
                  lives: int = 3,
                  team: int = 1,
@@ -39,13 +39,13 @@ class Ship:
         self.controller: Optional[KesslerController] = None
 
         # Ship custom graphics
-        self.custom_sprite_path = None
+        self.custom_sprite_path: Optional[str] = None
 
         # State info
         self.id: int = ship_id
         self.speed: float = 0.0
-        self.position: Tuple[float, float] = position
-        self.velocity: Tuple[float, float] = (0.0, 0.0)
+        self.position: tuple[float, float] = position
+        self.velocity: tuple[float, float] = (0.0, 0.0)
         self.angular_velocity: float = 0.0
         self.heading: float = angle
         self.lives: int = lives
@@ -60,8 +60,8 @@ class Ship:
         self.drop_mine: bool = False
 
         # Physical model constants/params
-        self.thrust_range: Tuple[float, float] = (-480.0, 480.0)  # m/s^2
-        self.turn_thrust_range: Tuple[float, float] = (-180.0, 180.0)  # degrees/s^2
+        self.thrust_range: tuple[float, float] = (-480.0, 480.0)  # m/s^2
+        self.turn_thrust_range: tuple[float, float] = (-180.0, 180.0)  # degrees/s^2
         self.max_speed: float = 240.0  # Meters per second
         self.max_angular_speed: float = 360.0 # degrees per second
         self.drag: float = 0.0  # m/s^2
@@ -87,7 +87,7 @@ class Ship:
 
 
     @property
-    def state(self) -> Dict[str, Any]:
+    def state(self) -> dict[str, Any]:
         return {
             "position": self.position,
             "velocity": self.velocity,
@@ -104,7 +104,7 @@ class Ship:
         }
 
     @property
-    def ownstate(self) -> Dict[str, Any]:
+    def ownstate(self) -> dict[str, Any]:
         return {**self.state,
                 "bullets_remaining": self.bullets_remaining,
                 "mines_remaining": self.mines_remaining,
@@ -166,7 +166,7 @@ class Ship:
     def shoot(self) -> None:
         self.fire = True
 
-    def update(self, delta_time: float = 1 / 30) -> Tuple[Optional[Bullet], Optional[Mine]]:
+    def update(self, delta_time: float = 1 / 30) -> tuple[Optional[Bullet], Optional[Mine]]:
         """
         Update our position and other particulars.
         """
@@ -252,7 +252,7 @@ class Ship:
 
         return new_bullet, new_mine
 
-    def destruct(self, map_size: Tuple[float, float]) -> None:
+    def destruct(self, map_size: tuple[float, float]) -> None:
         """
         Called by the game when a ship collides with something and dies. Handles life decrementing and triggers respawn
         """
@@ -264,7 +264,7 @@ class Ship:
         spawn_heading = self.heading
         self.respawn(spawn_position, spawn_heading)
 
-    def respawn(self, position: Tuple[float, float], heading: float = 90.0) -> None:
+    def respawn(self, position: tuple[float, float], heading: float = 90.0) -> None:
         """
         Called when we die and need to make a new ship.
         'respawning' is an invulnerability timer.

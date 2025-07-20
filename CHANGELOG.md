@@ -1,5 +1,10 @@
 # Changelog
 
+## [2.3.0] - 15 July 2025
+
+- Fixed issues with automated building of mypyc compiled wheels
+- Fixed issues with uploading compiled mypyc wheels to pypi
+
 ## [2.2.0] - 9 July 2025
 
 - Added better collision detection based on geometry of bullet over timesteps - now framerate independent

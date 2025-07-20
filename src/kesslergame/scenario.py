@@ -3,7 +3,7 @@
 # NOTICE: This file is subject to the license agreement defined in file 'LICENSE', which is part of
 # this source code package.
 
-from typing import List, Tuple, Dict, Any, Optional
+from typing import Any, Optional
 import random
 
 from .ship import Ship
@@ -11,8 +11,8 @@ from .asteroid import Asteroid
 
 
 class Scenario:
-    def __init__(self, name: str = "Unnamed", num_asteroids: int = 0, asteroid_states: Optional[List[Dict[str, Any]]] = None,
-                 ship_states: Optional[List[Dict[str, Any]]] = None, map_size: Optional[Tuple[int, int]] = None, seed: Optional[int] = None,
+    def __init__(self, name: str = "Unnamed", num_asteroids: int = 0, asteroid_states: Optional[list[dict[str, Any]]] = None,
+                 ship_states: Optional[list[dict[str, Any]]] = None, map_size: Optional[tuple[int, int]] = None, seed: Optional[int] = None,
                  time_limit: float = float("inf"), ammo_limit_multiplier: float = 0.0, stop_if_no_ammo: bool = False) -> None:
         """
         Specify the starting state of the environment, including map dimensions and optional features
@@ -67,7 +67,7 @@ class Scenario:
         else:
             self.stop_if_no_ammo = False
 
-        # Check for mismatch between explicitly defined number of asteroids and Tuple of states
+        # Check for mismatch between explicitly defined number of asteroids and tuple of states
         if num_asteroids and asteroid_states:
             raise ValueError("Both `num_asteroids` and `asteroid_positions` are specified for Scenario() constructor."
                              "Make sure to only define one of these arguments")
@@ -117,11 +117,11 @@ class Scenario:
         # Counting based off of each asteroid making 3 children when destroyed
         return sum([3 ** (size - 1) for size in range(1, asteroid_size + 1)])
 
-    def asteroids(self) -> List[Asteroid]:
+    def asteroids(self) -> list[Asteroid]:
         """
         Create asteroid sprites
         :param frequency: Operating frequency of the game
-        :return: List of ShipSprites
+        :return: list of ShipSprites
         """
         asteroids = list()
 
@@ -141,11 +141,11 @@ class Scenario:
 
         return asteroids
 
-    def ships(self) -> List[Ship]:
+    def ships(self) -> list[Ship]:
         """
         Create ship sprites
         :param frequency: Operating frequency of the game
-        :return: List of ShipSprites
+        :return: list of ShipSprites
         """
         # Loop through and create ShipSprites based on starting state
         return [Ship(idx + 1, bullets_remaining=self.bullet_limit, **ship_state) for idx, ship_state in enumerate(self.ship_states)]

@@ -3,13 +3,16 @@
 # NOTICE: This file is subject to the license agreement defined in file 'LICENSE', which is part of
 # this source code package.
 
+import re
+import os
+import shutil
+
 from setuptools import setup, find_packages
 from mypyc.build import mypycify
 
 with open('requirements.txt') as f:
     requirements = f.read().splitlines()
 
-import re
 VERSIONFILE="src/kesslergame/_version.py"
 verstrline = open(VERSIONFILE, "rt").read()
 VSRE = r"^__version__ = ['\"]([^'\"]*)['\"]"
@@ -24,8 +27,8 @@ mypyc_modules = [
     "src/kesslergame/asteroid.py",
     "src/kesslergame/bullet.py",
     "src/kesslergame/collisions.py",
-    "src/kesslergame/controller.py",
-    "src/kesslergame/controller_gamepad.py",
+#    "src/kesslergame/controller.py", DO NOT compile the controller.py, because adding the ship_id attribute from the derived class gets really messy and buggy
+#    "src/kesslergame/controller_gamepad.py",
     "src/kesslergame/kessler_game.py",
     "src/kesslergame/mines.py",
     "src/kesslergame/scenario.py",
@@ -37,25 +40,40 @@ mypyc_modules = [
     "src/kesslergame/graphics/graphics_plt.py",
     "src/kesslergame/graphics/graphics_tk.py",
     "src/kesslergame/graphics/graphics_ue.py",
-    # Add __init__.py if you have specific initialization code that needs compilation.
-    # "src/__init__.py",
     "src/kesslergame/__init__.py",
     "src/kesslergame/graphics/__init__.py",
 ]
 
-setup(
-    name='KesslerGame',
-    version=verstr,
-    packages=find_packages(where='src', exclude=['examples', 'src.examples', '*.examples.*', 'examples.*']),
-    install_requires=requirements,
-    ext_modules=mypycify(mypyc_modules),
-    package_data={
-        '': ['*.png'],
-    },
-    package_dir={'': 'src'},
-)
+# Workaround: Temporarily remove src/__init__.py before compilation, and restore afterwards
+init_file = "src/__init__.py"
 
-
-
-
-
+try:
+    if os.path.exists(init_file):
+        print(f"Found {init_file}, deleting it temporarily for compilation.")
+        os.remove(init_file)
+    else:
+        print(f"{init_file} does not exist, skipping deletion.")
+    
+    setup(
+        name='KesslerGame',
+        version=verstr,
+        packages=find_packages(where='src', exclude=['examples', 'src.examples', '*.examples.*', 'examples.*']),
+        install_requires=requirements,
+        ext_modules=mypycify(mypyc_modules),
+        package_data={
+            '': ['*.png'],
+        },
+        package_dir={'': 'src'},
+    )
+except Exception as e:
+    print(f"Error during setup: {e}")
+    raise
+finally:
+    try:
+        if not os.path.exists(init_file):
+            print(f"Recreating {init_file} as an empty file.")
+            with open(init_file, 'w'):
+                pass
+    except Exception as e:
+        print(f"Error while recreating {init_file}: {e}")
+        raise
