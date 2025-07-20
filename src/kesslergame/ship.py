@@ -242,7 +242,7 @@ class Ship:
             self.angular_velocity = -self.max_angular_speed
 
         # Update the heading based on angular velocity
-        self.heading += self.angular_velocity
+        self.heading += self.angular_velocity * delta_time
 
         # Keep the angle within (0, 360)
         self.heading %= 360.0
