@@ -257,6 +257,10 @@ class Ship:
             self.thrust = min(max(self.thrust_range[0], self.thrust), self.thrust_range[1])
             warnings.warn('Ship ' + str(self.id) + ' thrust command outside of allowable range', RuntimeWarning)
 
+        # Store speed and heading BEFORE acceleration/thrust for integration
+        initial_speed = self.speed
+        initial_heading = math.radians(self.heading)  # convert to radians
+
         # Apply thrust
         self.speed += self.thrust * delta_time
 
@@ -271,20 +275,92 @@ class Ship:
             self.turn_rate = min(max(self.turn_rate_range[0], self.turn_rate), self.turn_rate_range[1])
             warnings.warn('Ship ' + str(self.id) + ' turn rate command outside of allowable range', RuntimeWarning)
 
+        # Analytic position integration, framerate independent
+        # The shape that the ship traces out with a constant turn rate and thrust over the previous frame,
+        # is a Euler spiral, or Clothoid. This shape can be analytically integrated! Yay!
+
+        # Determine speed after full step
+        unclamped_final_speed = initial_speed + self.thrust * delta_time
+        max_speed = self.max_speed if initial_speed >= 0 else -self.max_speed  # handle negative speeds (e.g. asteroids reverse)
+
+        # Time to hit max speed (if at all)
+        t1: float | None = None
+        if self.thrust != 0.0:
+            to_max = (max_speed - initial_speed) / self.thrust
+            if self.thrust > 0.0 and unclamped_final_speed > max_speed and 0.0 < to_max < delta_time:
+                t1 = to_max
+            elif self.thrust < 0.0 and unclamped_final_speed < max_speed and 0.0 < to_max < delta_time:
+                t1 = to_max
+
+        x0: float = self.x
+        y0: float = self.y
+
+        def euler_spiral_integration(vi, a, th0, omega, t):
+            """
+            Returns (dx, dy) using either analytic or Taylor expansion for small omega.
+            Args:
+                vi: initial speed
+                a: acceleration
+                th0: initial heading (radians)
+                omega: turn rate (rad/sec)
+                t: duration (seconds)
+            """
+            if abs(omega) < 1e-4:
+                # Taylor expansion with Horner's method
+                costh = math.cos(th0)
+                sinth = math.sin(th0)
+                tt = t * t
+                # Horner: vi*t + 0.5*a*t^2   = t * (vi + a*t*0.5)
+                dt_main = t * (vi + a * t * 0.5)
+                # 0.5*vi*t^2*omega + (1/6)*a*t^3*omega = (omega * tt) * (0.5*vi + a * t / 6.0)
+                smallterm = omega * tt * (0.5 * vi + a * t / 6.0)
+                dx = costh * dt_main - sinth * smallterm
+                dy = sinth * dt_main + costh * smallterm
+            else:
+                dtheta = omega * t
+                th1 = th0 + dtheta
+                sin_th0 = math.sin(th0)
+                sin_th1 = math.sin(th1)
+                cos_th0 = math.cos(th0)
+                cos_th1 = math.cos(th1)
+                sin_diff = sin_th1 - sin_th0
+                cos_diff = cos_th1 - cos_th0
+                dx = (vi * sin_diff + (a / omega) * (cos_diff + dtheta * sin_th1)) / omega
+                dy = (-vi * cos_diff + (a / omega) * (sin_diff - dtheta * cos_th1)) / omega
+            return dx, dy
+
+        omega = math.radians(self.turn_rate)
+        theta0 = initial_heading
+
+        if t1 is None:
+            # No exceeding limit within this step, use normal analytic integration
+            dx, dy = euler_spiral_integration(initial_speed, self.thrust, theta0, omega, delta_time)
+            self.x = (x0 + dx) % map_size[0]
+            self.y = (y0 + dy) % map_size[1]
+        else:
+            # 2-phase integration: (i) accelerate to speed limit, (ii) coast at v_max
+            # Phase 1: accelerating from vi to vmax over t1
+            dx1, dy1 = euler_spiral_integration(initial_speed, self.thrust, theta0, omega, t1)
+            theta1 = theta0 + omega * t1
+
+            # Phase 2: constant (max) speed, no acceleration
+            # speed is clamped
+            t2 = delta_time - t1
+            dx2, dy2 = euler_spiral_integration(max_speed, 0.0, theta1, omega, t2)
+
+            self.x = (x0 + dx1 + dx2) % map_size[0]
+            self.y = (y0 + dy1 + dy2) % map_size[1]
+
         # Update the angle based on turning rate
         self.heading += self.turn_rate * delta_time
 
-        # Keep the angle within (0, 360)
+        # Keep the angle within [0, 360.0)
         self.heading %= 360.0
 
         # Use speed magnitude to get velocity vector
         rad_heading = math.radians(self.heading)
         self.vx = math.cos(rad_heading) * self.speed
         self.vy = math.sin(rad_heading) * self.speed
-
-        # Update the position based off the velocities
-        self.x = (self.x + self.vx * delta_time) % map_size[0]
-        self.y = (self.y + self.vy * delta_time) % map_size[1]
 
         # Update the state dict
         self.update_state()
