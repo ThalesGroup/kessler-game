@@ -295,7 +295,7 @@ class Ship:
         x0: float = self.x
         y0: float = self.y
 
-        def euler_spiral_integration(vi, a, th0, omega, t):
+        def euler_spiral_integration(vi, a, theta0, omega, t):
             """
             Returns (dx, dy) using either analytic or Taylor expansion for small omega.
             Args:
@@ -307,26 +307,26 @@ class Ship:
             """
             if abs(omega) < 1e-4:
                 # Taylor expansion with Horner's method
-                costh = math.cos(th0)
-                sinth = math.sin(th0)
-                tt = t * t
-                # Horner: vi*t + 0.5*a*t^2   = t * (vi + a*t*0.5)
+                cos_theta0 = math.cos(theta0)
+                sin_theta0 = math.sin(theta0)
+                t_sq = t * t
+                # Horner: vi*t + 0.5*a*t^2
                 dt_main = t * (vi + a * t * 0.5)
                 # 0.5*vi*t^2*omega + (1/6)*a*t^3*omega = (omega * tt) * (0.5*vi + a * t / 6.0)
-                smallterm = omega * tt * (0.5 * vi + a * t / 6.0)
-                dx = costh * dt_main - sinth * smallterm
-                dy = sinth * dt_main + costh * smallterm
+                smallterm = omega * t_sq * (0.5 * vi + a * t / 6.0)
+                dx = cos_theta0 * dt_main - sin_theta0 * smallterm
+                dy = sin_theta0 * dt_main + cos_theta0 * smallterm
             else:
-                dtheta = omega * t
-                th1 = th0 + dtheta
-                sin_th0 = math.sin(th0)
-                sin_th1 = math.sin(th1)
-                cos_th0 = math.cos(th0)
-                cos_th1 = math.cos(th1)
-                sin_diff = sin_th1 - sin_th0
-                cos_diff = cos_th1 - cos_th0
-                dx = (vi * sin_diff + (a / omega) * (cos_diff + dtheta * sin_th1)) / omega
-                dy = (-vi * cos_diff + (a / omega) * (sin_diff - dtheta * cos_th1)) / omega
+                delta_theta = omega * t
+                theta1 = theta0 + delta_theta
+                sin_theta0 = math.sin(theta0)
+                sin_theta1 = math.sin(theta1)
+                cos_theta0 = math.cos(theta0)
+                cos_theta1 = math.cos(theta1)
+                sin_diff = sin_theta1 - sin_theta0
+                cos_diff = cos_theta1 - cos_theta0
+                dx = (vi * sin_diff + (a / omega) * (cos_diff + delta_theta * sin_theta1)) / omega
+                dy = (-vi * cos_diff + (a / omega) * (sin_diff - delta_theta * cos_theta1)) / omega
             return dx, dy
 
         omega = math.radians(self.turn_rate)
@@ -373,7 +373,7 @@ class Ship:
         """
         self.lives -= 1
         self.deaths += 1
-        spawn_position = self.position
+        spawn_position = self.position # (map_size[0]/2, map_size[1]/2)
         spawn_heading = self.heading
         self.respawn(spawn_position, spawn_heading)
 
