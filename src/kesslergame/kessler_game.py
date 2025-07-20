@@ -52,7 +52,7 @@ class KesslerGame:
         self.graphics_type: GraphicsType = settings.get("graphics_type", GraphicsType.Tkinter)
         self.graphics_obj: KesslerGraphics | None = settings.get("graphics_obj", None)
         self.realtime_multiplier: float = settings.get("realtime_multiplier", 0.0 if self.graphics_type==GraphicsType.NoGraphics else 1.0)
-        self.time_limit: float = settings.get("time_limit", float("inf"))
+        self.time_limit: float = settings.get("time_limit", math.inf)
         self.random_ast_splits: bool = settings.get("random_ast_splits", False)
         self.competition_safe_mode: bool = settings.get("competition_safe_mode", True)
 
@@ -307,14 +307,16 @@ class KesslerGame:
                 # Track which asteroids will be destroyed and by which mine
                 asteroids_to_cull.clear()
                 # For each asteroid, find the nearest mine within blast range
+                closest_mine: Mine | None
+                closest_sq_dist: float
                 for ast_idx, asteroid in enumerate(asteroids):
-                    closest_mine: Mine | None = None
-                    closest_sq_dist: float = float('inf')
+                    closest_mine = None
+                    closest_sq_dist = math.inf
                     for mine in detonating_mines:
-                        dx: float = asteroid.x - mine.x
-                        dy: float = asteroid.y - mine.y
-                        radius_sum: float = mine.blast_radius + asteroid.radius
-                        sq_dist: float = dx * dx + dy * dy
+                        dx = asteroid.x - mine.x
+                        dy = asteroid.y - mine.y
+                        radius_sum = mine.blast_radius + asteroid.radius
+                        sq_dist = dx * dx + dy * dy
                         if sq_dist <= radius_sum * radius_sum and sq_dist < closest_sq_dist:
                             closest_sq_dist = sq_dist
                             closest_mine = mine
@@ -329,13 +331,13 @@ class KesslerGame:
                 for ship in liveships:
                     if not ship.alive or ship.is_respawning:
                         continue
-                    closest_mine: Mine | None = None
-                    closest_sq_dist: float = float('inf')
+                    closest_mine = None
+                    closest_sq_dist = math.inf
                     for mine in detonating_mines:
-                        dx: float = ship.x - mine.x
-                        dy: float = ship.y - mine.y
-                        radius_sum: float = mine.blast_radius + ship.radius
-                        sq_dist: float = dx * dx + dy * dy
+                        dx = ship.x - mine.x
+                        dy = ship.y - mine.y
+                        radius_sum = mine.blast_radius + ship.radius
+                        sq_dist = dx * dx + dy * dy
                         if sq_dist <= radius_sum * radius_sum and sq_dist < closest_sq_dist:
                             closest_sq_dist = sq_dist
                             closest_mine = mine
@@ -518,6 +520,6 @@ class TrainerEnvironment(KesslerGame):
             'prints_on': settings.get("prints_on", False),
             'graphics_type': GraphicsType.NoGraphics,
             'realtime_multiplier': 0,
-            'time_limit': settings.get("time_limit", float("inf"))
+            'time_limit': settings.get("time_limit", math.inf)
         }
         super().__init__(trainer_settings)

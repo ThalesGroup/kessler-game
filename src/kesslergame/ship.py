@@ -295,7 +295,7 @@ class Ship:
         x0: float = self.x
         y0: float = self.y
 
-        def euler_spiral_integration(vi, a, theta0, omega, t):
+        def spiral_integration(vi: float, a: float, theta0: float, omega: float, t: float) -> tuple[float, float]:
             """
             Returns (dx, dy) using either analytic or Taylor expansion for small omega.
             Args:
@@ -334,19 +334,19 @@ class Ship:
 
         if t1 is None:
             # No exceeding limit within this step, use normal analytic integration
-            dx, dy = euler_spiral_integration(initial_speed, self.thrust, theta0, omega, delta_time)
+            dx, dy = spiral_integration(initial_speed, self.thrust, theta0, omega, delta_time)
             self.x = (x0 + dx) % map_size[0]
             self.y = (y0 + dy) % map_size[1]
         else:
             # 2-phase integration: (i) accelerate to speed limit, (ii) coast at v_max
             # Phase 1: accelerating from vi to vmax over t1
-            dx1, dy1 = euler_spiral_integration(initial_speed, self.thrust, theta0, omega, t1)
+            dx1, dy1 = spiral_integration(initial_speed, self.thrust, theta0, omega, t1)
             theta1 = theta0 + omega * t1
 
             # Phase 2: constant (max) speed, no acceleration
             # speed is clamped
             t2 = delta_time - t1
-            dx2, dy2 = euler_spiral_integration(max_speed, 0.0, theta1, omega, t2)
+            dx2, dy2 = spiral_integration(max_speed, 0.0, theta1, omega, t2)
 
             self.x = (x0 + dx1 + dx2) % map_size[0]
             self.y = (y0 + dy1 + dy2) % map_size[1]
