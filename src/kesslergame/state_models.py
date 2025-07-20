@@ -530,6 +530,124 @@ class ShipState:
         self._ship_data = ship
         self._view = ShipOwnView(ship)
 
+    @property
+    def x(self) -> float:
+        return self._view.x
+
+    @property
+    def y(self) -> float:
+        return self._view.y
+
+    @property
+    def position(self) -> tuple[float, float]:
+        return self._view.position
+
+    @property
+    def vx(self) -> float:
+        return self._view.vx
+
+    @property
+    def vy(self) -> float:
+        return self._view.vy
+
+    @property
+    def velocity(self) -> tuple[float, float]:
+        return self._view.velocity
+
+    @property
+    def speed(self) -> float:
+        return self._view.speed
+
+    @property
+    def heading(self) -> float:
+        return self._view.heading
+
+    @property
+    def mass(self) -> float:
+        return self._view.mass
+
+    @property
+    def radius(self) -> float:
+        return self._view.radius
+
+    @property
+    def id(self) -> int:
+        return self._view.id
+
+    @property
+    def team(self) -> int:
+        return self._view.team
+
+    @property
+    def is_respawning(self) -> bool:
+        return self._view.is_respawning
+
+    @property
+    def lives_remaining(self) -> int:
+        return self._view.lives_remaining
+
+    @property
+    def deaths(self) -> int:
+        return self._view.deaths
+
+    # ShipOwnView properties
+
+    @property
+    def bullets_remaining(self) -> int:
+        return self._view.bullets_remaining
+
+    @property
+    def mines_remaining(self) -> int:
+        return self._view.mines_remaining
+
+    @property
+    def can_fire(self) -> bool:
+        return self._view.can_fire
+
+    @property
+    def fire_cooldown(self) -> float:
+        return self._view.fire_cooldown
+
+    @property
+    def fire_rate(self) -> float:
+        return self._view.fire_rate
+
+    @property
+    def can_deploy_mine(self) -> bool:
+        return self._view.can_deploy_mine
+
+    @property
+    def mine_cooldown(self) -> float:
+        return self._view.mine_cooldown
+
+    @property
+    def mine_deploy_rate(self) -> float:
+        return self._view.mine_deploy_rate
+
+    @property
+    def respawn_time_left(self) -> float:
+        return self._view.respawn_time_left
+
+    @property
+    def respawn_time(self) -> float:
+        return self._view.respawn_time
+
+    @property
+    def thrust_range(self) -> tuple[float, float]:
+        return self._view.thrust_range
+
+    @property
+    def turn_rate_range(self) -> tuple[float, float]:
+        return self._view.turn_rate_range
+
+    @property
+    def max_speed(self) -> float:
+        return self._view.max_speed
+
+    @property
+    def drag(self) -> float:
+        return self._view.drag
+
     def __getitem__(self, key: str) -> float | int | bool | tuple[float, float]:
         """Allow dict-style access to view attributes."""
         if hasattr(self._view, key):
