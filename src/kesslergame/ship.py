@@ -296,9 +296,7 @@ class Ship:
         Called by the game when a ship collides with something and dies. Handles life decrementing and triggers respawn
         """
         self.lives -= 1
-        self.deaths +=1
-        # spawn_position = [map_size[0] / 2,
-        #                   map_size[1] / 2]
+        self.deaths += 1
         spawn_position = self.position
         spawn_heading = self.heading
         self.respawn(spawn_position, spawn_heading)
@@ -320,12 +318,11 @@ class Ship:
     def deploy_mine(self) -> Mine | None:
         # if self.mines_remaining != 0 and not self._mine_limiter:
         if self.can_deploy_mine:
-
             # Remove respawn invincibility. Mine deployment limiter
             self._respawning = 0.0
             self._mine_limiter = self._mine_deploy_time
 
-            if self.mines_remaining > 0:
+            if self.mines_remaining != -1: # Mines are limited
                 self.mines_remaining -= 1
             self.mines_dropped += 1
             mine_x = self.position[0]
@@ -337,13 +334,12 @@ class Ship:
     def fire_bullet(self) -> Bullet | None:
         # if self.bullets_remaining != 0 and not self._fire_limiter:
         if self.can_fire:
-
             # Remove respawn invincibility. Trigger fire limiter
             self._respawning = 0.0
             self._fire_limiter = self._fire_time
 
             # Bullet counters
-            if self.bullets_remaining > 0:
+            if self.bullets_remaining != -1: # Bullets are limited
                 self.bullets_remaining -= 1
             self.bullets_shot += 1
 
