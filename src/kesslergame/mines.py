@@ -8,6 +8,7 @@ from typing import TYPE_CHECKING
 if TYPE_CHECKING:
     from .ship import Ship
     from .asteroid import Asteroid
+from .state_models import MineDataList
 
 
 class Mine:
@@ -26,7 +27,7 @@ class Mine:
         self.x, self.y = starting_position
 
         # [x: float, y: float, mass: float, fuse_time: float, remaining_time: float]
-        self._state: list[float] = [
+        self._state: MineDataList = [
             self.x, self.y,
             self.mass,
             self.fuse_time,
@@ -48,7 +49,7 @@ class Mine:
         pass
 
     @property
-    def state(self) -> list[float]:
+    def state(self) -> MineDataList:
         return self._state
 
     @property

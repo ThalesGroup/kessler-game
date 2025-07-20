@@ -9,6 +9,7 @@ import warnings
 from .bullet import Bullet
 from .mines import Mine
 from .controller import KesslerController
+from .state_models import ShipDataList
 
 
 class Ship:
@@ -82,7 +83,7 @@ class Ship:
         self.asteroids_hit: int = 0  # Number of asteroids hit (including ship collision)
 
         # [x: float, y: float, vx: float, vy: float, speed: float, heading: float, mass: float, radius: float, id: int, team: int, is_respawning: bool, lives_remaining: int, deaths: int]
-        self._state: list[float | int | bool] = [
+        self._state: ShipDataList = [
             self.x, self.y,
             self.vx, self.vy,
             self.speed,
@@ -97,7 +98,7 @@ class Ship:
         ]
 
         # Extends the shared state with more internal values
-        self._ownstate: list[float | int | bool] = self._state + [
+        self._ownstate: ShipDataList = self._state + [
             self.bullets_remaining,
             self.mines_remaining,
             self.can_fire,
@@ -160,11 +161,11 @@ class Ship:
         return (self.vx, self.vy)
 
     @property
-    def state(self) -> list[float | int]:
+    def state(self) -> ShipDataList:
         return self._state
 
     @property
-    def ownstate(self) -> list[float | int]:
+    def ownstate(self) -> ShipDataList:
         return self._ownstate
 
     @property

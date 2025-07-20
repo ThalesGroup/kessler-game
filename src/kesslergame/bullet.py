@@ -8,6 +8,7 @@ from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
     from .ship import Ship
+from .state_models import BulletDataList
 
 
 class Bullet:
@@ -28,7 +29,7 @@ class Bullet:
         self.vy = self.speed * sin_heading
 
         # [x: float, y: float, vx: float, vy: float, tail_dx: float, tail_dy: float, heading: float, mass: float, length: float]
-        self._state: list[float] = [
+        self._state: BulletDataList = [
             self.x, self.y,
             self.vx, self.vy,
             self.tail_delta_x, self.tail_delta_y,
@@ -49,7 +50,7 @@ class Bullet:
         pass
 
     @property
-    def state(self) -> list[float]:
+    def state(self) -> BulletDataList:
         return self._state
 
     @property
