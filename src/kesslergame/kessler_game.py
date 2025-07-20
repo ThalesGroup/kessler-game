@@ -90,6 +90,7 @@ class KesslerGame:
         sim_time: float = 0.0
         sim_frame: int = 0
         time_limit = scenario.time_limit if scenario.time_limit else self.time_limit
+        map_width, map_height = scenario.map_size
 
         # Assign controllers to each ship
         for controller, ship in zip(controllers, ships):
@@ -117,6 +118,8 @@ class KesslerGame:
         ######################
 
         new_asteroids: list[Asteroid] = []
+        bullets_to_cull: list[int] = []
+        asteroids_to_cull: list[int] = []
 
         # Maintain game_state dict to send to teams
         game_state: GameState = GameState(
@@ -204,11 +207,11 @@ class KesslerGame:
                 new_bullet, new_mine = ship.update(self.delta_time, scenario.map_size)
                 if new_bullet is not None:
                     bullets.append(new_bullet)
-                    if self.competition_safe_mode:
+                    if not self.competition_safe_mode:
                         game_state.add_bullet(new_bullet.state)
                 if new_mine is not None:
                     mines.append(new_mine)
-                    if self.competition_safe_mode:
+                    if not self.competition_safe_mode:
                         game_state.add_mine(new_mine.state)
 
             # Update performance tracker
@@ -218,69 +221,93 @@ class KesslerGame:
 
             # --- CHECK FOR COLLISIONS ---------------------------------------------------------------------------------
 
-            # --- Check bullet-asteroid collisions ---
-            bul_idx = 0
-            num_buls = len(bullets)
-            should_remove_bullet: bool = False
-            while bul_idx < num_buls:
-                bullet = bullets[bul_idx]
-                should_remove_bullet = False
-                ast_idx_to_remove: int = -1
-                earliest_collision_time: float = math.inf
+            # BULLET-ASTEROID COLLISIONS
+            # Resolve all collisions in chronological order instead of list order, for fairness
+            # Collect all potential bullet-asteroid collisions
+            collisions: list[tuple[float, int, int]] = []
+            for bul_idx, bullet in enumerate(bullets):
                 for ast_idx, asteroid in enumerate(asteroids):
-                    # Iterate through all asteroids, and if multiple collisions occur, find the one that occurs first
                     if circle_line_collision_continuous(
                         bullet.x, bullet.y, bullet.x + bullet.tail_delta_x, bullet.y + bullet.tail_delta_y, bullet.vx, bullet.vy,
                         asteroid.x, asteroid.y, asteroid.vx, asteroid.vy, asteroid.radius, self.delta_time
                     ):
-                        collision_start_time, _ = collision_time_interval(bullet.x, bullet.y,
-                                                                          bullet.x + bullet.tail_delta_x, bullet.y + bullet.tail_delta_y,
-                                                                          bullet.vx, bullet.vy,
-                                                                          asteroid.x, asteroid.y,
-                                                                          asteroid.vx, asteroid.vy,
-                                                                          asteroid.radius)
+                        collision_start_time, _ = collision_time_interval(
+                            bullet.x, bullet.y,
+                            bullet.x + bullet.tail_delta_x, bullet.y + bullet.tail_delta_y,
+                            bullet.vx, bullet.vy,
+                            asteroid.x, asteroid.y,
+                            asteroid.vx, asteroid.vy,
+                            asteroid.radius
+                        )
                         collision_time = max(-self.delta_time, collision_start_time)
-                        assert(collision_time <= 0.0)
-                        if collision_time < earliest_collision_time:
-                            earliest_collision_time = collision_time
-                            ast_idx_to_remove = ast_idx
-                if ast_idx_to_remove != -1:
-                    # Increment hit values on ship that fired bullet then destruct bullet and mark for removal
-                    bullet.owner.asteroids_hit += 1
-                    bullet.owner.bullets_hit += 1
-                    should_remove_bullet = True
-                    asteroid = asteroids[ast_idx_to_remove]
-                    # Asteroid destruct function and immediate removal
-                    new_asteroids.extend(asteroid.destruct(impactor=bullet, random_ast_split=self.random_ast_splits))
-                    # Swap and pop, O(1) removal of asteroid
-                    asteroids[ast_idx_to_remove] = asteroids[-1]
-                    asteroids.pop()
-                    # Mirror the change in the game_state dict
-                    if self.competition_safe_mode:
-                        game_state.remove_asteroid(ast_idx_to_remove)
-                # Cull any bullets past the map edge
-                # It is important we do this after the asteroid-bullet collision checks occur,
-                # in the case of bullets leaving the map but might hit an asteroid on the edge
-                if not ((0.0 <= bullet.x <= scenario.map_size[0] and 0.0 <= bullet.y <= scenario.map_size[1])
-                        or (0.0 <= bullet.x + bullet.tail_delta_x <= scenario.map_size[0] and 0.0 <= bullet.y + bullet.tail_delta_y <= scenario.map_size[1])):
-                    should_remove_bullet = True
-                # O(1) removal of bullet
-                if should_remove_bullet:
+                        # Inline insertion to keep collisions sorted by time
+                        i = len(collisions)
+                        while i > 0 and collisions[i - 1][0] > collision_time:
+                            i -= 1
+                        collisions.insert(i, (collision_time, bul_idx, ast_idx))
+
+            # Track destroyed bullets/asteroids
+            bullets_to_cull.clear()
+            asteroids_to_cull.clear()
+            # Resolve collisions in chronological order
+            for _, bul_idx, ast_idx in collisions:
+                if bul_idx in bullets_to_cull or ast_idx in asteroids_to_cull:
+                    # This pair is invalid because at least one of these are already gonzo
+                    continue
+                bullet = bullets[bul_idx]
+                asteroid = asteroids[ast_idx]
+
+                bullet.owner.asteroids_hit += 1
+                bullet.owner.bullets_hit += 1
+
+                new_asteroids.extend(asteroid.destruct(impactor=bullet, random_ast_split=self.random_ast_splits))
+                bullet.destruct()
+
+                bullets_to_cull.append(bul_idx)
+                asteroids_to_cull.append(ast_idx)
+
+            # Cull alive bullets that are off the map
+            for bul_idx, bullet in enumerate(bullets):
+                if bul_idx in bullets_to_cull:
+                    continue
+                if not (
+                    (0.0 <= bullet.x <= map_width and 0.0 <= bullet.y <= map_height)
+                    or (0.0 <= bullet.x + bullet.tail_delta_x <= map_width and 0.0 <= bullet.y + bullet.tail_delta_y <= map_height)
+                ):
                     bullet.destruct()
+                    bullets_to_cull.append(bul_idx)
+
+            # Remove bullets in O(1) with swap-and-pop
+            bul_idx = 0
+            num_bullets = len(bullets)
+            while bul_idx < num_bullets:
+                if bul_idx in bullets_to_cull:
                     bullets[bul_idx] = bullets[-1]
                     bullets.pop()
-                    num_buls -= 1
-                    # Mirror the change in the game_state dict
-                    if self.competition_safe_mode:
+                    num_bullets -= 1
+                    if not self.competition_safe_mode:
                         game_state.remove_bullet(bul_idx)
                 else:
                     bul_idx += 1
 
-            # Add the new asteroids from the bullet-asteroid collisions
+            # Remove asteroids in O(1) with swap-and-pop
+            ast_idx = 0
+            num_asteroids = len(asteroids)
+            while ast_idx < num_asteroids:
+                if ast_idx in asteroids_to_cull:
+                    asteroids[ast_idx] = asteroids[-1]
+                    asteroids.pop()
+                    num_asteroids -= 1
+                    if not self.competition_safe_mode:
+                        game_state.remove_asteroid(ast_idx)
+                else:
+                    ast_idx += 1
+
+            # Add new asteroids
             if new_asteroids:
                 asteroids.extend(new_asteroids)
-                if self.competition_safe_mode:
-                    game_state.add_asteroids([asteroid.state for asteroid in new_asteroids]) # Mirror change in game_state dict
+                if not self.competition_safe_mode:
+                    game_state.add_asteroids([a.state for a in new_asteroids])
                 new_asteroids.clear()
             
             # --- Check mine-asteroid and mine-ship effects ---
@@ -305,7 +332,7 @@ class KesslerGame:
                             asteroids.pop()
                             num_asts -= 1
                             # Mirror the change in the game_state dict
-                            if self.competition_safe_mode:
+                            if not self.competition_safe_mode:
                                 game_state.remove_asteroid(ast_idx)
                             # Don't advance ast_idx, must check the swapped-in asteroid
                         else:
@@ -325,7 +352,7 @@ class KesslerGame:
                     mines.pop()
                     num_mines -= 1
                     # Mirror the change in the game_state dict
-                    if self.competition_safe_mode:
+                    if not self.competition_safe_mode:
                         game_state.remove_mine(mine_idx)
                     # Don't advance mine_idx, must check the swapped-in mine
                 else:
@@ -334,7 +361,7 @@ class KesslerGame:
             # Add new asteroids from mine-asteroid collisions
             if new_asteroids:
                 asteroids.extend(new_asteroids)
-                if self.competition_safe_mode:
+                if not self.competition_safe_mode:
                     game_state.add_asteroids([asteroid.state for asteroid in new_asteroids]) # Mirror change in game_state dict
                 new_asteroids.clear()
             
@@ -356,7 +383,7 @@ class KesslerGame:
                             asteroids.pop()
                             num_asts -= 1
                             # Mirror the change in the game_state dict
-                            if self.competition_safe_mode:
+                            if not self.competition_safe_mode:
                                 game_state.remove_asteroid(ast_idx)
                             # Ship destruct function. Add one to asteroids_hit
                             ship.asteroids_hit += 1
@@ -370,7 +397,7 @@ class KesslerGame:
             # Add new asteroids from ship-asteroid collisions
             if new_asteroids:
                 asteroids.extend(new_asteroids)
-                if self.competition_safe_mode:
+                if not self.competition_safe_mode:
                     game_state.add_asteroids([asteroid.state for asteroid in new_asteroids]) # Mirror change in game_state dict
                 new_asteroids.clear()
             
@@ -391,7 +418,7 @@ class KesslerGame:
             # Cull ships if not alive
             if cull_ships:
                 liveships = [ship for ship in liveships if ship.alive]
-                if self.competition_safe_mode:
+                if not self.competition_safe_mode:
                     game_state.update_ships([ship.state for ship in liveships])
 
             # Update performance tracker with collisions timing
@@ -420,7 +447,7 @@ class KesslerGame:
             # --- CHECK STOP CONDITIONS --------------------------------------------------------------------------------
             sim_time += self.delta_time
             sim_frame += 1
-            if self.competition_safe_mode:
+            if not self.competition_safe_mode:
                 game_state.time = sim_time
                 game_state.frame = sim_frame
 
