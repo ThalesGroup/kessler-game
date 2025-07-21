@@ -216,16 +216,9 @@ class Ship:
         Update our position and other particulars.
         """
 
-        # Fire a bullet if instructed to
-        if self.fire:
-            new_bullet = self.fire_bullet()
-        else:
-            new_bullet = None
-
-        if self.drop_mine:
-            new_mine = self.deploy_mine()
-        else:
-            new_mine = None
+        # Handle firing and mining
+        new_bullet = self.fire_bullet() if self.fire else None
+        new_mine = self.deploy_mine() if self.drop_mine else None
 
         # Decrement respawn timer (if necessary)
         if self._respawning != 0.0:
@@ -257,7 +250,7 @@ class Ship:
 
         # Store speed and heading BEFORE acceleration/thrust for integration
         initial_speed = self.speed
-        initial_heading = math.radians(self.heading)  # convert to radians
+        theta0 = math.radians(self.heading)  # convert to radians
 
         is_moving: bool = abs(initial_speed) > 1e-12
 
@@ -269,29 +262,12 @@ class Ship:
         net_acc = self.thrust + drag_acc  # m/s²
         
         # Analytic position integration, framerate independent
-        # The shape that the ship traces out with a constant turn rate and thrust over the previous frame,
-        # is a Euler spiral, or Clothoid. This shape can be analytically integrated! Yay!
-
-        # Determine speed after full step
-        unclamped_final_speed = initial_speed + net_acc * delta_time
-        max_speed = math.copysign(self.max_speed, initial_speed)  # handle negative speeds (e.g. asteroids reverse)
-        
-        # Time to hit max speed (if at all)
-        t1: float | None = None
-        if self.thrust != 0.0:
-            to_max = (max_speed - initial_speed) / self.thrust
-            if self.thrust > 0.0 and unclamped_final_speed > max_speed and 0.0 < to_max < delta_time:
-                t1 = to_max
-            elif self.thrust < 0.0 and unclamped_final_speed < max_speed and 0.0 < to_max < delta_time:
-                t1 = to_max
-
-        # Clamp speed after acceleration
-        self.speed = unclamped_final_speed
-        if abs(self.speed) > self.max_speed:
-            self.speed = math.copysign(self.max_speed, self.speed)
+        # The shape that the ship traces out with a constant turn rate and thrust over the previous frame is a type of spiral
+        # This spiral can be analytically integrated! Yay!
 
         x0: float = self.x
         y0: float = self.y
+        omega = math.radians(self.turn_rate)
 
         def spiral_integration(vi: float, a: float, theta0: float, omega: float, t: float) -> tuple[float, float]:
             """
@@ -303,6 +279,8 @@ class Ship:
                 omega: turn rate (rad/sec)
                 t: duration (seconds)
             """
+            if abs(t) < 1e-12:
+                return 0.0, 0.0
             if abs(omega) < 1e-4:
                 # Taylor expansion with Horner's method
                 cos_theta0 = math.cos(theta0)
@@ -327,27 +305,51 @@ class Ship:
                 dy = (-vi * cos_diff + (a / omega) * (sin_diff - delta_theta * cos_theta1)) / omega
             return dx, dy
 
-        omega = math.radians(self.turn_rate)
-        theta0 = initial_heading
+        # Determine if we need to break the frame into two parts
+        t1: float | None = None
+        accel_phase2 = 0.0  # default to coasting or stopping in second phase
+
+        # Case 1: drag will bring us to a stop
+        if is_moving and net_acc * initial_speed < 0.0: # Net accel is opposite sign from direction of movement
+            t_to_stop = -initial_speed / net_acc # This is a positive number
+            if 0.0 <= t_to_stop < delta_time:
+                t1 = t_to_stop
+                v1 = 0.0  # Fully stopped
+        else:
+            # Case 2: acceleration would exceed max speed
+            max_speed = math.copysign(self.max_speed, initial_speed + net_acc * delta_time)
+            if net_acc != 0.0:
+                to_max = (max_speed - initial_speed) / net_acc
+                if 0.0 <= to_max < delta_time and (
+                    (net_acc > 0.0 and initial_speed <= max_speed) or
+                    (net_acc < 0.0 and initial_speed >= max_speed)
+                ):
+                    t1 = to_max
+                    v1 = max_speed  # Capped at max
 
         if t1 is None:
             # No exceeding limit within this step, use normal analytic integration
             dx, dy = spiral_integration(initial_speed, net_acc, theta0, omega, delta_time)
             self.x = (x0 + dx) % map_size[0]
             self.y = (y0 + dy) % map_size[1]
+            self.speed = initial_speed + net_acc * delta_time
         else:
-            # 2-phase integration: (i) accelerate to speed limit, (ii) coast at v_max
-            # Phase 1: accelerating from vi to vmax over t1
+            # 2-phase integration: (i) accelerate to speed limit or zero, (ii) coast or stop
+            # Phase 1: accelerating from vi to v1 over t1
             dx1, dy1 = spiral_integration(initial_speed, net_acc, theta0, omega, t1)
             theta1 = theta0 + omega * t1
 
-            # Phase 2: constant (max) speed, no acceleration
-            # speed is clamped
+            # Phase 2: constant speed or stopped, no acceleration
             t2 = delta_time - t1
-            dx2, dy2 = spiral_integration(max_speed, 0.0, theta1, omega, t2)
+            dx2, dy2 = spiral_integration(v1, accel_phase2, theta1, omega, t2)
 
             self.x = (x0 + dx1 + dx2) % map_size[0]
             self.y = (y0 + dy1 + dy2) % map_size[1]
+            self.speed = v1  # Either stopped or clamped
+
+        # Clamp speed after acceleration
+        if abs(self.speed) > self.max_speed:
+            self.speed = math.copysign(self.max_speed, self.speed)
 
         # Update the angle based on turning rate
         self.heading += self.turn_rate * delta_time
@@ -362,7 +364,7 @@ class Ship:
 
         # Update the state dict
         self.update_state()
-        
+
         return new_bullet, new_mine
 
     def destruct(self, map_size: tuple[float, float]) -> None:
