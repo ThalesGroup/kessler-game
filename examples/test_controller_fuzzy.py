@@ -4,7 +4,7 @@
 # this source code package.
 import skfuzzy.control
 
-from src.kesslergame import KesslerController
+from kesslergame import KesslerController
 from typing import Dict, Tuple
 import skfuzzy.control as ctrl
 import skfuzzy as skf
