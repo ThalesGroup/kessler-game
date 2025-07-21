@@ -98,6 +98,8 @@ class GameStateCompactDict(TypedDict):
 
 
 class AsteroidView:
+    __slots__ = ("_data",)
+
     def __init__(self, data: AsteroidDataList):
         # [x: float, y: float, vx: float, vy: float, size: int, mass: float, radius: float]
         self._data = data
@@ -166,6 +168,8 @@ class AsteroidView:
 
 
 class BulletView:
+    __slots__ = ("_data",)
+
     def __init__(self, data: BulletDataList):
         # [x: float, y: float, vx: float, vy: float, tail_dx: float, tail_dy: float, heading: float, mass: float, length: float]
         self._data = data
@@ -249,6 +253,8 @@ class BulletView:
 
 
 class MineView:
+    __slots__ = ("_data",)
+
     def __init__(self, data: MineDataList):
         # [x: float, y: float, mass: float, fuse_time: float, remaining_time: float]
         self._data = data
@@ -300,6 +306,8 @@ class MineView:
 
 
 class ShipView:
+    __slots__ = ("_data",)
+
     def __init__(self, data: ShipDataList):
         # [x, y, vx, vy, speed, heading, mass, radius, id, team, is_respawning, lives_remaining, deaths]
         self._data = data
@@ -415,6 +423,8 @@ class ShipView:
 
 
 class ShipOwnView(ShipView):
+    __slots__ = ("_own_data",)
+
     def __init__(self, data: ShipDataList):
         # Extend ShipView list with the following:
         # [bullets_remaining: int, mines_remaining: int, can_fire: bool, fire_cooldown: float, fire_rate: float,
@@ -529,6 +539,8 @@ class ShipState:
     Behaves like a read-only dictionary mapping property names to values, and
     internally wraps a ShipOwnView (which extends ShipView).
     """
+
+    __slots__ = ("_ship_data", "_view")
 
     def __init__(self, ship: ShipDataList):
         self._ship_data = ship
@@ -723,6 +735,21 @@ class ShipState:
 
 
 class GameState:
+    __slots__ = (
+        "_ship_data",
+        "_asteroid_data",
+        "_bullet_data",
+        "_mine_data",
+        "_map_size",
+        "_time_limit",
+        "_time",
+        "_frame",
+        "_delta_time",
+        "_frame_rate",
+        "_random_asteroid_splits",
+        "_competition_safe_mode",
+    )
+
     def __init__(self,
                  ships: list[ShipDataList],
                  asteroids: list[AsteroidDataList],
