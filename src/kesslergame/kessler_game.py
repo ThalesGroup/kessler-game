@@ -285,6 +285,8 @@ class KesslerGame:
                     game_state.remove_bullet(bul_idx)
 
             # Remove asteroids in O(1) using swap-and-pop based on collected indices
+            # We have to sort the list and reverse it, so that the indices of stuff
+            # yet to be deleted won't change on us.
             for ast_idx in sorted(asteroids_to_cull, reverse=True):
                 asteroids[ast_idx] = asteroids[-1]
                 asteroids.pop()
@@ -301,6 +303,8 @@ class KesslerGame:
 
 
             # --- MINE-ASTEROID AND MINE-SHIP COLLISIONS ---
+            # In the one-in-a-thousand chance that two mines blow up the same asteroid or ship
+            # in the same frame, this will credit the closest mine with the score
             cull_ships: bool = False
             detonating_mines: list[Mine] = [mine for mine in mines if mine.detonating]
             # If no mines are detonating, skip everything
