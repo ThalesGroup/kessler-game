@@ -820,36 +820,24 @@ class GameState:
 
     def remove_asteroid(self, index: int) -> None:
         """Remove asteroid at index using swap-and-pop O(1)"""
-        last_index = len(self._asteroid_data) - 1
-        if index < 0 or index > last_index:
-            raise IndexError(f"Invalid asteroid index: {index}")
         # Swap the element at index with the end
-        self._asteroid_data[index], self._asteroid_data[last_index] = self._asteroid_data[last_index], self._asteroid_data[index]
+        self._asteroid_data[index] = self._asteroid_data[-1]
         # Pop the last element
         self._asteroid_data.pop()
 
     def remove_bullet(self, index: int) -> None:
         """Remove bullet at index using swap-and-pop O(1)"""
-        last_index = len(self._bullet_data) - 1
-        if index < 0 or index > last_index:
-            raise IndexError(f"Invalid bullet index: {index}")
-        self._bullet_data[index], self._bullet_data[last_index] = self._bullet_data[last_index], self._bullet_data[index]
+        self._bullet_data[index] = self._bullet_data[-1]
         self._bullet_data.pop()
 
     def remove_mine(self, index: int) -> None:
         """Remove mine at index using swap-and-pop O(1)"""
-        last_index = len(self._mine_data) - 1
-        if index < 0 or index > last_index:
-            raise IndexError(f"Invalid mine index: {index}")
-        self._mine_data[index], self._mine_data[last_index] = self._mine_data[last_index], self._mine_data[index]
+        self._mine_data[index] = self._mine_data[-1]
         self._mine_data.pop()
 
     def remove_ship(self, index: int) -> None:
         """Remove ship at index using swap-and-pop O(1)"""
-        last_index = len(self._ship_data) - 1
-        if index < 0 or index > last_index:
-            raise IndexError(f"Invalid ship index: {index}")
-        self._ship_data[index], self._ship_data[last_index] = self._ship_data[last_index], self._ship_data[index]
+        self._ship_data[index] = self._ship_data[-1]
         self._ship_data.pop()
 
     def __getitem__(self, key: str) -> list[AsteroidView] | list[BulletView] | list[MineView] | list[ShipView] | tuple[int, int] | float | int | bool:
