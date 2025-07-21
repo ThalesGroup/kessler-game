@@ -97,7 +97,8 @@ class Ship:
             self.deaths
         ]
 
-        # Extends the shared state with more internal values
+        # Extends the shared state with the ownstate values
+        # [bullets_remaining: int, mines_remaining: int, can_fire: bool, fire_wait_time: float, fire_rate: float, can_deploy_mine: bool, mine_wait_time: float, mine_deploy_rate: float, respawn_time_left: float, respawn_time: float, thrust_range_min: float, thrust_range_max: float, turn_rate_range_min: float, turn_rate_range_max: float, max_speed: float, drag: float]
         self._ownstate: ShipDataList = self._state + [
             self.bullets_remaining,
             self.mines_remaining,
