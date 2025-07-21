@@ -896,7 +896,11 @@ class GameState:
                 f"  Asteroids: {len(self._asteroid_data)}\n"
                 f"  Ships:     {len(self._ship_data)}\n"
                 f"  Bullets:   {len(self._bullet_data)}\n"
-                f"  Mines:     {len(self._mine_data)}\n")
+                f"  Mines:     {len(self._mine_data)}\n"
+                f"Properties: ships, asteroids, bullets, mines, "
+                f"map_size, time_limit, time, frame, delta_time, "
+                f"frame_rate, random_asteroid_splits, competition_safe_mode\n"
+                f"Methods: dict(), fast_compact()")
 
     def dict(self) -> GameStateDict:
         """Return a plain dictionary representation of the game state."""
