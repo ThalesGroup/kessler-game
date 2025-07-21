@@ -1,10 +1,9 @@
 # Changelog
 
-## [2.4.0] - NEXT VERSION 2025
+## [2.X.X] - NEXT VERSION, maybe last 2.X.X aside from bug fixes or documentation
 - Fixed building MyPyC compiled wheels, so compiled modules are now actually being run to provide a 4-10X+ speed benefit over interpreted
 - Use cibuildwheel to automate building MyPyC compiled wheels, and upload to pypi and the Github release
 - Wait until all asteroid collision checks are finished before appending new asteroids
-- Change bullet-asteroid collision detection to take earlier collision in time, instead of whichever asteroid is first in the list
 - Optimize removal of asteroids and other game objects from O(n) to O(1), by swapping item to delete with last element, and popping
 - Optimize creation of game_state and ship_state by reusing dictionaries instead of recreating them
 - Optimize creation of game_state by sharing the same dictionary between controllers by default, and only recreating in a competition setting
@@ -17,7 +16,12 @@
 - Use lists instead of tuples for positions/velocities that change, to dramatically optimize game_state update speed
 - Fix mine detonation off-by-one at 60 FPS and higher, due to floating point error accumulating over time, and the EPS checked against being way too small
 - Changed perf tracking's default setting to false, since it is rarely necessary and slows down the game measurably
-- Update PerfDict to return the aggregated times for each category over all frames, instead of one for each frame which is hard to parse and analyze
+- Update PerfDict to return the aggregated times for each category over all frames, instead of one for each frame which is hard to parse and analyze, and was slow
+- Added GameState and ShipState classes, providing 3 interfaces for getting the game data: dictionary, properties, and fast_compact() modes
+- Made bullet-asteroid collisions globally chronological, and much more fair as a result for when two ships are going for the same asteroids and the same asteroid collides with multiple bullets during the same frame
+- Made the rare case of two mines exploding at once more fair, such that if an asteroid is within the blast radius of two mines, it counts as the closer mine hitting it
+- Added framerate-independent dynamics to the ship by analytically integrating, instead of using an Euler approximation
+- Added more documentation for how to use the ShipState, GameState, and the game settings
 
 ## [2.3.0] - 15 July 2025
 
