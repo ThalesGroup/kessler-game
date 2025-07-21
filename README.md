@@ -54,8 +54,7 @@ NOTE: UE5 graphics currently do not support the display of mines, and it also ha
 
 ## Documentation
 
-Documentation is not yet available for Kessler. If you would like to contribute to documentation, check out 
-[CONTRIBUTING.md](CONTRIBUTING.md) for info on how to get started
+See docs/ for a guide to the game's API, and how to instantiate, configure, and run Kessler!
 
 ## Contributing
 
