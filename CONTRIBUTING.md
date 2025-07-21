@@ -33,3 +33,4 @@ considered for contributions. Well-commented, concise, and clean code is require
 - After making changes, please run `mypy --strict path/to/kessler_game.py` to type check your changes, and make sure there are no errors.
 - Once there are no errors, please also try compiling wheels with MyPyC, which use these static type hints to generate compiled extension modules which allow this game to run much more efficiently.
 - To compile the game, type `python setup_mypyc.py bdist_wheel` within the root of the repo, where setup_mypyc.py lives. If all is successful, a platform-specific wheel will be placed in dist/
+- Please then do `pip install wheelname.whl` to install and test the wheel. MyPyC wheels will do runtime type checking, so this can reveal more issues that need to be fixed.
