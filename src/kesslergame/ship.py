@@ -269,12 +269,22 @@ class Ship:
         # Analytic position integration, framerate independent
         # The shape that the ship traces out with a constant turn rate and thrust over the previous frame is a type of spiral
         # This spiral can be analytically integrated! Yay!
+        # The Sympy code to set up dynamics and integrate is as follows:
+
+        # from sympy import *
+        # x0, y0, v0, theta0, omega, delta_x, delta_y, t, delta_t, a = symbols('x0 y0 v0 theta0 omega delta_x delta_y t delta_t a')
+        # v_t = v0 + a * t
+        # theta_t = theta0 + omega * t
+        # delta_x_expr = integrate(v_t * cos(theta_t), (t, 0, delta_t))
+        # delta_y_expr = integrate(v_t * sin(theta_t), (t, 0, delta_t))
+
+        # And notice how after integrating, we can simplify things by defining: theta1 = theta0 + omega * delta_t
 
         x0: float = self.x
         y0: float = self.y
         omega = math.radians(self.turn_rate)
 
-        def spiral_integration(vi: float, a: float, theta0: float, omega: float, t: float) -> tuple[float, float]:
+        def analytic_integration(vi: float, a: float, theta0: float, omega: float, t: float) -> tuple[float, float]:
             """
             Returns (dx, dy) using either analytic or Taylor expansion for small omega.
             Args:
@@ -334,19 +344,19 @@ class Ship:
 
         if t1 is None:
             # No exceeding limit within this step, use normal analytic integration
-            dx, dy = spiral_integration(initial_speed, net_acc, theta0, omega, delta_time)
+            dx, dy = analytic_integration(initial_speed, net_acc, theta0, omega, delta_time)
             self.x = (x0 + dx) % map_size[0]
             self.y = (y0 + dy) % map_size[1]
             self.speed = initial_speed + net_acc * delta_time
         else:
             # 2-phase integration: (i) accelerate to speed limit or zero, (ii) coast or stop
             # Phase 1: accelerating from vi to v1 over t1
-            dx1, dy1 = spiral_integration(initial_speed, net_acc, theta0, omega, t1)
+            dx1, dy1 = analytic_integration(initial_speed, net_acc, theta0, omega, t1)
             theta1 = theta0 + omega * t1
 
             # Phase 2: constant speed or stopped, no acceleration
             t2 = delta_time - t1
-            dx2, dy2 = spiral_integration(v1, accel_phase2, theta1, omega, t2)
+            dx2, dy2 = analytic_integration(v1, accel_phase2, theta1, omega, t2)
 
             self.x = (x0 + dx1 + dx2) % map_size[0]
             self.y = (y0 + dy1 + dy2) % map_size[1]
