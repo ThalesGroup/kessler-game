@@ -139,6 +139,7 @@ class AsteroidView:
     def radius(self) -> float:
         return self._data[6]
 
+    @property
     def dict(self) -> AsteroidStateDict:
         return {
             "position": self.position,
@@ -221,6 +222,7 @@ class BulletView:
     def length(self) -> float:
         return self._data[8]
 
+    @property
     def dict(self) -> BulletStateDict:
         return {
             "position": self.position,
@@ -275,6 +277,7 @@ class MineView:
     def remaining_time(self) -> float:
         return self._data[4]
 
+    @property
     def dict(self) -> MineStateDict:
         return {
             "position": self.position,
@@ -366,6 +369,7 @@ class ShipView:
         assert(isinstance(self._data[12], int))
         return self._data[12]
 
+    @property
     def dict(self) -> ShipStateDict:
         return {
             "position": self.position,
@@ -670,6 +674,7 @@ class ShipState:
         """Return the underlying ship list (mutable)."""
         return self._ship_data
 
+    @property
     def dict(self) -> ShipOwnStateDict:
         """Return a plain dictionary representation of this ship's own state."""
         return {
@@ -895,10 +900,10 @@ class GameState:
     def dict(self) -> GameStateDict:
         """Return a plain dictionary representation of the game state."""
         return {
-            "ships": [ShipView(ship_data).dict() for ship_data in self._ship_data],
-            "asteroids": [AsteroidView(asteroid_data).dict() for asteroid_data in self._asteroid_data],
-            "bullets": [BulletView(bullet_data).dict() for bullet_data in self._bullet_data],
-            "mines": [MineView(mine_data).dict() for mine_data in self._mine_data],
+            "ships": [ShipView(ship_data).dict for ship_data in self._ship_data],
+            "asteroids": [AsteroidView(asteroid_data).dict for asteroid_data in self._asteroid_data],
+            "bullets": [BulletView(bullet_data).dict for bullet_data in self._bullet_data],
+            "mines": [MineView(mine_data).dict for mine_data in self._mine_data],
             "map_size": self._map_size,
             "time_limit": self._time_limit,
             "time": self._time,
