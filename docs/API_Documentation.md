@@ -14,8 +14,8 @@ These objects encapsulate the full exact state of the deterministic game.
 Agents can interact with these objects using:
 - **Python-style property access** (e.g. `ship_state.velocity`)
 - **Dictionary-style access** (e.g., `ship_state["velocity"]`)
-- **Raw list formats** using `fast_compact()`
-- **Classic dictionary format** via `dict()`
+- **Raw list formats** using `.fast_compact`
+- **Classic dictionary format** via `.dict`
 
 IMPORTANT: When the game setting competition_safe_mode is disabled, mutating game_state or ship_state will alter the internal game state, and this is undefined behavior.
 Additionally, any references to the data within this may change from frame-to-frame. They may not be static.
@@ -30,10 +30,10 @@ Represents the full state of the agent’s own ship, including controls and cool
 ### Access Methods:
 - `ship_state.position` → `(x, y)` tuple
 - `ship_state["position"]`
-- `ship_state.dict()` → `ShipOwnStateDict`
-- `ship_state.fast_compact()` → `ShipDataList`
+- `ship_state.dict` → `ShipOwnStateDict`
+- `ship_state.fast_compact` → `ShipDataList`
 
-### Attributes:
+### Attributes (Available in ships in GameState):
 
 | Name                | Type                 | Description                                |
 |---------------------|----------------------|--------------------------------------------|
@@ -49,7 +49,7 @@ Represents the full state of the agent’s own ship, including controls and cool
 | `lives_remaining`   | `int`                | Lives left                                 |
 | `deaths`            | `int`                | Total deaths so far                        |
 
-#### Combat + Cooldowns:
+#### Combat + Cooldowns (Only available for your own ship in ShipState):
 
 | Name                | Type                 | Description                                |
 |---------------------|----------------------|--------------------------------------------|
@@ -62,7 +62,7 @@ Represents the full state of the agent’s own ship, including controls and cool
 | `mine_cooldown`     | `float`              | Time left before deploying another mine (s)|
 | `mine_deploy_rate`  | `float`              | Time between mine drops (s)                |
 
-#### Respawn & Movement:
+#### Respawn & Movement (Only available for your own ship in ShipState):
 
 | Name                  | Type                  | Description                                |
 |-----------------------|-----------------------|--------------------------------------------|
@@ -80,41 +80,41 @@ Represents the full state of the agent’s own ship, including controls and cool
 ### Access Methods:
 - `game_state.asteroids` → list of `AsteroidView`
 - `game_state["bullets"]`
-- `game_state.dict()` → `GameStateDict`
-- `game_state.fast_compact()` → `GameStateCompactDict`
+- `game_state.dict` → `GameStateDict`
+- `game_state.fast_compact` → `GameStateCompactDict`
 
 ### Properties:
 
-| Name                    | Type                     | Description                            |
-|-------------------------|--------------------------|----------------------------------------|
-| `ships`                 | `list[ShipView]`         | All ships (includes enemies)           |
-| `asteroids`             | `list[AsteroidView]`     | Asteroids on screen                    |
-| `bullets`               | `list[BulletView]`       | Active bullets                         |
-| `mines`                 | `list[MineView]`         | Active mines                           |
-| `map_size`              | `tuple[int, int]`        | World boundaries                       |
-| `time_limit`            | `float`                  | Match duration in seconds              |
-| `time`                  | `float`                  | Elapsed time                           |
-| `frame`                 | `int`                    | Current frame number                   |
-| `delta_time`            | `float`                  | Seconds per frame                      |
-| `frame_rate`            | `float`                  | Target frame rate                      |
-| `random_asteroid_splits`| `bool`                   | Asteroid fragmentation randomness      |
-| `competition_safe_mode` | `bool`                   | If in fairness-safe mode               |
+| Name                    | Type                     | Description                                |
+|-------------------------|--------------------------|----------------------------------------    |
+| `ships`                 | `list[ShipView]`         | All ships (includes enemies)               |
+| `asteroids`             | `list[AsteroidView]`     | Asteroids on screen                        |
+| `bullets`               | `list[BulletView]`       | Active bullets                             |
+| `mines`                 | `list[MineView]`         | Active mines                               |
+| `map_size`              | `tuple[int, int]`        | Asteroid field boundaries                  |
+| `time_limit`            | `float`                  | Scenario duration in seconds               |
+| `time`                  | `float`                  | Elapsed time                               |
+| `frame`                 | `int`                    | Current frame number, counting from 0      |
+| `delta_time`            | `float`                  | Seconds per frame                          |
+| `frame_rate`            | `float`                  | Frames per second                          |
+| `random_asteroid_splits`| `bool`                   | Whether asteroid split angles are random (False by default) |
+| `competition_safe_mode` | `bool`                   | Safe copy of data if True, game runs faster if False |
 
 NOTE: The objects like AsteroidView may behave like dicts when you index into them, but they are not. It may be tempting to try `copy.deepcopy(asteroid)` and then modify your own copy of the AsteroidView, but this won't work.
-The correct way is to call .dict() on the AsteroidView, which will give you your own copy of the asteroid dictionary for you to freely use and store.
+The correct way is to call .dict on the AsteroidView, which will give you your own copy of the asteroid dictionary for you to freely use and store.
 
 ---
 
 ## Compact Representation
 
-### `fast_compact()`
+### `fast_compact`
 Returns a raw, fast format for training which should be over twice as fast to read the data from.
 This is recommended for advanced users who want the maximum speed, and are formatting the input data in their own way.
 
-- `game_state.fast_compact()` → `GameStateCompactDict`
-- `ship_state.fast_compact()` → `ShipDataList`
+- `game_state.fast_compact` → `GameStateCompactDict`
+- `ship_state.fast_compact` → `ShipDataList`
 
-#### Running game_state.fast_compact() might return a dictionary that looks like:
+#### Calling game_state.fast_compact might return a dictionary that looks like:
 ```
 {
     "ships": [
@@ -154,17 +154,17 @@ The schema for bullets is:
 The schema for mines is:
 `[x: float, y: float, mass: float, fuse_time: float, remaining_time: float]`
 
-#### ship_state.fast_compact() may return a single list that looks like:
+#### ship_state.fast_compact may return a single list that looks like:
 `[395.29566377267156, 786.1447258308528, -120.00000000000011, -207.84609690826522, 240.0, 240.0, 300.0, 20.0, 1, 1, False, 3, 0, -1, 0, True, 0.0, 10.0, False, 0.0, 1.0, 0.0, 3.0, -480.0, 480.0, -180.0, 180.0, 240.0, 80.0]`
 
 With its schema being:
 `[x: float, y: float, vx: float, vy: float, speed: float, heading: float, mass: float, radius: float, id: int, team: int, is_respawning: bool, lives_remaining: int, deaths: int, bullets_remaining: int, mines_remaining: int, can_fire: bool, fire_wait_time: float, fire_rate: float, can_deploy_mine: bool, mine_wait_time: float, mine_deploy_rate: float, respawn_time_left: float, respawn_time: float, thrust_range_min: float, thrust_range_max: float, turn_rate_range_min: float, turn_rate_range_max: float, max_speed: float, drag: float]`
 
-### `dict()`
+### `dict`
 Returns classic human-readable nested dictionaries:
 
-- `game_state.dict()` → `GameStateDict`
-- `ship_state.dict()` → `ShipOwnStateDict`
+- `game_state.dict` → `GameStateDict`
+- `ship_state.dict` → `ShipOwnStateDict`
 
 A GameStateDict may look like:
 ```
@@ -278,9 +278,167 @@ Any attribute that is available in the dictionary view will also be available as
 Attribute access is recommended for simplicity, and there are some shorthands. For example: `asteroid.x, asteroid.y, asteroid.vx, asteroid.vy` are simpler ways to get the position and velocity compared to
 `asteroid["position"][0], asteroid["position"][1], asteroid["velocity"][0], asteroid["velocity"][1]`
 
-### Example (for any View):
+
+
+## `ShipView`
+
+Represents a ship visible in the game world (including enemies and allies). This object contains only the public, visible state of the ship — not internal values like cooldowns or controls (those are only available in your own `ShipState`).
+
+Access ship data using:
+
+* **Attribute-style access**: `ship.heading`, `ship.velocity`
+* **Dictionary-style access**: `ship["mass"]`, `ship["is_respawning"]`
+* **Full dictionary copy**: `ship.dict` → `ShipStateDict`
+
+### Attributes:
+
+| Name              | Type                  | Description                              |
+| ----------------- | --------------------- | ---------------------------------------- |
+| `x`, `y`          | `float`               | Position components                      |
+| `vx`, `vy`        | `float`               | Velocity components                      |
+| `position`        | `tuple[float, float]` | (x, y) coordinate                        |
+| `velocity`        | `tuple[float, float]` | (vx, vy) vector                          |
+| `speed`           | `float`               | Scalar speed (m/s)                       |
+| `heading`         | `float`               | Facing angle (degrees)                   |
+| `mass`            | `float`               | Physical mass (kg)                       |
+| `radius`          | `float`               | Collision radius (m)                     |
+| `id`              | `int`                 | Ship ID (unique)                         |
+| `team`            | `int`                 | Team ID (unique)                         |
+| `is_respawning`   | `bool`                | Whether the ship is currently invincible |
+| `lives_remaining` | `int`                 | Lives left before permanently dead       |
+| `deaths`          | `int`                 | Number of times this ship has died       |
+
+### Example Usage:
+
+```python
+enemy = game_state.ships[2]
+
+# Access via properties
+print(enemy.position, enemy.speed, enemy.is_respawning)
+
+# Access like a dict
+print(enemy["velocity"], enemy["deaths"])
+
+# Copy as a plain dict
+enemy_copy = enemy.dict
+```
+
+Ships accessed through `ShipView` are immutable for the current frame. To retain their state across time, use `.dict` to make a copy.
+
+
+## `AsteroidView`
+
+Represents a single asteroid entity in the game. Each asteroid has physical properties and can be accessed in multiple ways:
+
+* **Attribute-style access**: `asteroid.x`, `asteroid.velocity`
+* **Dictionary-style access**: `asteroid["x"]`, `asteroid["velocity"]`
+* **Full copy as dictionary**: `asteroid.dict` → `AsteroidStateDict`
+
+### Attributes:
+
+| Name       | Type                  | Description                         |
+| ---------- | --------------------- | ----------------------------------- |
+| `x`, `y`   | `float`               | Position components                 |
+| `vx`, `vy` | `float`               | Velocity components                 |
+| `position` | `tuple[float, float]` | (x, y) coordinate                   |
+| `velocity` | `tuple[float, float]` | (vx, vy) vector                     |
+| `size`     | `int`                 | Asteroid size class (1, 2, 3, 4)    |
+| `mass`     | `float`               | Asteroid mass (kg)                  |
+| `radius`   | `float`               | Explosion radius (m)                |
+
+### Example Usage:
 
 ```python
 asteroid = game_state.asteroids[0]
-print(asteroid.x, asteroid.velocity)         # via properties
-print(asteroid["x"], asteroid["velocity"])   # via dict-like access
+
+# Access via attributes
+print(asteroid.x, asteroid.y, asteroid.velocity)
+
+# Access via dict-style
+print(asteroid["position"], asteroid["mass"])
+
+# Convert to dictionary for safe copying and storage
+asteroid_dict = asteroid.dict
+```
+
+
+## `BulletView`
+
+Represents a single bullet in the game. Bullets are short-lived projectiles with defined physical properties and a direction vector.
+
+You can access bullet attributes using:
+
+* **Attribute-style access**: `bullet.heading`, `bullet.velocity`
+* **Dictionary-style access**: `bullet["tail_delta"]`, `bullet["mass"]`
+* **Full dictionary copy**: `bullet.dict` → `BulletStateDict`
+
+### Attributes:
+
+| Name                 | Type                  | Description                                            |
+| -------------------- | --------------------- | ------------------------------------------------------ |
+| `x`, `y`             | `float`               | Position components                                    |
+| `vx`, `vy`           | `float`               | Velocity components                                    |
+| `position`           | `tuple[float, float]` | (x, y) coordinate                                      |
+| `velocity`           | `tuple[float, float]` | (vx, vy) vector                                        |
+| `tail_dx`, `tail_dy` | `float`               | Vector components for the tail of bullet               |
+| `tail_delta`         | `tuple[float, float]` | (dx, dy) vector for the tail of bullet                 |
+| `tail`               | `tuple[float, float]` | Calculated tail end position = `position + tail_delta` |
+| `heading`            | `float`               | Direction the bullet is facing (degrees)               |
+| `mass`               | `float`               | Bullet mass (kg)                                       |
+| `length`             | `float`               | Bullet length                                          |
+
+### Example Usage:
+
+```python
+bullet = game_state.bullets[0]
+
+# Access attributes
+print(bullet.position, bullet.heading)
+
+# Tail info (for rendering)
+print(bullet.tail, bullet.tail_delta)
+
+# As a dict
+bullet_copy = bullet.dict
+```
+
+Bullet objects are read-only within a game frame. Use `.dict` if you need to copy the data for long-term use or modification.
+
+
+## `MineView`
+
+Represents a mine deployed in the game world. Mines are stationary, timed explosives with limited lifespan before detonation.
+
+Accessible through:
+
+* **Attribute-style access**: `mine.mass`, `mine.remaining_time`
+* **Dictionary-style access**: `mine["position"]`, `mine["fuse_time"]`
+* **Full dictionary copy**: `mine.dict` → `MineStateDict`
+
+### Attributes:
+
+| Name             | Type                  | Description                                 |
+| ---------------- | --------------------- | ------------------------------------------- |
+| `x`, `y`         | `float`               | Position components                         |
+| `position`       | `tuple[float, float]` | (x, y) coordinate                           |
+| `mass`           | `float`               | Mass of the mine (kg)                       |
+| `fuse_time`      | `float`               | Total fuse duration when deployed (seconds) |
+| `remaining_time` | `float`               | Time left until detonation (seconds)        |
+
+### Example Usage:
+
+```python
+mine = game_state.mines[0]
+
+# Access via attributes
+print(mine.position, mine.remaining_time)
+
+# Access via dictionary-style
+print(mine["mass"], mine["fuse_time"])
+
+# Copy as dict
+mine_copy = mine.dict
+```
+
+Mines are read-only per frame. Use `.dict` to safely extract a copy if you need to store or modify the values independently.
+
