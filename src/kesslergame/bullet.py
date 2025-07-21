@@ -38,7 +38,7 @@ class Bullet:
             self.length
         ]
 
-    def update(self, delta_time: float = 1/30) -> None:
+    def update(self, delta_time: float = 1 / 30) -> None:
         # Update the position:
         self.x += self.vx * delta_time
         self.y += self.vy * delta_time
