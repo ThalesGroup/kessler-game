@@ -255,8 +255,12 @@ class Ship:
         is_moving: bool = abs(initial_speed) > 1e-12
 
         # Get direction of motion for drag
-        motion_sign = math.copysign(1.0, initial_speed) if is_moving else 0.0
-        drag_acc = -self.drag * motion_sign if is_moving else 0.0
+        if abs(initial_speed) > 1e-12:
+            motion_sign = math.copysign(1.0, initial_speed)
+        else:
+            motion_sign = math.copysign(1.0, self.thrust) if abs(self.thrust) > 1e-12 else 0.0
+
+        drag_acc = -self.drag * motion_sign
 
         # Combine thrust and drag into one net acceleration
         net_acc = self.thrust + drag_acc  # m/s²
