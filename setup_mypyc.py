@@ -45,15 +45,16 @@ mypyc_modules = [
 ]
 
 # Workaround: Temporarily remove src/__init__.py before compilation, and restore afterwards
-init_file = "src/__init__.py"
+#init_file = "src/__init__.py"
 
 try:
+    '''
     if os.path.exists(init_file):
         print(f"Found {init_file}, deleting it temporarily for compilation.")
         os.remove(init_file)
     else:
         print(f"{init_file} does not exist, skipping deletion.")
-    
+    '''
     setup(
         name='KesslerGame',
         version=verstr,
@@ -69,6 +70,8 @@ except Exception as e:
     print(f"Error during setup: {e}")
     raise
 finally:
+    pass
+    '''
     try:
         if not os.path.exists(init_file):
             print(f"Recreating {init_file} as an empty file.")
@@ -77,3 +80,4 @@ finally:
     except Exception as e:
         print(f"Error while recreating {init_file}: {e}")
         raise
+    '''
