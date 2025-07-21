@@ -712,7 +712,8 @@ class ShipState:
         inner = repr(self._view)
         if inner.startswith("<ShipOwnView"):
             inner = "<ShipState" + inner[len("<ShipOwnView"):]
-        return inner
+        documentation = "\nProperties: Same as keys in ShipState\nMethods: dict(), fast_compact()"
+        return inner + documentation
 
 
 class GameState:
@@ -884,7 +885,11 @@ class GameState:
         return (f"<GameState frame={self.frame} time={self.time:.2f}s "
                 f"asteroids={len(self._asteroid_data)} "
                 f"ships={len(self._ship_data)} bullets={len(self._bullet_data)} "
-                f"mines={len(self._mine_data)}>")
+                f"mines={len(self._mine_data)}>\n"
+                f"Properties: ships, asteroids, bullets, mines, "
+                f"map_size, time_limit, time, frame, delta_time, "
+                f"frame_rate, random_asteroid_splits, competition_safe_mode\n"
+                f"Methods: dict(), fast_compact()")
 
     def __str__(self) -> str:
         return (f"GameState @ frame {self.frame} ({self.time:.2f}s)\n"
