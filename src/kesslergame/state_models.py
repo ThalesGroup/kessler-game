@@ -665,6 +665,7 @@ class ShipState:
         """Returns all (key, value) pairs."""
         return [(k, getattr(self._view, k)) for k in self.keys()]
 
+    @property
     def fast_compact(self) -> ShipDataList:
         """Return the underlying ship list (mutable)."""
         return self._ship_data
@@ -712,7 +713,7 @@ class ShipState:
         inner = repr(self._view)
         if inner.startswith("<ShipOwnView"):
             inner = "<ShipState" + inner[len("<ShipOwnView"):]
-        documentation = "\nProperties: Same as keys in ShipState\nMethods: dict(), fast_compact()"
+        documentation = "\nProperties: Same as keys in ShipState, along with dict, fast_compact"
         return inner + documentation
 
 
@@ -876,8 +877,8 @@ class GameState:
                 f"mines={len(self._mine_data)}>\n"
                 f"Properties: ships, asteroids, bullets, mines, "
                 f"map_size, time_limit, time, frame, delta_time, "
-                f"frame_rate, random_asteroid_splits, competition_safe_mode\n"
-                f"Methods: dict(), fast_compact()")
+                f"frame_rate, random_asteroid_splits, competition_safe_mode, "
+                f"dict, fast_compact")
 
     def __str__(self) -> str:
         return (f"GameState @ frame {self.frame} ({self.time:.2f}s)\n"
@@ -887,9 +888,10 @@ class GameState:
                 f"  Mines:     {len(self._mine_data)}\n"
                 f"Properties: ships, asteroids, bullets, mines, "
                 f"map_size, time_limit, time, frame, delta_time, "
-                f"frame_rate, random_asteroid_splits, competition_safe_mode\n"
-                f"Methods: dict(), fast_compact()")
+                f"frame_rate, random_asteroid_splits, competition_safe_mode, "
+                f"dict, fast_compact")
 
+    @property
     def dict(self) -> GameStateDict:
         """Return a plain dictionary representation of the game state."""
         return {
@@ -907,6 +909,7 @@ class GameState:
             "competition_safe_mode": self._competition_safe_mode,
         }
     
+    @property
     def fast_compact(self) -> GameStateCompactDict:
         """Return a minimal raw list-based version of the game state for fast serialization. Recommended for agent training."""
         return {
