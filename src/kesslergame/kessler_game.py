@@ -66,11 +66,17 @@ class KesslerGame:
                                 'controller_name': True, 'scale': 1.0}
         self.UI_settings = cast(UISettingsDict, UI_settings)
         
-    def run(self, scenario: Scenario, controllers: list[KesslerController]) -> tuple[Score, PerfDict]:
+    def run(self, scenario: Any, controllers: list[KesslerController]) -> tuple[Score, PerfDict]:
         """
         Run an entire scenario from start to finish and return score and stop reason
         """
-
+        # This is a workaround, because there's a mix of people who import like:
+        # from kesslergame import Scenario
+        # and people doing:
+        # from src.kesslergame import Scenario
+        # MyPyC does not recognize src as a module, and only kesslergame is a module. So this works around that type incompatibility
+        
+        scenario = cast(Scenario, scenario)
         ##################
         # INITIALIZATION #
         ##################
