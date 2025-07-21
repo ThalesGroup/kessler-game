@@ -100,6 +100,9 @@ Represents the full state of the agent’s own ship, including controls and cool
 | `random_asteroid_splits`| `bool`                   | Asteroid fragmentation randomness      |
 | `competition_safe_mode` | `bool`                   | If in fairness-safe mode               |
 
+NOTE: The objects like AsteroidView may behave like dicts when you index into them, but they are not. It may be tempting to try `copy.deepcopy(asteroid)` and then modify your own copy of the AsteroidView, but this won't work.
+The correct way is to call .dict() on the AsteroidView, which will give you your own copy of the asteroid dictionary for you to freely use and store.
+
 ---
 
 ## Compact Representation
