@@ -70,18 +70,10 @@ class KesslerGame:
         """
         Run an entire scenario from start to finish and return score and stop reason
         """
-        # This is a workaround, because there's a mix of people who import like:
-        # from kesslergame import Scenario
-        # and people doing:
-        # from src.kesslergame import Scenario
-        # MyPyC does not recognize src as a module, and only kesslergame is a module. So this works around that type incompatibility
-        
-        scenario = cast(Scenario, scenario)
         ##################
         # INITIALIZATION #
         ##################
         # Initialize objects lists from scenario
-        #scenario = cast(Scenario, scenario)
         asteroids: list[Asteroid] = scenario.asteroids()
         ships: list[Ship] = scenario.ships() # Keep full list of ships (dead or alive) for score reporting
         liveships: list[Ship] = list(ships) # Maintain a parallel list of just live ships
