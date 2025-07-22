@@ -269,46 +269,61 @@ class Ship:
         # Analytic position integration, framerate independent
         # The shape that the ship traces out with a constant turn rate and thrust over the previous frame is a type of spiral
         # This spiral can be analytically integrated! Yay!
-        # The Sympy code to set up dynamics and integrate is as follows:
-
-        # from sympy import *
-        # x0, y0, v0, theta0, omega, delta_x, delta_y, t, delta_t, a = symbols('x0 y0 v0 theta0 omega delta_x delta_y t delta_t a')
-        # v_t = v0 + a * t
-        # theta_t = theta0 + omega * t
-        # delta_x_expr = integrate(v_t * cos(theta_t), (t, 0, delta_t))
-        # delta_y_expr = integrate(v_t * sin(theta_t), (t, 0, delta_t))
-
-        # And notice how after integrating, we can simplify things by defining: theta1 = theta0 + omega * delta_t
 
         x0: float = self.x
         y0: float = self.y
         omega = math.radians(self.turn_rate)
 
-        def analytic_integration(vi: float, a: float, theta0: float, omega: float, t: float) -> tuple[float, float]:
+        def analytic_integration(v0: float, a: float, theta0: float, omega: float, delta_t: float) -> tuple[float, float]:
             """
             Returns (dx, dy) using either analytic or Taylor expansion for small omega.
             Args:
-                vi: initial speed
+                v0: initial speed
                 a: acceleration
-                th0: initial heading (radians)
+                theta0: initial heading (radians)
                 omega: turn rate (rad/sec)
-                t: duration (seconds)
+                dt: t1 - t0, the time interval to integrate over (seconds)
             """
-            if abs(t) < 1e-12:
+            if abs(delta_t) < 1e-15:
+                # Integrating over basically no time into the future
                 return 0.0, 0.0
-            if abs(omega) < 1e-4:
-                # Taylor expansion with Horner's method
+            if abs(omega) < 0.05:
+                # Omega is very small, and the divisions in the analytic solution have numerical instability
+                # Use a 2nd order Taylor/Maclaurin series to get a much more accurate result near 0
+                # Also without this code, with omega near 0, the ship starts teleporting!
+                # The cutoff of 0.05 was found by testing some values for the constants,
+                # and making a plot of the absolute error between the Taylor and analytic graphs.
+                # 0.05 tends to minimize this absolute error, and is the tipping point.
                 cos_theta0 = math.cos(theta0)
                 sin_theta0 = math.sin(theta0)
-                t_sq = t * t
-                # Horner: vi*t + 0.5*a*t^2
-                dt_main = t * (vi + a * t * 0.5)
-                # 0.5*vi*t^2*omega + (1/6)*a*t^3*omega = (omega * tt) * (0.5*vi + a * t / 6.0)
-                smallterm = omega * t_sq * (0.5 * vi + a * t / 6.0)
-                dx = cos_theta0 * dt_main - sin_theta0 * smallterm
-                dy = sin_theta0 * dt_main + cos_theta0 * smallterm
+
+                delta_t2 = delta_t * delta_t
+                delta_t3 = delta_t2 * delta_t
+
+                # Derivatives were found by taking limits as omega approaches zero, of the derivatives of the analytic solution
+                delta_x_omega0 = delta_t * (a * delta_t + 2.0 * v0) * math.cos(theta0) / 2.0
+                delta_x_deriv_omega0 = delta_t2 * (-2.0 * a * delta_t - 3.0 * v0) * math.sin(theta0) / 6.0
+                delta_x_second_deriv_omega0 = delta_t3 * (-3.0 * a * delta_t - 4.0 * v0) * math.cos(theta0) / 12.0
+
+                delta_y_omega0 = delta_t * (a * delta_t + 2.0 * v0) * math.sin(theta0) / 2.0
+                delta_y_deriv_omega0 = delta_t2 * (2.0 * a * delta_t + 3.0 * v0) * math.cos(theta0) / 6.0
+                delta_y_second_deriv_omega0 = delta_t3 * (-3.0 * a * delta_t - 4.0 * v0) * math.sin(theta0) / 12.0
+                
+                # Assemble Taylor polynomial and evaluate for dx and dy
+                dx = delta_x_omega0 + omega * (delta_x_deriv_omega0 + (omega / 2.0) * delta_x_second_deriv_omega0)
+                dy = delta_y_omega0 + omega * (delta_y_deriv_omega0 + (omega / 2.0) * delta_y_second_deriv_omega0)
             else:
-                delta_theta = omega * t
+                # Exact analytic solution
+                # The Sympy code to set up dynamics and integrate is as follows:
+
+                # from sympy import *
+                # x0, y0, v0, theta0, omega, delta_x, delta_y, t, delta_t, a = symbols('x0 y0 v0 theta0 omega delta_x delta_y t delta_t a')
+                # v_t = v0 + a * t
+                # theta_t = theta0 + omega * t
+                # delta_x_expr = integrate(v_t * cos(theta_t), (t, 0, delta_t))
+                # delta_y_expr = integrate(v_t * sin(theta_t), (t, 0, delta_t))
+                
+                delta_theta = omega * delta_t
                 theta1 = theta0 + delta_theta
                 sin_theta0 = math.sin(theta0)
                 sin_theta1 = math.sin(theta1)
@@ -316,8 +331,8 @@ class Ship:
                 cos_theta1 = math.cos(theta1)
                 sin_diff = sin_theta1 - sin_theta0
                 cos_diff = cos_theta1 - cos_theta0
-                dx = (vi * sin_diff + (a / omega) * (cos_diff + delta_theta * sin_theta1)) / omega
-                dy = (-vi * cos_diff + (a / omega) * (sin_diff - delta_theta * cos_theta1)) / omega
+                dx = (v0 * sin_diff + (a / omega) * (cos_diff + delta_theta * sin_theta1)) / omega
+                dy = (-v0 * cos_diff + (a / omega) * (sin_diff - delta_theta * cos_theta1)) / omega
             return dx, dy
 
         # Determine if we need to break the frame into two parts
