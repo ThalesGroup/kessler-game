@@ -287,36 +287,40 @@ class Ship:
             if abs(delta_t) < 1e-15:
                 # Integrating over basically no time into the future
                 return 0.0, 0.0
-            if abs(omega) < 0.05:
+            if abs(omega) < 0.15:
                 # Omega is very small, and the divisions in the analytic solution have numerical instability
                 # Use a 2nd order Taylor/Maclaurin series to get a much more accurate result near 0
                 # Also without this code, with omega near 0, the ship starts teleporting!
-                # The cutoff of 0.05 was found by testing some values for the constants,
+                # The cutoff of 0.15 was found by testing some values for the constants,
                 # and making a plot of the absolute error between the Taylor and analytic graphs.
-                # 0.05 tends to minimize this absolute error, and is the tipping point.
+                # 0.15 tends to minimize this max absolute error at about 1e-11, and is the balance point.
                 cos_theta0 = math.cos(theta0)
                 sin_theta0 = math.sin(theta0)
 
                 delta_t2 = delta_t * delta_t
                 delta_t3 = delta_t2 * delta_t
+                delta_t4 = delta_t3 * delta_t
                 a_delta_t = a * delta_t
 
                 # Derivatives were found by taking limits as omega approaches zero, of the derivatives of the analytic solution
                 omega0_common = delta_t * (a_delta_t / 2.0 + v0)
                 omega0_deriv_common = delta_t2 * (a_delta_t / 3.0 + v0 / 2.0)
-                omega0_second_deriv_common = delta_t3 * (-a_delta_t / 4.0 - v0 / 3.0)
+                omega0_second_deriv_common = delta_t3 * (a_delta_t / 4.0 + v0 / 3.0)
+                omega0_third_deriv_common = delta_t4 * (a_delta_t / 5.0 + v0 / 4.0)
 
                 delta_x_omega0 = omega0_common * cos_theta0
                 delta_x_deriv_omega0 = -omega0_deriv_common * sin_theta0
-                delta_x_second_deriv_omega0 = omega0_second_deriv_common * cos_theta0
+                delta_x_second_deriv_omega0 = -omega0_second_deriv_common * cos_theta0
+                delta_x_third_deriv_omega0 = omega0_third_deriv_common * sin_theta0
 
                 delta_y_omega0 = omega0_common * sin_theta0
                 delta_y_deriv_omega0 = omega0_deriv_common * cos_theta0
-                delta_y_second_deriv_omega0 = omega0_second_deriv_common * sin_theta0
+                delta_y_second_deriv_omega0 = -omega0_second_deriv_common * sin_theta0
+                delta_y_third_deriv_omega0 = -omega0_third_deriv_common * cos_theta0
                 
                 # Assemble Taylor polynomial and evaluate for dx and dy
-                dx = delta_x_omega0 + omega * (delta_x_deriv_omega0 + (omega / 2.0) * delta_x_second_deriv_omega0)
-                dy = delta_y_omega0 + omega * (delta_y_deriv_omega0 + (omega / 2.0) * delta_y_second_deriv_omega0)
+                dx = delta_x_omega0 + omega * (delta_x_deriv_omega0 + omega * (delta_x_second_deriv_omega0 / 2.0 + omega * delta_x_third_deriv_omega0 / 6.0))
+                dy = delta_y_omega0 + omega * (delta_y_deriv_omega0 + omega * (delta_y_second_deriv_omega0 / 2.0 + omega * delta_y_third_deriv_omega0 / 6.0))
             else:
                 # Exact analytic solution
                 # The Sympy code to set up dynamics and integrate is as follows:
