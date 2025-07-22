@@ -301,13 +301,13 @@ class Ship:
                 delta_t3 = delta_t2 * delta_t
 
                 # Derivatives were found by taking limits as omega approaches zero, of the derivatives of the analytic solution
-                delta_x_omega0 = delta_t * (a * delta_t + 2.0 * v0) * math.cos(theta0) / 2.0
-                delta_x_deriv_omega0 = delta_t2 * (-2.0 * a * delta_t - 3.0 * v0) * math.sin(theta0) / 6.0
-                delta_x_second_deriv_omega0 = delta_t3 * (-3.0 * a * delta_t - 4.0 * v0) * math.cos(theta0) / 12.0
+                delta_x_omega0 = delta_t * (a * delta_t + 2.0 * v0) * cos_theta0 / 2.0
+                delta_x_deriv_omega0 = delta_t2 * (-2.0 * a * delta_t - 3.0 * v0) * sin_theta0 / 6.0
+                delta_x_second_deriv_omega0 = delta_t3 * (-3.0 * a * delta_t - 4.0 * v0) * cos_theta0 / 12.0
 
-                delta_y_omega0 = delta_t * (a * delta_t + 2.0 * v0) * math.sin(theta0) / 2.0
-                delta_y_deriv_omega0 = delta_t2 * (2.0 * a * delta_t + 3.0 * v0) * math.cos(theta0) / 6.0
-                delta_y_second_deriv_omega0 = delta_t3 * (-3.0 * a * delta_t - 4.0 * v0) * math.sin(theta0) / 12.0
+                delta_y_omega0 = delta_t * (a * delta_t + 2.0 * v0) * sin_theta0 / 2.0
+                delta_y_deriv_omega0 = delta_t2 * (2.0 * a * delta_t + 3.0 * v0) * cos_theta0 / 6.0
+                delta_y_second_deriv_omega0 = delta_t3 * (-3.0 * a * delta_t - 4.0 * v0) * sin_theta0 / 12.0
                 
                 # Assemble Taylor polynomial and evaluate for dx and dy
                 dx = delta_x_omega0 + omega * (delta_x_deriv_omega0 + (omega / 2.0) * delta_x_second_deriv_omega0)
