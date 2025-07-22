@@ -7,6 +7,12 @@ from math import isnan, sqrt, hypot, dist, nan, inf, isfinite
 
 from .math_utils import solve_quadratic, project_point_onto_segment_and_get_t
 
+def ship_asteroid_continuous_collision_time():
+    pass
+
+def ship_ship_continuous_collision_time():
+    pass
+
 def collision_time_interval(
     ax: float, # Line seg start
     ay: float,

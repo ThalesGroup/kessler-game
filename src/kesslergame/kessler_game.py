@@ -12,7 +12,7 @@ from enum import Enum
 from .scenario import Scenario
 from .score import Score
 from .controller import KesslerController
-from .collisions import circle_line_collision_continuous, collision_time_interval
+from .collisions import circle_line_collision_continuous, collision_time_interval, ship_asteroid_continuous_collision_time, ship_ship_continuous_collision_time
 from .graphics import GraphicsType, GraphicsHandler, KesslerGraphics
 from .mines import Mine
 from .asteroid import Asteroid
@@ -237,6 +237,7 @@ class KesslerGame:
                             asteroid.vx, asteroid.vy,
                             asteroid.radius
                         )
+                        assert -self.delta_time <= collision_start_time <= 0.0
                         collision_time = max(-self.delta_time, collision_start_time)
                         # Inline insertion to keep collisions sorted by time
                         i = len(collisions)
@@ -258,6 +259,7 @@ class KesslerGame:
                 bullet.owner.asteroids_hit += 1
                 bullet.owner.bullets_hit += 1
 
+                # Collect new asteroids to add after all collisions checks are done
                 new_asteroids.extend(asteroid.destruct(impactor=bullet, random_ast_split=self.random_ast_splits))
                 bullet.destruct()
 
@@ -326,6 +328,7 @@ class KesslerGame:
                     if closest_mine is not None:
                         closest_mine.owner.asteroids_hit += 1
                         closest_mine.owner.mines_hit += 1
+                        # Collect new asteroids to add after all collisions checks are done
                         new_asteroids.extend(asteroid.destruct(impactor=closest_mine, random_ast_split=self.random_ast_splits))
                         asteroids_to_cull.append(ast_idx)
 
@@ -365,7 +368,7 @@ class KesslerGame:
                         num_mines -= 1
                         if not self.competition_safe_mode:
                             game_state.remove_mine(mine_idx)
-                        # Don't increment index — need to check swapped-in mine
+                        # Don't increment index. Need to check swapped-in mine
                     else:
                         mine_idx += 1
 
@@ -377,59 +380,91 @@ class KesslerGame:
                     new_asteroids.clear()
             
 
-
             
-            # --- Check ship-asteroid collisions ---
-            for ship in liveships:
+            # --- SHIP-ASTEROID COLLISIONS ---  assert -self.delta_time <= collision_start_time <= 0.0
+            # Collect all potential ship-asteroid collisions, sorted inline
+            ship_asteroid_collisions: list[tuple[float, int, int]] = []
+            for ship_idx, ship in enumerate(liveships):
                 if ship.alive and not ship.is_respawning:
-                    ast_idx = 0
-                    num_asts = len(asteroids)
-                    while ast_idx < num_asts:
-                        asteroid = asteroids[ast_idx]
-                        dx = ship.x - asteroid.x
-                        dy = ship.y - asteroid.y
-                        radius_sum = ship.radius + asteroid.radius
-                        # Most of the time no collision occurs, so use early exit to optimize collision check
-                        if abs(dx) <= radius_sum and abs(dy) <= radius_sum and dx * dx + dy * dy <= radius_sum * radius_sum:
-                            # Asteroid destruct function and immediate removal
-                            new_asteroids.extend(asteroid.destruct(impactor=ship, random_ast_split=self.random_ast_splits))
-                            asteroids[ast_idx] = asteroids[-1]
-                            asteroids.pop()
-                            num_asts -= 1
-                            # Mirror the change in the game_state dict
-                            if not self.competition_safe_mode:
-                                game_state.remove_asteroid(ast_idx)
-                            # Ship destruct function. Add one to asteroids_hit
-                            ship.asteroids_hit += 1
-                            ship.destruct(map_size=scenario.map_size)
-                            cull_ships = True
-                            # Stop checking this ship's collisions
-                            break
-                        else:
-                            ast_idx += 1
-            
+                    for ast_idx, asteroid in enumerate(asteroids):
+                        collision_start_time = ship_asteroid_continuous_collision_time(
+                            ship.x, ship.y, ship.vx, ship.vy, ship.radius,
+                            asteroid.x, asteroid.y, asteroid.vx, asteroid.vy, asteroid.radius,
+                            self.delta_time
+                        )
+                        if collision_start_time is not None and not math.isnan(collision_start_time):
+                            assert -self.delta_time <= collision_start_time <= 0.0
+                            # Insert chronologically
+                            i = len(ship_asteroid_collisions)
+                            while i > 0 and ship_asteroid_collisions[i-1][0] > collision_start_time:
+                                i -= 1
+                            ship_asteroid_collisions.insert(i, (collision_start_time, ship_idx, ast_idx))
+
+            ships_to_cull: list[int] = []
+            asteroids_to_cull.clear()
+            # Resolve in time order
+            for _, ship_idx, ast_idx in ship_asteroid_collisions:
+                if ship_idx in ships_to_cull or ast_idx in asteroids_to_cull:
+                    # This pair is invalid because one or two of them are already dead
+                    continue
+                ship = liveships[ship_idx]
+                new_asteroids.extend(asteroids[ast_idx].destruct(impactor=ship, random_ast_split=self.random_ast_splits))
+                ship.asteroids_hit += 1
+                ship.destruct(map_size=scenario.map_size)
+                ships_to_cull.append(ship_idx)
+                asteroids_to_cull.append(ast_idx)
+                cull_ships = True
+
+            # Remove asteroids (swap-and-pop reverse index order)
+            for ast_idx in sorted(asteroids_to_cull, reverse=True):
+                asteroids[ast_idx] = asteroids[-1]
+                asteroids.pop()
+                if not self.competition_safe_mode:
+                    game_state.remove_asteroid(ast_idx)
+
             # Add new asteroids from ship-asteroid collisions
             if new_asteroids:
                 asteroids.extend(new_asteroids)
                 if not self.competition_safe_mode:
-                    game_state.add_asteroids([asteroid.state for asteroid in new_asteroids]) # Mirror change in game_state dict
+                    game_state.add_asteroids([asteroid.state for asteroid in new_asteroids])
                 new_asteroids.clear()
-            
-            # --- Check ship-ship collisions ---
-            for ship_idx, ship1 in enumerate(liveships):
-                if ship1.alive:
-                    for ship2 in liveships[ship_idx + 1:]:
-                        if ship2.alive:
-                            if not ship2.is_respawning and not ship1.is_respawning:
-                                dx = ship1.x - ship2.x
-                                dy = ship1.y - ship2.y
-                                radius_sum = ship1.radius + ship2.radius
-                                # Most of the time no collision occurs, so use early exit to optimize collision check
-                                if abs(dx) <= radius_sum and abs(dy) <= radius_sum and dx * dx + dy * dy <= radius_sum * radius_sum:
-                                    ship1.destruct(map_size=scenario.map_size)
-                                    ship2.destruct(map_size=scenario.map_size)
-                                    cull_ships = True
-            # Cull ships if not alive
+
+
+
+            # ---------- SHIP-SHIP COLLISIONS (chronological, fair) ----------
+            ship_ship_collisions: list[tuple[float, int, int]] = []
+            num_ships = len(liveships)
+            for ship1_idx, ship1 in enumerate(liveships):
+                if ship1.alive and not ship1.is_respawning:
+                    for ship2_idx in range(ship1_idx + 1, num_ships):
+                        ship2 = liveships[ship2_idx]
+                        if ship2.alive and not ship2.is_respawning:
+                            collision_start_time = ship_ship_continuous_collision_time(
+                                ship1.x, ship1.y, ship1.vx, ship1.vy, ship1.radius,
+                                ship2.x, ship2.y, ship2.vx, ship2.vy, ship2.radius,
+                                self.delta_time
+                            )
+                            if collision_start_time is not None and not math.isnan(collision_start_time):
+                                assert -self.delta_time <= collision_start_time <= 0.0
+                                # Insert chronologically
+                                i = len(ship_ship_collisions)
+                                while i > 0 and ship_ship_collisions[i-1][0] > collision_start_time:
+                                    i -= 1
+                                ship_ship_collisions.insert(i, (collision_start_time, ship1_idx, ship2_idx))
+
+            for _, ship1_idx, ship2_idx in ship_ship_collisions:
+                if ship1_idx in ships_to_cull or ship2_idx in ships_to_cull:
+                    continue
+                ship1 = liveships[ship1_idx]
+                ship2 = liveships[ship2_idx]
+                assert ship1.alive and ship2.alive
+                ship1.destruct(map_size=scenario.map_size)
+                ship2.destruct(map_size=scenario.map_size)
+                ships_to_cull.append(ship1_idx)
+                ships_to_cull.append(ship2_idx)
+                cull_ships = True
+
+            # Cull ships if needed
             if cull_ships:
                 liveships = [ship for ship in liveships if ship.alive]
                 if not self.competition_safe_mode:
