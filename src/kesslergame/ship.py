@@ -10,6 +10,7 @@ from .bullet import Bullet
 from .mines import Mine
 from .controller import KesslerController
 from .state_models import ShipDataList
+from .math import analytic_ship_movement_integration
 
 
 class Ship:
@@ -274,76 +275,6 @@ class Ship:
         y0: float = self.y
         omega = math.radians(self.turn_rate)
 
-        def analytic_integration(v0: float, a: float, theta0: float, omega: float, delta_t: float) -> tuple[float, float]:
-            """
-            Returns (dx, dy) using either analytic or Taylor expansion for small omega.
-            Args:
-                v0: initial speed
-                a: acceleration
-                theta0: initial heading (radians)
-                omega: turn rate (rad/sec)
-                dt: t1 - t0, the time interval to integrate over (seconds)
-            """
-            if abs(delta_t) < 1e-15:
-                # Integrating over basically no time into the future
-                return 0.0, 0.0
-            if abs(omega) < 0.15:
-                # Omega is very small, and the divisions in the analytic solution have numerical instability
-                # Use a 2nd order Taylor/Maclaurin series to get a much more accurate result near 0
-                # Also without this code, with omega near 0, the ship starts teleporting!
-                # The cutoff of 0.15 was found by testing some values for the constants,
-                # and making a plot of the absolute error between the Taylor and analytic graphs.
-                # 0.15 tends to minimize this max absolute error at about 1e-11, and is the balance point.
-                cos_theta0 = math.cos(theta0)
-                sin_theta0 = math.sin(theta0)
-
-                delta_t2 = delta_t * delta_t
-                delta_t3 = delta_t2 * delta_t
-                delta_t4 = delta_t3 * delta_t
-                a_delta_t = a * delta_t
-
-                # Derivatives were found by taking limits as omega approaches zero, of the derivatives of the analytic solution
-                omega0_common = delta_t * (a_delta_t / 2.0 + v0)
-                omega0_deriv_common = delta_t2 * (a_delta_t / 3.0 + v0 / 2.0)
-                omega0_second_deriv_common = delta_t3 * (a_delta_t / 4.0 + v0 / 3.0)
-                omega0_third_deriv_common = delta_t4 * (a_delta_t / 5.0 + v0 / 4.0)
-
-                delta_x_omega0 = omega0_common * cos_theta0
-                delta_x_deriv_omega0 = -omega0_deriv_common * sin_theta0
-                delta_x_second_deriv_omega0 = -omega0_second_deriv_common * cos_theta0
-                delta_x_third_deriv_omega0 = omega0_third_deriv_common * sin_theta0
-
-                delta_y_omega0 = omega0_common * sin_theta0
-                delta_y_deriv_omega0 = omega0_deriv_common * cos_theta0
-                delta_y_second_deriv_omega0 = -omega0_second_deriv_common * sin_theta0
-                delta_y_third_deriv_omega0 = -omega0_third_deriv_common * cos_theta0
-                
-                # Assemble Taylor polynomial and evaluate for dx and dy
-                dx = delta_x_omega0 + omega * (delta_x_deriv_omega0 + omega * (delta_x_second_deriv_omega0 / 2.0 + omega * delta_x_third_deriv_omega0 / 6.0))
-                dy = delta_y_omega0 + omega * (delta_y_deriv_omega0 + omega * (delta_y_second_deriv_omega0 / 2.0 + omega * delta_y_third_deriv_omega0 / 6.0))
-            else:
-                # Exact analytic solution
-                # The Sympy code to set up dynamics and integrate is as follows:
-
-                # from sympy import *
-                # x0, y0, v0, theta0, omega, delta_x, delta_y, t, delta_t, a = symbols('x0 y0 v0 theta0 omega delta_x delta_y t delta_t a')
-                # v_t = v0 + a * t
-                # theta_t = theta0 + omega * t
-                # delta_x_expr = integrate(v_t * cos(theta_t), (t, 0, delta_t))
-                # delta_y_expr = integrate(v_t * sin(theta_t), (t, 0, delta_t))
-                
-                delta_theta = omega * delta_t
-                theta1 = theta0 + delta_theta
-                sin_theta0 = math.sin(theta0)
-                sin_theta1 = math.sin(theta1)
-                cos_theta0 = math.cos(theta0)
-                cos_theta1 = math.cos(theta1)
-                sin_diff = sin_theta1 - sin_theta0
-                cos_diff = cos_theta1 - cos_theta0
-                dx = (v0 * sin_diff + (a / omega) * (cos_diff + delta_theta * sin_theta1)) / omega
-                dy = (-v0 * cos_diff + (a / omega) * (sin_diff - delta_theta * cos_theta1)) / omega
-            return dx, dy
-
         # Determine if we need to break the frame into two parts
         t1: float | None = None
         accel_phase2 = 0.0  # default to coasting or stopping in second phase
@@ -368,19 +299,19 @@ class Ship:
 
         if t1 is None:
             # No exceeding limit within this step, use normal analytic integration
-            dx, dy = analytic_integration(initial_speed, net_acc, theta0, omega, delta_time)
+            dx, dy = analytic_ship_movement_integration(initial_speed, net_acc, theta0, omega, delta_time)
             self.x = (x0 + dx) % map_size[0]
             self.y = (y0 + dy) % map_size[1]
             self.speed = initial_speed + net_acc * delta_time
         else:
             # 2-phase integration: (i) accelerate to speed limit or zero, (ii) coast or stop
             # Phase 1: accelerating from vi to v1 over t1
-            dx1, dy1 = analytic_integration(initial_speed, net_acc, theta0, omega, t1)
+            dx1, dy1 = analytic_ship_movement_integration(initial_speed, net_acc, theta0, omega, t1)
             theta1 = theta0 + omega * t1
 
             # Phase 2: constant speed or stopped, no acceleration
             t2 = delta_time - t1
-            dx2, dy2 = analytic_integration(v1, accel_phase2, theta1, omega, t2)
+            dx2, dy2 = analytic_ship_movement_integration(v1, accel_phase2, theta1, omega, t2)
 
             self.x = (x0 + dx1 + dx2) % map_size[0]
             self.y = (y0 + dy1 + dy2) % map_size[1]

@@ -3,71 +3,9 @@
 # NOTICE: This file is subject to the license agreement defined in file 'LICENSE', which is part of
 # this source code package.
 
-import math
+from math import isnan, sqrt, hypot, dist, nan, inf, isfinite
 
-def solve_quadratic(a: float, b: float, c: float) -> tuple[float, float]:
-    """
-    Solve the quadratic equation a*x**2 + b*x + c = 0 for real roots.
-
-    Handles degenerate linear and constant cases. Returns a tuple of roots (t0, t1) in sorted order.
-    If there are no real roots, returns (math.nan, math.nan). If linear, returns one solution repeated.
-
-    Note: Does not handle floating point overflow.
-
-    Args:
-        a (float): Quadratic coefficient.
-        b (float): Linear coefficient.
-        c (float): Constant term.
-
-    Returns:
-        tuple[float, float]: Roots (t0, t1), sorted in ascending order, or (nan, nan) if no real roots.
-    """
-    if a == 0.0:
-        # Linear case: bx + c = 0
-        if b == 0.0:
-            if c == 0.0:
-                return 0.0, 0.0
-            else:
-                return math.nan, math.nan
-        else:
-            x = -c / b
-            return x, x
-
-    discriminant = b * b - 4.0 * a * c
-    if discriminant < 0.0:
-        # No real solutions
-        return math.nan, math.nan
-
-    q = -0.5 * (b + math.copysign(math.sqrt(discriminant), b))
-    if c == 0.0:
-        x1 = -b / a
-        if x1 < 0.0:
-            return x1, 0.0
-        else:
-            return 0.0, x1
-
-    # q cannot be 0 here
-    x1 = q / a
-    x2 = c / q
-    if x1 <= x2:
-        return x1, x2
-    else:
-        return x2, x1
-
-def project_point_onto_segment_and_get_t(x1: float, y1: float, x2: float, y2: float, px: float, py: float) -> float:
-    """
-    Projects point P onto segment A->B, returns t in [0,1] where projection falls;
-    If out of [0,1], the closest endpoint is closer than the interior.
-    """
-    dx = x2 - x1
-    dy = y2 - y1
-    len_sq = dx * dx + dy * dy
-    if len_sq < 1e-12:
-        return math.nan
-    px_rel = px - x1
-    py_rel = py - y1
-    t = (px_rel * dx + py_rel * dy) / len_sq
-    return t
+from .math_utils import solve_quadratic, project_point_onto_segment_and_get_t
 
 def collision_time_interval(
     ax: float, # Line seg start
@@ -110,7 +48,7 @@ def collision_time_interval(
     # Segment vector and length
     seg_dx = b0x - a0x
     seg_dy = b0y - a0y
-    seg_len = math.hypot(seg_dx, seg_dy)  # Will be 12.0, the bullet length
+    seg_len = hypot(seg_dx, seg_dy)  # Will be 12.0, the bullet length
 
     # For normalization later
     if seg_len == 0.0:
@@ -134,16 +72,16 @@ def collision_time_interval(
     t0_B, t1_B = solve_quadratic(q2, q1, q0)
 
     # Should check for NaNs - if both are nan, there's no possibility
-    if math.isnan(t0_A) and math.isnan(t0_B):
-        return (math.nan, math.nan)
+    if isnan(t0_A) and isnan(t0_B):
+        return (nan, nan)
 
-    t0 = math.inf
-    t1 = -math.inf
+    t0 = inf
+    t1 = -inf
     for t in [t0_A, t0_B]:
-        if not math.isnan(t):
+        if not isnan(t):
             t0 = min(t0, t)
     for t in [t1_A, t1_B]:
-        if not math.isnan(t):
+        if not isnan(t):
             t1 = max(t1, t)
 
     # Mid-segment "side swipe" collisions
@@ -170,8 +108,8 @@ def collision_time_interval(
     ast_proj_n = r_a0_to_center_x * nx + r_a0_to_center_y * ny
 
     # Find when the center of the circle crosses the (possibly growing or shrinking) normal tube of radius r
-    t_ast_center = ast_proj_n / v_proj_n if v_proj_n != 0.0 else math.inf
-    t_diff_ast_radius = r / v_proj_n if v_proj_n != 0.0 else math.inf
+    t_ast_center = ast_proj_n / v_proj_n if v_proj_n != 0.0 else inf
+    t_diff_ast_radius = r / v_proj_n if v_proj_n != 0.0 else inf
 
     t0_mid = t_ast_center - t_diff_ast_radius
     t1_mid = t_ast_center + t_diff_ast_radius
@@ -207,8 +145,8 @@ def collision_time_interval(
         t1 = t1_mid
 
     # If we never updated t0/t1, no collision
-    if not (math.isfinite(t0) and math.isfinite(t1)):
-        return (math.nan, math.nan)
+    if not (isfinite(t0) and isfinite(t1)):
+        return (nan, nan)
 
     return (t0, t1)
 
@@ -433,14 +371,14 @@ def circle_line_collision_old(line_A: tuple[float, float], line_B: tuple[float, 
         return False
 
     # calculate side lengths of triangle formed from the line segment and circle center point
-    a = math.dist(line_A, center)
-    b = math.dist(line_B, center)
-    c = math.dist(line_A, line_B)
+    a = dist(line_A, center)
+    b = dist(line_B, center)
+    c = dist(line_A, line_B)
 
     # Heron's formula to calculate area of triangle and resultant height (distance from circle center to line segment)
     s = 0.5 * (a + b + c)
 
-    cen_dist = 2.0 / c * math.sqrt(max(0.0, s * (s - a) * (s - b) * (s - c)))
+    cen_dist = 2.0 / c * sqrt(max(0.0, s * (s - a) * (s - b) * (s - c)))
 
     # If circle distance to line segment is less than circle radius, they are colliding
     return cen_dist < radius
