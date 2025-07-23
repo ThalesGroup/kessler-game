@@ -5,7 +5,7 @@
 
 from math import isnan, sqrt, hypot, dist, nan, inf, isfinite
 
-from .math_utils import solve_quadratic, project_point_onto_segment_and_get_t, analytic_ship_movement_integration, find_first_leq_zero
+from .math_utils import solve_quadratic, project_point_onto_segment_and_get_t, analytic_ship_movement_integration, find_first_leq_zero, circle_circle_collision_time_interval
 
 
 def ship_asteroid_continuous_collision_time(ship_x: float, ship_y: float, ship_r: float, ship_speed: float,

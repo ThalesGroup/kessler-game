@@ -3,7 +3,7 @@
 # NOTICE: This file is subject to the license agreement defined in file 'LICENSE', which is part of
 # this source code package.
 
-from math import sin, cos, nan, inf, copysign, sqrt
+from math import sin, cos, nan, inf, copysign, sqrt, isclose
 from typing import Callable
 
 
@@ -142,6 +142,58 @@ def analytic_ship_movement_integration(v0: float, a: float, theta0: float, omega
         dx = (v0 * sin_diff + (a / omega) * (cos_diff + delta_theta * sin_theta1)) / omega
         dy = (-v0 * cos_diff + (a / omega) * (sin_diff - delta_theta * cos_theta1)) / omega
     return dx, dy
+
+
+def circle_circle_collision_time_interval(
+    ax: float, ay: float, vax: float, vay: float, ra: float,
+    bx: float, by: float, vbx: float, vby: float, rb: float
+) -> tuple[float, float]:
+    """
+    Returns (t_enter, t_exit) if the two circles will collide,
+    or (nan, nan) if there's no collision in the future.
+    Can return (-inf, inf) if the circles collide always and ever.
+    """
+    # This linalg version is mathematically the same as setting up a quadratic and solving it, but is faster since it simplifies things
+
+    separation = ra + rb
+
+    dx = ax - bx
+    dy = ay - by
+    dvx = vax - vbx
+    dvy = vay - vby
+
+    dist_sq = dx * dx + dy * dy
+    speed_sq = dvx * dvx + dvy * dvy
+    dot = dx * dvx + dy * dvy
+    sep_sq = separation * separation
+
+    # Both stationary. Either overlapping forever or never
+    if isclose(speed_sq, 0.0):
+        if dist_sq <= sep_sq:
+            return -inf, inf # Always overlapping
+        else:
+            return nan, nan # Never collide
+
+    # Already outside and moving away (or tangent and moving apart)
+    if dot >= 0.0 and dist_sq > sep_sq:
+        return nan, nan
+
+    # sin check: if angle too wide, paths never intersect within radius band
+    cos_theta_sq = (dot * dot) / (dist_sq * speed_sq)
+    sin_theta_sq = 1.0 - cos_theta_sq
+    min_sin_sq = sep_sq / dist_sq
+
+    if sin_theta_sq > min_sin_sq:
+        return nan, nan  # Will miss each other
+
+    # Compute collision time interval centered around closest approach
+    root_term = sqrt((sep_sq - dist_sq * sin_theta_sq) / speed_sq)
+    t_mid = -dot / speed_sq
+
+    t_enter = t_mid - root_term
+    t_exit  = t_mid + root_term
+
+    return t_enter, t_exit
 
 
 def find_first_leq_zero(
