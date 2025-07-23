@@ -26,8 +26,7 @@ def ship_asteroid_continuous_collision_time(ship_x: float, ship_y: float, ship_r
     combined_vel = abs(ship_speed) + abs(ast_speed) #sqrt(ast_vx * ast_vx + ast_vy * ast_vy)
     delta_x = ship_x - ast_x
     delta_y = ship_y - ast_y
-    rad_sum = ship_r + ast_r
-    max_separation = delta_time * combined_vel + rad_sum
+    max_separation = delta_time * combined_vel + ship_r + ast_r
     # if separation <= 0.0 then we collided, but we still go through the rest of the function to find when it first happened
     if delta_x * delta_x + delta_y * delta_y > max_separation * max_separation:
         # There is no possible way these could have been colliding in the time interval [-delta_time, 0.0]
@@ -89,8 +88,7 @@ def ship_ship_continuous_collision_time(ship1_x: float, ship1_y: float, ship1_r:
     combined_vel = abs(ship1_speed) + abs(ship2_speed)
     delta_x = ship1_x - ship2_x
     delta_y = ship1_y - ship2_y
-    rad_sum = ship1_r + ship2_r
-    max_separation = delta_time * combined_vel + rad_sum
+    max_separation = delta_time * combined_vel + ship1_r + ship2_r
     # if separation <= 0.0 then we collided, but we still go through the rest of the function to find when it first happened
     if delta_x * delta_x + delta_y * delta_y > max_separation * max_separation:
         # There is no possible way these could have been colliding in the time interval [-delta_time, 0.0]
