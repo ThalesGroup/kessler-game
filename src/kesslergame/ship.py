@@ -10,7 +10,7 @@ from .bullet import Bullet
 from .mines import Mine
 from .controller import KesslerController
 from .state_models import ShipDataList
-from .math import analytic_ship_movement_integration
+from .math_utils import analytic_ship_movement_integration
 
 
 class Ship:
@@ -172,11 +172,11 @@ class Ship:
 
     @property
     def alive(self) -> bool:
-        return True if self.lives > 0 else False
+        return self.lives > 0
 
     @property
     def is_respawning(self) -> bool:
-        return True if self._respawning else False
+        return bool(self._respawning)
 
     @property
     def respawn_time_left(self) -> float:

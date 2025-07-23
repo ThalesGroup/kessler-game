@@ -334,8 +334,9 @@ class KesslerGame:
 
                 # For each live, non-respawning ship, apply damage only from the closest mine within range
                 for ship in liveships:
-                    if not ship.alive or ship.is_respawning:
+                    if ship.is_respawning:
                         continue
+                    assert ship.alive
                     closest_mine = None
                     closest_sq_dist = math.inf
                     for mine in detonating_mines:
@@ -381,7 +382,7 @@ class KesslerGame:
             
 
             
-            # --- SHIP-ASTEROID COLLISIONS ---  assert -self.delta_time <= collision_start_time <= 0.0
+            # --- SHIP-ASTEROID COLLISIONS ---
             # Collect all potential ship-asteroid collisions, sorted inline
             ship_asteroid_collisions: list[tuple[float, int, int]] = []
             for ship_idx, ship in enumerate(liveships):
@@ -400,18 +401,19 @@ class KesslerGame:
                                 i -= 1
                             ship_asteroid_collisions.insert(i, (collision_start_time, ship_idx, ast_idx))
 
-            ships_to_cull: list[int] = []
+            # Remember that just because a ship took damage this frame, doesn't mean it's dead (out of lives)
+            ships_exempt_from_further_damage: list[int] = []
             asteroids_to_cull.clear()
             # Resolve in time order
             for _, ship_idx, ast_idx in ship_asteroid_collisions:
-                if ship_idx in ships_to_cull or ast_idx in asteroids_to_cull:
-                    # This pair is invalid because one or two of them are already dead
+                if ship_idx in ships_exempt_from_further_damage or ast_idx in asteroids_to_cull:
+                    # This pair is invalid because one or two of them are already hit
                     continue
                 ship = liveships[ship_idx]
                 new_asteroids.extend(asteroids[ast_idx].destruct(impactor=ship, random_ast_split=self.random_ast_splits))
                 ship.asteroids_hit += 1
                 ship.destruct(map_size=scenario.map_size)
-                ships_to_cull.append(ship_idx)
+                ships_exempt_from_further_damage.append(ship_idx)
                 asteroids_to_cull.append(ast_idx)
                 cull_ships = True
 
@@ -453,22 +455,25 @@ class KesslerGame:
                                 ship_ship_collisions.insert(i, (collision_start_time, ship1_idx, ship2_idx))
 
             for _, ship1_idx, ship2_idx in ship_ship_collisions:
-                if ship1_idx in ships_to_cull or ship2_idx in ships_to_cull:
+                if ship1_idx in ships_exempt_from_further_damage or ship2_idx in ships_exempt_from_further_damage:
                     continue
                 ship1 = liveships[ship1_idx]
                 ship2 = liveships[ship2_idx]
                 assert ship1.alive and ship2.alive
                 ship1.destruct(map_size=scenario.map_size)
                 ship2.destruct(map_size=scenario.map_size)
-                ships_to_cull.append(ship1_idx)
-                ships_to_cull.append(ship2_idx)
+                ships_exempt_from_further_damage.append(ship1_idx)
+                ships_exempt_from_further_damage.append(ship2_idx)
                 cull_ships = True
 
-            # Cull ships if needed
+            # Cull ships if they are all out of lives
+            # We don't cull a ship just because it took damage this frame! They may still have more lives.
             if cull_ships:
-                liveships = [ship for ship in liveships if ship.alive]
-                if not self.competition_safe_mode:
-                    game_state.update_ships([ship.state for ship in liveships])
+                new_liveships = [ship for ship in liveships if ship.alive]
+                if len(liveships) != len(new_liveships):
+                    liveships = new_liveships
+                    if not self.competition_safe_mode:
+                        game_state.update_ships([ship.state for ship in liveships])
 
             # Update performance tracker with collisions timing
             if self.perf_tracker:
