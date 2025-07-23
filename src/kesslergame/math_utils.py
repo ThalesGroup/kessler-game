@@ -200,8 +200,8 @@ def find_first_leq_zero(
     f: Callable[[float], float],
     a: float,
     b: float,
-    tol: float = 1e-8,
-    max_iter: int = 100
+    tol: float = 1e-12,
+    max_iter: int = 40
 ) -> float:
     """
     Finds the smallest t in [a, b] such that f(t) <= 0.
