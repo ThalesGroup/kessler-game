@@ -7,14 +7,6 @@ from math import isnan, sqrt, hypot, dist, nan, inf, isfinite
 
 from .math_utils import solve_quadratic, project_point_onto_segment_and_get_t, analytic_ship_movement_integration, find_first_leq_zero
 
-'''
-collision_start_time = ship_asteroid_continuous_collision_time(
-    ship.x, ship.y, ship.radius, ship.integration_initial_states,
-    asteroid.x, asteroid.y, asteroid.vx, asteroid.vy, asteroid.radius,
-    self.delta_time
-)
-'''
-
 
 def ship_asteroid_continuous_collision_time(ship_x: float, ship_y: float, ship_r: float, ship_speed: float,
                                             ship_integration_initial_states: list[tuple[float, float, float, float, float, float, float, float]],
@@ -66,7 +58,7 @@ def ship_asteroid_continuous_collision_time(ship_x: float, ship_y: float, ship_r
                 break # Break since no more full intervals will lie beyond this, as the integral is assumed to be from 0 to t, where t <= 0
             else:
                 # This interval is fully included within t. Add the full integral amount
-                assert t <= end_t, f"{t=} {end_t=} {start_t=}"
+                assert t <= end_t
                 dx_sum += dx
                 dy_sum += dy
         sx = ship_x + dx_sum
@@ -175,7 +167,7 @@ def collision_time_interval(
     r: float # Circle radius
 ) -> tuple[float, float]:
     """
-    Returns the time interval [t0, t1] where the moving segment (A,B) and moving circle intersect.
+    Returns the time interval [t0, t1] where the moving segment (A, B) and moving circle intersect.
     Returns (nan, nan) if there is no interception.
 
     Conceptually, we use the frame of reference of the asteroid, and use positions and velocities relative from it.
@@ -230,13 +222,16 @@ def collision_time_interval(
         return (nan, nan)
 
     t0 = inf
+    if not isnan(t0_A):
+        t0 = t0_A
+    if not isnan(t0_B) and t0_B < t0:
+        t0 = t0_B
+
     t1 = -inf
-    for t in [t0_A, t0_B]:
-        if not isnan(t):
-            t0 = min(t0, t)
-    for t in [t1_A, t1_B]:
-        if not isnan(t):
-            t1 = max(t1, t)
+    if not isnan(t1_A):
+        t1 = t1_A
+    if not isnan(t1_B) and t1_B > t1:
+        t1 = t1_B
 
     # Mid-segment "side swipe" collisions
     # Compute the perpendicular axis n to the segment (A->B); positive to the left of AB

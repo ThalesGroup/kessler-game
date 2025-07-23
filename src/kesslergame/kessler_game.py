@@ -4,8 +4,8 @@
 # this source code package.
 
 import time
-import math
 
+from math import inf, isnan
 from typing import Any, TypedDict, cast
 from enum import Enum
 
@@ -52,7 +52,7 @@ class KesslerGame:
         self.graphics_type: GraphicsType = settings.get("graphics_type", GraphicsType.Tkinter)
         self.graphics_obj: KesslerGraphics | None = settings.get("graphics_obj", None)
         self.realtime_multiplier: float = settings.get("realtime_multiplier", 0.0 if self.graphics_type==GraphicsType.NoGraphics else 1.0)
-        self.time_limit: float = settings.get("time_limit", math.inf)
+        self.time_limit: float = settings.get("time_limit", inf)
         self.random_ast_splits: bool = settings.get("random_ast_splits", False)
         self.competition_safe_mode: bool = settings.get("competition_safe_mode", True)
 
@@ -316,7 +316,7 @@ class KesslerGame:
                 closest_sq_dist: float
                 for ast_idx, asteroid in enumerate(asteroids):
                     closest_mine = None
-                    closest_sq_dist = math.inf
+                    closest_sq_dist = inf
                     for mine in detonating_mines:
                         dx = asteroid.x - mine.x
                         dy = asteroid.y - mine.y
@@ -338,7 +338,7 @@ class KesslerGame:
                         continue
                     assert ship.alive
                     closest_mine = None
-                    closest_sq_dist = math.inf
+                    closest_sq_dist = inf
                     for mine in detonating_mines:
                         dx = ship.x - mine.x
                         dy = ship.y - mine.y
@@ -393,7 +393,7 @@ class KesslerGame:
                             asteroid.x, asteroid.y, asteroid.vx, asteroid.vy, asteroid.radius, asteroid.speed,
                             self.delta_time
                         )
-                        if not math.isnan(collision_start_time):
+                        if not isnan(collision_start_time):
                             assert -self.delta_time <= collision_start_time <= 0.0
                             # Insert chronologically
                             i = len(ship_asteroid_collisions)
@@ -446,7 +446,7 @@ class KesslerGame:
                                 ship2.x, ship2.y, ship2.radius, ship2.speed, ship2.integration_initial_states,
                                 self.delta_time
                             )
-                            if collision_start_time is not None and not math.isnan(collision_start_time):
+                            if collision_start_time is not None and not isnan(collision_start_time):
                                 assert -self.delta_time <= collision_start_time <= 0.0
                                 # Insert chronologically
                                 i = len(ship_ship_collisions)
@@ -562,6 +562,6 @@ class TrainerEnvironment(KesslerGame):
             'prints_on': settings.get("prints_on", False),
             'graphics_type': GraphicsType.NoGraphics,
             'realtime_multiplier': 0,
-            'time_limit': settings.get("time_limit", math.inf)
+            'time_limit': settings.get("time_limit", inf)
         }
         super().__init__(trainer_settings)
