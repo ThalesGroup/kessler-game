@@ -21,7 +21,8 @@ class Ship:
         'drag', 'radius', 'mass', '_respawning', '_respawn_time', '_fire_limiter',
         '_fire_time', '_mine_limiter', '_mine_deploy_time', 'mines_remaining',
         'bullets_remaining', 'bullets_shot', 'mines_dropped', 'bullets_hit',
-        'mines_hit', 'asteroids_hit', 'custom_sprite_path', '_state', '_ownstate'
+        'mines_hit', 'asteroids_hit', 'custom_sprite_path', 'integration_initial_states',
+        '_state', '_ownstate'
     )
     def __init__(self, ship_id: int,
                  position: tuple[float, float],
@@ -51,6 +52,12 @@ class Ship:
         self.deaths: int = 0
         self.team: int = team
         self.team_name: str = team_name if team_name is not None else 'Team ' + str(self.team)
+
+        # To be able to perform continuous collision detection between the ship and other objects,
+        # We need to store the stages of integration over the previous frame
+        # So that the integration can be re-done in reverse to trace out the ship's exact path
+        # The tuple is (start_time_in_s_from_beginning_of_frame, integration_duration_s, v0, a, theta0, omega)
+        self.integration_initial_states: list[tuple[float, float, float, float, float, float]] = []
 
         # Controller inputs
         self.thrust: float = 0.0
@@ -253,6 +260,7 @@ class Ship:
         # Store speed and heading BEFORE acceleration/thrust for integration
         initial_speed = self.speed
         theta0 = math.radians(self.heading)  # convert to radians
+        self.integration_initial_states.clear()
 
         is_moving: bool = abs(initial_speed) > 1e-12
 
@@ -306,14 +314,16 @@ class Ship:
                     v1 = max_speed
 
         if t1 is None:
-            # No exceeding limit within this step, use normal single-step analytic integration
+            # No exceeding limit within this step, use normal single-phase analytic integration
             dx, dy = analytic_ship_movement_integration(initial_speed, net_acc, theta0, omega, delta_time)
             self.x = (x0 + dx) % map_size[0]
             self.y = (y0 + dy) % map_size[1]
             self.speed = initial_speed + net_acc * delta_time
+            # Append the end state, so we can reverse-integrate later by plugging in a negative time
+            self.integration_initial_states.append((0.0, -delta_time, self.speed, net_acc, theta0 + omega * delta_time, omega))
         else:
             # 2-phase integration splitting frame into two periods: (i) accelerate to speed limit or zero, (ii) coasting or stationary
-            # Phase 1: accelerating from vi to v1 over t1
+            # Phase 1: accelerating from v0 to v1 over t1
             dx1, dy1 = analytic_ship_movement_integration(initial_speed, net_acc, theta0, omega, t1)
             theta1 = theta0 + omega * t1
 
@@ -324,6 +334,11 @@ class Ship:
             self.x = (x0 + dx1 + dx2) % map_size[0]
             self.y = (y0 + dy1 + dy2) % map_size[1]
             self.speed = v1  # Either stopped or clamped
+
+            # Append the end state, so we can reverse-integrate later by plugging in a negative time
+            self.integration_initial_states.append((0.0, -t2, self.speed, accel_phase2, theta1 + omega * t2, omega))
+            # And append the midpoint of the integration
+            self.integration_initial_states.append((-t2, -delta_time, self.speed, net_acc, theta1, omega))
 
         # Clamp speed after acceleration (This is only needed in case of floating point error, but is otherwise unnecessary)
         if abs(self.speed) > self.max_speed:

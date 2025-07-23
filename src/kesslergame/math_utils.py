@@ -4,6 +4,7 @@
 # this source code package.
 
 from math import sin, cos, nan, inf, copysign, sqrt
+from typing import Callable
 
 def solve_quadratic(a: float, b: float, c: float) -> tuple[float, float]:
     """
@@ -138,3 +139,98 @@ def analytic_ship_movement_integration(v0: float, a: float, theta0: float, omega
         dx = (v0 * sin_diff + (a / omega) * (cos_diff + delta_theta * sin_theta1)) / omega
         dy = (-v0 * cos_diff + (a / omega) * (sin_diff - delta_theta * cos_theta1)) / omega
     return dx, dy
+
+def find_first_leq_zero(
+    f: Callable[[float], float],
+    a: float,
+    b: float,
+    tol: float = 1e-8,
+    max_iter: int = 50
+) -> float:
+    """
+    Finds the smallest value t in [a, b] such that f(t) <= 0.
+    If no such t exists, returns nan.
+    Strategy:
+    - If f(a) <= 0, return a.
+    - If f(a) > 0 and f(b) <= 0, bisect for smallest t where f(t) <= 0.
+    - If f(a) > 0 and f(b) > 0, estimate derivatives. if critical point found, it's a min so search for it.
+      If min is below zero, bisect to find leftmost solution.
+    - Otherwise, return nan.
+    Parameters:
+        f (Callable[[float], float]): The function to evaluate.
+        a (float): Lower bound of the interval.
+        b (float): Upper bound of the interval.
+        tol (float): Tolerance for root finding.
+        max_iter (int): Maximum bisection iterations.
+    Returns:
+        float: The smallest t in [a,b] with f(t)<=0, or nan if none exists.
+    """
+
+    def estimate_derivative(f: Callable[[float], float], x: float, h: float = 1e-8) -> float:
+        """
+        Estimate the derivative of f at x via finite difference.
+        """
+        return (f(x + h) - f(x)) / h
+
+    def bisect_first_below_zero(
+        f: Callable[[float], float], 
+        left: float, 
+        right: float
+    ) -> float:
+        """
+        Standard bisection to find smallest t in [left, right] with f(t) <= 0.
+        Assumes f(left) > 0, f(right) <= 0.
+        """
+        for _ in range(max_iter):
+            mid: float = (left + right) / 2
+            if f(mid) <= 0:
+                right = mid
+            else:
+                left = mid
+            if abs(right - left) < tol:
+                return right if f(right) <= 0 else nan
+        return right if f(right) <= 0 else nan
+
+    def bisect_derivative_zero(
+        f: Callable[[float], float],
+        left: float,
+        right: float
+    ) -> float:
+        """
+        Bisection search for t in [left, right] where f'(t) = 0.
+        Assumes f'(left) < 0, f'(right) > 0.
+        Returns approximate critical point.
+        """
+        for _ in range(max_iter):
+            mid: float = (left + right) / 2
+            d_left: float = estimate_derivative(f, left)
+            d_mid: float = estimate_derivative(f, mid)
+
+            if d_left * d_mid <= 0:
+                right = mid
+            else:
+                left = mid
+            if abs(right - left) < tol:
+                return (left + right) / 2
+        return (left + right) / 2
+
+    fa: float = f(a)
+    fb: float = f(b)
+    if fa <= 0:
+        return a
+    if fb <= 0:
+        return bisect_first_below_zero(f, a, b)
+
+    # Estimate derivatives at endpoints
+    da: float = estimate_derivative(f, a)
+    db: float = estimate_derivative(f, b)
+    if da < 0 and db > 0:
+        # Possible minimum inside
+        t_c: float = bisect_derivative_zero(f, a, b)
+        f_tc: float = f(t_c)
+        if f_tc <= 0:
+            # Bisect for first zero between a and t_c
+            return bisect_first_below_zero(f, a, t_c)
+
+    # Otherwise: no such t
+    return nan

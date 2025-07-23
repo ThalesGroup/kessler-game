@@ -389,11 +389,11 @@ class KesslerGame:
                 if ship.alive and not ship.is_respawning:
                     for ast_idx, asteroid in enumerate(asteroids):
                         collision_start_time = ship_asteroid_continuous_collision_time(
-                            ship.x, ship.y, ship.vx, ship.vy, ship.radius,
+                            ship.x, ship.y, ship.radius, ship.speed, ship.integration_initial_states,
                             asteroid.x, asteroid.y, asteroid.vx, asteroid.vy, asteroid.radius,
                             self.delta_time
                         )
-                        if collision_start_time is not None and not math.isnan(collision_start_time):
+                        if not math.isnan(collision_start_time):
                             assert -self.delta_time <= collision_start_time <= 0.0
                             # Insert chronologically
                             i = len(ship_asteroid_collisions)
@@ -442,8 +442,8 @@ class KesslerGame:
                         ship2 = liveships[ship2_idx]
                         if ship2.alive and not ship2.is_respawning:
                             collision_start_time = ship_ship_continuous_collision_time(
-                                ship1.x, ship1.y, ship1.vx, ship1.vy, ship1.radius,
-                                ship2.x, ship2.y, ship2.vx, ship2.vy, ship2.radius,
+                                ship1.x, ship1.y, ship1.radius, ship1.speed, ship1.integration_initial_states,
+                                ship2.x, ship2.y, ship2.radius, ship2.speed, ship2.integration_initial_states,
                                 self.delta_time
                             )
                             if collision_start_time is not None and not math.isnan(collision_start_time):

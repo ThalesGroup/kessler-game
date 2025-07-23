@@ -5,13 +5,143 @@
 
 from math import isnan, sqrt, hypot, dist, nan, inf, isfinite
 
-from .math_utils import solve_quadratic, project_point_onto_segment_and_get_t
+from .math_utils import solve_quadratic, project_point_onto_segment_and_get_t, analytic_ship_movement_integration, find_first_leq_zero
 
-def ship_asteroid_continuous_collision_time():
-    pass
+'''
+collision_start_time = ship_asteroid_continuous_collision_time(
+    ship.x, ship.y, ship.radius, ship.integration_initial_states,
+    asteroid.x, asteroid.y, asteroid.vx, asteroid.vy, asteroid.radius,
+    self.delta_time
+)
+'''
 
-def ship_ship_continuous_collision_time():
-    pass
+
+def ship_asteroid_continuous_collision_time(ship_x: float, ship_y: float, ship_r: float, ship_speed: float,
+                                            ship_integration_initial_states: list[tuple[float, float, float, float, float, float]],
+                                            ast_x: float, ast_y: float, ast_vx: float, ast_vy: float, ast_r: float, delta_time: float) -> float:
+    # Given the asteroid and ship states at this instant, this function checks whether a collision
+    # between them has occurred anytime within the past delta_time seconds.
+    # This function returns nan if not, and returns t, the earliest time of collision where -delta_time <= t <= 0.0, if a collision was detected.
+    
+    # The asteroid moves at constant velocity
+    # The ship can accelerate, and move in a spiral path. Integration is required to solve for its movement.
+
+    # Wrapping is NOT CONSIDERED. That would make things too complex, and is not necessary 99.999999% of the time.
+    # Not considering wrapping will only introduce false negatives, and not false positives, so this will be lenient for players.
+
+    # First, we do an early rejection check. If the asteroid and ship are far enough away that with their combined velocities
+    # it is impossible that they could have collided within the past delta_time seconds, then return nan
+    combined_vel = abs(ship_speed) + sqrt(ast_vx * ast_vx + ast_vy * ast_vy)
+    delta_x = ship_x - ast_x
+    delta_y = ship_y - ast_y
+    rad_sum = ship_r + ast_r
+    separation = sqrt(delta_x * delta_x + delta_y * delta_y) - rad_sum
+    # if separation <= 0.0 then we collided, but we still go through the rest of the function to find when it first happened
+    if separation >= delta_time * combined_vel:
+        # There is no possible way these could have been colliding in the time interval [-delta_time, 0.0]
+        # even if they were booking it away from each other in this past frame
+        return nan
+
+    # This is the function we want to root find
+    def squared_separation_between_ship_and_asteroid_at_t(t: float) -> float:
+        # Give some leeway on the edges, so we can estimate the derivative
+        assert -delta_time - 1e-7 <= t <= 1e-7
+        # Back-extrapolate the asteroid
+        ax = ast_x + ast_vx * t
+        ay = ast_y + ast_vy * t
+        dx_sum = 0.0
+        dy_sum = 0.0
+        # To get the position of the ship in the past, we integrate its position backward
+        # using the integration intervals we stored in the ship state when it was integrating it forward in time.
+        # If the integral is split into multiple time segments, add them all up going backward in time,
+        # until we hit t, the end point of the integration
+        for ship_initial_state in ship_integration_initial_states:
+            start_t, end_t, v0, a, theta0, omega = ship_initial_state
+            assert end_t - start_t <= 0.0
+            if end_t - 1e-7 <= t <= start_t + 1e-7:
+                # We need to include this interval since t lies in the middle of it
+                dx, dy = analytic_ship_movement_integration(v0, a, theta0, omega, t - start_t)
+                dx_sum += dx
+                dy_sum += dy
+        sx = ship_x + dx_sum
+        sy = ship_y + dy_sum
+        dist_x = ax - sx
+        dist_y = ay - sy
+        rad_sum = ship_r + ast_r
+        # If this return value is positive, the objects are not colliding. If they are negative or zero, they are.
+        return dist_x * dist_x + dist_y * dist_y - rad_sum * rad_sum
+
+    return find_first_leq_zero(squared_separation_between_ship_and_asteroid_at_t, -delta_time, 0.0)
+
+
+def ship_ship_continuous_collision_time(ship1_x: float, ship1_y: float, ship1_r: float, ship1_speed: float,
+                                        ship1_integration_initial_states: list[tuple[float, float, float, float, float, float]],
+                                        ship2_x: float, ship2_y: float, ship2_r: float, ship2_speed: float,
+                                        ship2_integration_initial_states: list[tuple[float, float, float, float, float, float]], delta_time: float) -> float:
+    # Given the two ship states at this instant, this function checks whether a collision
+    # between them has occurred anytime within the past delta_time seconds.
+    # This function returns nan if not, and returns t, the earliest time of collision where -delta_time <= t <= 0.0, if a collision was detected.
+
+    # Both ships can accelerate and move in spiral paths. Integration is required to solve for their movements.
+
+    # Wrapping is NOT CONSIDERED. That would make things too complex, and is not necessary 99.999999% of the time.
+    # Not considering wrapping will only introduce false negatives, and not false positives, so this will be lenient for players.
+
+    # First, we do an early rejection check. If the ships are far enough away that with their combined velocities
+    # it is impossible that they could have collided within the past delta_time seconds, then return nan
+    combined_vel = abs(ship1_speed) + abs(ship2_speed)
+    delta_x = ship1_x - ship2_x
+    delta_y = ship1_y - ship2_y
+    rad_sum = ship1_r + ship2_r
+    separation = sqrt(delta_x * delta_x + delta_y * delta_y) - rad_sum
+    # if separation <= 0.0 then we collided, but we still go through the rest of the function to find when it first happened
+    if separation >= delta_time * combined_vel:
+        # There is no possible way these could have been colliding in the time interval [-delta_time, 0.0]
+        # even if they were booking it away from each other in this past frame
+        return nan
+
+    # This is the function we want to root find
+    def squared_separation_between_ships_at_t(t: float) -> float:
+        # Give some leeway on the edges, so we can estimate the derivative
+        assert -delta_time - 1e-7 <= t <= 1e-7
+
+        dx1_sum = 0.0
+        dy1_sum = 0.0
+        dx2_sum = 0.0
+        dy2_sum = 0.0
+
+        # Integrate ship 1 position backward in time
+        for state in ship1_integration_initial_states:
+            start_t, end_t, v0, a, theta0, omega = state
+            assert end_t - start_t <= 0.0
+            if end_t - 1e-7 <= t <= start_t + 1e-7:
+                dx, dy = analytic_ship_movement_integration(v0, a, theta0, omega, t - start_t)
+                dx1_sum += dx
+                dy1_sum += dy
+
+        # Integrate ship 2 position backward in time
+        for state in ship2_integration_initial_states:
+            start_t, end_t, v0, a, theta0, omega = state
+            assert end_t - start_t <= 0.0
+            if end_t - 1e-7 <= t <= start_t + 1e-7:
+                dx, dy = analytic_ship_movement_integration(v0, a, theta0, omega, t - start_t)
+                dx2_sum += dx
+                dy2_sum += dy
+
+        sx1 = ship1_x + dx1_sum
+        sy1 = ship1_y + dy1_sum
+        sx2 = ship2_x + dx2_sum
+        sy2 = ship2_y + dy2_sum
+
+        dist_x = sx2 - sx1
+        dist_y = sy2 - sy1
+        rad_sum = ship1_r + ship2_r
+
+        # If this return value is positive, the objects are not colliding. If they are negative or zero, they are.
+        return dist_x * dist_x + dist_y * dist_y - rad_sum * rad_sum
+
+    return find_first_leq_zero(squared_separation_between_ships_at_t, -delta_time, 0.0)
+
 
 def collision_time_interval(
     ax: float, # Line seg start
@@ -156,6 +286,7 @@ def collision_time_interval(
 
     return (t0, t1)
 
+
 def project_origin_onto_segment_dist_sq(x1: float, y1: float, x2: float, y2: float) -> float:
     # Given a segment from (x1, y1) to (x2, y2), project the origin (0, 0)
     # onto this segment and return the squared distance from the origin
@@ -186,6 +317,7 @@ def project_origin_onto_segment_dist_sq(x1: float, y1: float, x2: float, y2: flo
 
     # Return the squared distance from the origin to this closest point.
     return px * px + py * py
+
 
 def circle_line_collision_continuous(
     ax0: float,
@@ -311,6 +443,7 @@ def circle_line_collision_continuous(
     '''
     return False
 
+
 def circle_line_collision_discrete(line_A: tuple[float, float], line_B: tuple[float, float], center: tuple[float, float], radius: float) -> bool:
     # Unused
     # Accurate version of the discrete collision check
@@ -362,6 +495,7 @@ def circle_line_collision_discrete(line_A: tuple[float, float], line_B: tuple[fl
 
     # If the squared distance of the closest point on line segment to the center of circle is less than or equal to the squared radius, there is a collision
     return dist_sq <= radius * radius
+
 
 def circle_line_collision_old(line_A: tuple[float, float], line_B: tuple[float, float], center: tuple[float, float], radius: float) -> bool:
     # Unused
