@@ -5,7 +5,7 @@
 
 from typing import Any
 import random
-from math import isclose
+from math import isclose, inf
 
 from .ship import Ship
 from .asteroid import Asteroid
@@ -44,7 +44,7 @@ def nudge_asteroid_away_from_border(asteroid_dict: dict[str, Any], map_size: tup
 class Scenario:
     def __init__(self, name: str = "Unnamed", num_asteroids: int = 0, asteroid_states: list[dict[str, Any]] | None = None,
                  ship_states: list[dict[str, Any]] | None = None, map_size: tuple[int, int] | None = None, seed: int | None = None,
-                 time_limit: float = float("inf"), ammo_limit_multiplier: float = 0.0, stop_if_no_ammo: bool = False) -> None:
+                 time_limit: float = inf, ammo_limit_multiplier: float = 0.0, stop_if_no_ammo: bool = False) -> None:
         """
         Specify the starting state of the environment, including map dimensions and optional features
 
@@ -83,7 +83,7 @@ class Scenario:
         self.asteroid_states = list()
 
         # Set the ammo limit multiplier
-        if ammo_limit_multiplier < 0:
+        if ammo_limit_multiplier < 0.0:
             raise ValueError("Ammo limit multiplier must be > 0."
                              "If unlimited ammo is desired, do not pass the ammo limit multiplier")
         else:
@@ -141,6 +141,7 @@ class Scenario:
             else:
                 return temp
         else:
+            # Unlimited
             return -1
 
     @staticmethod

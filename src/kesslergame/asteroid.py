@@ -49,7 +49,7 @@ class Asteroid:
         # Set position as specified
         self.x, self.y = position
 
-        # Set collision radius based on size # TODO May need to change once size can be visualized
+        # Set collision radius based on size
         self.radius: float = self.size * 8.0
 
         self.mass: float = 0.25 * math.pi * self.radius * self.radius
@@ -93,7 +93,7 @@ class Asteroid:
         """ Move the asteroid based on velocity"""
         self.x = (self.x + self.vx * delta_time) % map_size[0]
         self.y = (self.y + self.vy * delta_time) % map_size[1]
-        # Update the state dict without a dict lookup, using the mutable list storing position
+        # Update mutable state
         self._state[0] = self.x
         self._state[1] = self.y
         self.angle += delta_time * self.turnrate

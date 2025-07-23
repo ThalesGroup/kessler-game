@@ -355,7 +355,7 @@ class Ship:
         self.vx = math.cos(rad_heading) * self.speed
         self.vy = math.sin(rad_heading) * self.speed
 
-        # Update the state dict
+        # Update the mutable state
         self.update_state()
 
         return new_bullet, new_mine
