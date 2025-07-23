@@ -36,8 +36,7 @@ def ship_asteroid_continuous_collision_time(ship_x: float, ship_y: float, ship_r
 
     # This is the function we want to root find
     def squared_separation_between_ship_and_asteroid_at_t(t: float) -> float:
-        # Give some leeway on the edges, so we can estimate the derivative
-        assert -delta_time - 1e-7 <= t <= 1e-7
+        assert -delta_time <= t <= 0.0
         # Back-extrapolate the asteroid
         ax = ast_x + ast_vx * t
         ay = ast_y + ast_vy * t
@@ -50,7 +49,7 @@ def ship_asteroid_continuous_collision_time(ship_x: float, ship_y: float, ship_r
         for ship_initial_state in ship_integration_initial_states:
             start_t, end_t, v0, a, theta0, omega, dx, dy = ship_initial_state
             assert end_t - start_t <= 0.0
-            if end_t - 1e-7 <= t <= start_t + 1e-7:
+            if end_t < t <= start_t:
                 # We need to include this interval since t lies in the middle of it
                 dx, dy = analytic_ship_movement_integration(v0, a, theta0, omega, t - start_t)
                 dx_sum += dx
@@ -100,8 +99,7 @@ def ship_ship_continuous_collision_time(ship1_x: float, ship1_y: float, ship1_r:
 
     # This is the function we want to root find
     def squared_separation_between_ships_at_t(t: float) -> float:
-        # Give some leeway on the edges, so we can estimate the derivative
-        assert -delta_time - 1e-7 <= t <= 1e-7
+        assert -delta_time <= t <= 0.0
 
         dx1_sum = 0.0
         dy1_sum = 0.0
@@ -112,7 +110,7 @@ def ship_ship_continuous_collision_time(ship1_x: float, ship1_y: float, ship1_r:
         for state in ship1_integration_initial_states:
             start_t, end_t, v0, a, theta0, omega, dx, dy = state
             assert end_t - start_t <= 0.0
-            if end_t - 1e-7 <= t <= start_t + 1e-7:
+            if end_t < t <= start_t:
                 dx, dy = analytic_ship_movement_integration(v0, a, theta0, omega, t - start_t)
                 dx1_sum += dx
                 dy1_sum += dy
@@ -127,7 +125,7 @@ def ship_ship_continuous_collision_time(ship1_x: float, ship1_y: float, ship1_r:
         for state in ship2_integration_initial_states:
             start_t, end_t, v0, a, theta0, omega, dx, dy = state
             assert end_t - start_t <= 0.0
-            if end_t - 1e-7 <= t <= start_t + 1e-7:
+            if end_t < t <= start_t:
                 dx, dy = analytic_ship_movement_integration(v0, a, theta0, omega, t - start_t)
                 dx2_sum += dx
                 dy2_sum += dy
