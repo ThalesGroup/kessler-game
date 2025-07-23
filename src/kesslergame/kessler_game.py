@@ -390,7 +390,7 @@ class KesslerGame:
                     for ast_idx, asteroid in enumerate(asteroids):
                         collision_start_time = ship_asteroid_continuous_collision_time(
                             ship.x, ship.y, ship.radius, ship.speed, ship.integration_initial_states,
-                            asteroid.x, asteroid.y, asteroid.vx, asteroid.vy, asteroid.radius, asteroid.speed
+                            asteroid.x, asteroid.y, asteroid.vx, asteroid.vy, asteroid.radius, asteroid.speed,
                             self.delta_time
                         )
                         if not math.isnan(collision_start_time):
