@@ -182,14 +182,14 @@ def find_first_leq_zero(
         Assumes f(left) > 0, f(right) <= 0.
         """
         for _ in range(max_iter):
-            mid: float = (left + right) / 2
-            if f(mid) <= 0:
+            mid: float = 0.5 * (left + right)
+            if f(mid) <= 0.0:
                 right = mid
             else:
                 left = mid
             if abs(right - left) < tol:
-                return right if f(right) <= 0 else nan
-        return right if f(right) <= 0 else nan
+                return right if f(right) <= 0.0 else nan
+        return right if f(right) <= 0.0 else nan
 
     def bisect_derivative_zero(
         f: Callable[[float], float],
@@ -202,33 +202,33 @@ def find_first_leq_zero(
         Returns approximate critical point.
         """
         for _ in range(max_iter):
-            mid: float = (left + right) / 2
+            mid: float = 0.5 * (left + right)
             d_left: float = estimate_derivative(f, left)
             d_mid: float = estimate_derivative(f, mid)
 
-            if d_left * d_mid <= 0:
+            if d_left * d_mid <= 0.0:
                 right = mid
             else:
                 left = mid
             if abs(right - left) < tol:
-                return (left + right) / 2
-        return (left + right) / 2
+                return 0.5 * (left + right)
+        return 0.5 * (left + right)
 
     fa: float = f(a)
     fb: float = f(b)
-    if fa <= 0:
+    if fa <= 0.0:
         return a
-    if fb <= 0:
+    if fb <= 0.0:
         return bisect_first_below_zero(f, a, b)
 
     # Estimate derivatives at endpoints
     da: float = estimate_derivative(f, a)
     db: float = estimate_derivative(f, b)
-    if da < 0 and db > 0:
+    if da < 0.0 and db > 0.0:
         # Possible minimum inside
         t_c: float = bisect_derivative_zero(f, a, b)
         f_tc: float = f(t_c)
-        if f_tc <= 0:
+        if f_tc <= 0.0:
             # Bisect for first zero between a and t_c
             return bisect_first_below_zero(f, a, t_c)
 
