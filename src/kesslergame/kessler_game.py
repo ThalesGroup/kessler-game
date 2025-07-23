@@ -5,7 +5,7 @@
 
 import time
 
-from math import inf, isnan
+from math import inf, isnan, isfinite
 from typing import Any, TypedDict, cast
 from enum import Enum
 
@@ -151,6 +151,9 @@ class KesslerGame:
 
             # Loop through each controller/ship combo and apply their actions
             for ship_idx, ship in enumerate(liveships):
+                if controllers[ship_idx].ship_id != ship.id:
+                    raise RuntimeError("Controller and ship ID do not match")
+                
                 # Generate game_state info to send to controller
                 game_state_to_controller: GameState
                 if self.competition_safe_mode:
@@ -175,10 +178,21 @@ class KesslerGame:
                     )
                 else:
                     game_state_to_controller = game_state
+                
                 # Evaluate each controller letting control be applied
-                if controllers[ship_idx].ship_id != ship.id:
-                    raise RuntimeError("Controller and ship ID do not match")
-                ship.thrust, ship.turn_rate, ship.fire, ship.drop_mine = controllers[ship_idx].actions(ShipState(ship.ownstate), game_state_to_controller)
+                thrust, turn_rate, fire, drop_mine = controllers[ship_idx].actions(ShipState(ship.ownstate), game_state_to_controller)
+
+                assert isinstance(thrust, (int, float)),    f"Controller {ship_idx} thrust is not a number: {thrust!r}"
+                assert isfinite(float(thrust)),             f"Controller {ship_idx} thrust is not finite: {thrust!r}"
+                assert isinstance(turn_rate, (int, float)), f"Controller {ship_idx} turn_rate is not a number: {turn_rate!r}"
+                assert isfinite(float(turn_rate)),          f"Controller {ship_idx} turn_rate is not finite: {turn_rate!r}"
+                assert isinstance(fire, bool),              f"Controller {ship_idx} fire is not bool: {fire!r}"
+                assert isinstance(drop_mine, bool),         f"Controller {ship_idx} drop_mine is not bool: {drop_mine!r}"
+
+                ship.thrust = float(thrust) # Upcast potential ints to float
+                ship.turn_rate = float(turn_rate)
+                ship.fire = fire
+                ship.drop_mine = drop_mine
 
                 # Update controller evaluation time if performance tracking
                 if self.perf_tracker:
