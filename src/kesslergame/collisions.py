@@ -61,11 +61,14 @@ def ship_asteroid_continuous_collision_time(ship_x: float, ship_y: float, ship_r
             if end_t - 1e-7 <= t <= start_t + 1e-7:
                 # We need to include this interval since t lies in the middle of it
                 dx, dy = analytic_ship_movement_integration(v0, a, theta0, omega, t - start_t)
+                dx_sum += dx
+                dy_sum += dy
+                break # Break since no more full intervals will lie beyond this, as the integral is assumed to be from 0 to t, where t <= 0
             else:
                 # This interval is fully included within t. Add the full integral amount
-                assert t <= end_t
-            dx_sum += dx
-            dy_sum += dy
+                assert t <= end_t, f"{t=} {end_t=} {start_t=}"
+                dx_sum += dx
+                dy_sum += dy
         sx = ship_x + dx_sum
         sy = ship_y + dy_sum
         dist_x = ax - sx
@@ -119,11 +122,14 @@ def ship_ship_continuous_collision_time(ship1_x: float, ship1_y: float, ship1_r:
             assert end_t - start_t <= 0.0
             if end_t - 1e-7 <= t <= start_t + 1e-7:
                 dx, dy = analytic_ship_movement_integration(v0, a, theta0, omega, t - start_t)
+                dx1_sum += dx
+                dy1_sum += dy
+                break # Break since no more full intervals will lie beyond this, as the integral is assumed to be from 0 to t, where t <= 0
             else:
                 # This interval is fully included within t. Add the full integral amount
                 assert t <= end_t
-            dx1_sum += dx
-            dy1_sum += dy
+                dx1_sum += dx
+                dy1_sum += dy
 
         # Integrate ship 2 position backward in time
         for state in ship2_integration_initial_states:
@@ -131,11 +137,14 @@ def ship_ship_continuous_collision_time(ship1_x: float, ship1_y: float, ship1_r:
             assert end_t - start_t <= 0.0
             if end_t - 1e-7 <= t <= start_t + 1e-7:
                 dx, dy = analytic_ship_movement_integration(v0, a, theta0, omega, t - start_t)
+                dx2_sum += dx
+                dy2_sum += dy
+                break # Break since no more full intervals will lie beyond this, as the integral is assumed to be from 0 to t, where t <= 0
             else:
                 # This interval is fully included within t. Add the full integral amount
                 assert t <= end_t
-            dx2_sum += dx
-            dy2_sum += dy
+                dx2_sum += dx
+                dy2_sum += dy
 
         sx1 = ship1_x + dx1_sum
         sy1 = ship1_y + dy1_sum
