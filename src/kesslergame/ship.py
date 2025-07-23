@@ -257,17 +257,20 @@ class Ship:
         is_moving: bool = abs(initial_speed) > 1e-12
 
         # Get direction of motion for drag
-        if abs(initial_speed) > 1e-12:
+        if is_moving:
             motion_sign = math.copysign(1.0, initial_speed)
         else:
             motion_sign = math.copysign(1.0, self.thrust) if abs(self.thrust) > 1e-12 else 0.0
 
+        # Drag will always oppose the direction of motion
         drag_acc = -self.drag * motion_sign
 
         # Combine thrust and drag into one net acceleration
+        # This constant acceleration will apply for the entire duration of this frame, unless we hit the speed cap or hit 0,
+        # in which case we do 0 acceleration after that time for the rest of the frame
         net_acc = self.thrust + drag_acc  # m/s²
         
-        # Analytic position integration, framerate independent
+        # We perform analytic position integration, which is framerate independent
         # The shape that the ship traces out with a constant turn rate and thrust over the previous frame is a type of spiral
         # This spiral can be analytically integrated! Yay!
 
@@ -277,11 +280,13 @@ class Ship:
 
         # Determine if we need to break the frame into two parts
         t1: float | None = None
-        accel_phase2 = 0.0  # default to coasting or stopping in second phase
+        accel_phase2 = 0.0  # default to coasting at max speed, or stopped in second phase
 
         # Case 1: drag will bring us to a stop
         if is_moving and net_acc * initial_speed < 0.0: # Net accel is opposite sign from direction of movement
-            t_to_stop = -initial_speed / net_acc # This is a positive number
+            assert net_acc != 0.0
+            t_to_stop = -initial_speed / net_acc # This is a positive number, and net_acc is nonzero
+            assert t_to_stop >= 0.0
             if 0.0 <= t_to_stop < delta_time:
                 t1 = t_to_stop
                 v1 = 0.0  # Fully stopped
@@ -290,21 +295,24 @@ class Ship:
             max_speed = math.copysign(self.max_speed, initial_speed + net_acc * delta_time)
             if net_acc != 0.0:
                 to_max = (max_speed - initial_speed) / net_acc
-                if 0.0 <= to_max < delta_time and (
-                    (net_acc > 0.0 and initial_speed <= max_speed) or
-                    (net_acc < 0.0 and initial_speed >= max_speed)
-                ):
+                assert to_max >= 0.0
+                # If we'll achieve and exceed max speed within this frame,
+                # or 
+                if 0.0 <= to_max < delta_time:
+                    assert ((net_acc > 0.0 and initial_speed <= max_speed) or (net_acc < 0.0 and initial_speed >= max_speed))
+                    # The starting point for the second integration phase is starting at max speed,
+                    # at the time when we will achieve max speed from the first phase
                     t1 = to_max
-                    v1 = max_speed  # Capped at max
+                    v1 = max_speed
 
         if t1 is None:
-            # No exceeding limit within this step, use normal analytic integration
+            # No exceeding limit within this step, use normal single-step analytic integration
             dx, dy = analytic_ship_movement_integration(initial_speed, net_acc, theta0, omega, delta_time)
             self.x = (x0 + dx) % map_size[0]
             self.y = (y0 + dy) % map_size[1]
             self.speed = initial_speed + net_acc * delta_time
         else:
-            # 2-phase integration: (i) accelerate to speed limit or zero, (ii) coast or stop
+            # 2-phase integration splitting frame into two periods: (i) accelerate to speed limit or zero, (ii) coasting or stationary
             # Phase 1: accelerating from vi to v1 over t1
             dx1, dy1 = analytic_ship_movement_integration(initial_speed, net_acc, theta0, omega, t1)
             theta1 = theta0 + omega * t1
@@ -317,7 +325,7 @@ class Ship:
             self.y = (y0 + dy1 + dy2) % map_size[1]
             self.speed = v1  # Either stopped or clamped
 
-        # Clamp speed after acceleration
+        # Clamp speed after acceleration (This is only needed in case of floating point error, but is otherwise unnecessary)
         if abs(self.speed) > self.max_speed:
             self.speed = math.copysign(self.max_speed, self.speed)
 
