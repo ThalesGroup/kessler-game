@@ -164,7 +164,7 @@ class AsteroidView:
         return cast(float | int | tuple[float, float], getattr(self, key))
 
     def __repr__(self) -> str:
-        return f"<AsteroidView pos={self.position} vel={self.velocity} size={self.size} mass={self.mass} radius={self.radius}>"
+        return f"<Asteroid pos={self.position} vel={self.velocity} size={self.size} mass={self.mass} radius={self.radius}>"
 
 
 class BulletView:
@@ -247,7 +247,7 @@ class BulletView:
         return cast(float | tuple[float, float], getattr(self, key))
 
     def __repr__(self) -> str:
-        return (f"<BulletView pos={self.position} vel={self.velocity} "
+        return (f"<Bullet pos={self.position} vel={self.velocity} "
                 f"tail_delta={self.tail_delta} "
                 f"heading={self.heading:.1f} mass={self.mass} length={self.length}>")
 
@@ -302,7 +302,7 @@ class MineView:
         return cast(float | tuple[float, float], getattr(self, key))
 
     def __repr__(self) -> str:
-        return f"<MineView pos={self.position} mass={self.mass} fuse_time={self.fuse_time} remaining_time={self.remaining_time}>"
+        return f"<Mine pos={self.position} mass={self.mass} fuse_time={self.fuse_time} remaining_time={self.remaining_time}>"
 
 
 class ShipView:
@@ -414,7 +414,7 @@ class ShipView:
 
     def __repr__(self) -> str:
         return (
-            f"<ShipView position={self.position} velocity={self.velocity} "
+            f"<Ship position={self.position} velocity={self.velocity} "
             f"speed={self.speed:.2f} heading={self.heading:.1f} mass={self.mass:.2f} "
             f"radius={self.radius:.2f} id={self.id} team={self.team} "
             f"is_respawning={self.is_respawning} lives_remaining={self.lives_remaining} "
@@ -520,7 +520,7 @@ class ShipOwnView(ShipView):
 
     def __repr__(self) -> str:
         return (
-            f"<ShipOwnView position={self.position} velocity={self.velocity} speed={self.speed:.2f} "
+            f"<OwnShip position={self.position} velocity={self.velocity} speed={self.speed:.2f} "
             f"heading={self.heading:.1f} mass={self.mass:.2f} radius={self.radius:.2f} id={self.id} team={self.team} "
             f"is_respawning={self.is_respawning} lives_remaining={self.lives_remaining} deaths={self.deaths} "
             f"bullets_remaining={self.bullets_remaining} mines_remaining={self.mines_remaining} can_fire={self.can_fire} "
@@ -728,8 +728,8 @@ class ShipState:
 
     def __repr__(self) -> str:
         inner = repr(self._view)
-        if inner.startswith("<ShipOwnView"):
-            inner = "<ShipState" + inner[len("<ShipOwnView"):]
+        if inner.startswith("<OwnShip"):
+            inner = "<ShipState" + inner[len("<OwnShip"):]
         documentation = "\nProperties: Same as keys in ShipState, along with .dict -> dict, .fast_compact -> dict"
         return inner + documentation
 
