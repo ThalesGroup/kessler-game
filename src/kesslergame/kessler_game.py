@@ -222,7 +222,7 @@ class KesslerGame:
             # BULLET-ASTEROID COLLISIONS
             # Resolve all collisions in chronological order instead of list order, for fairness
             # Collect all potential bullet-asteroid collisions
-            collisions: list[tuple[float, int, int]] = []
+            bullet_asteroid_collisions: list[tuple[float, int, int]] = []
             for bul_idx, bullet in enumerate(bullets):
                 for ast_idx, asteroid in enumerate(asteroids):
                     if circle_line_collision_continuous(
@@ -240,16 +240,16 @@ class KesslerGame:
                         collision_time = max(-self.delta_time, collision_start_time)
                         assert -self.delta_time <= collision_time <= 0.0
                         # Inline insertion to keep collisions sorted by time
-                        i = len(collisions)
-                        while i > 0 and collisions[i - 1][0] > collision_time:
+                        i = len(bullet_asteroid_collisions)
+                        while i > 0 and bullet_asteroid_collisions[i - 1][0] > collision_time:
                             i -= 1
-                        collisions.insert(i, (collision_time, bul_idx, ast_idx))
+                        bullet_asteroid_collisions.insert(i, (collision_time, bul_idx, ast_idx))
 
             # Track destroyed bullets/asteroids
             bullets_to_cull.clear()
             asteroids_to_cull.clear()
             # Resolve collisions in chronological order
-            for _, bul_idx, ast_idx in collisions:
+            for _, bul_idx, ast_idx in bullet_asteroid_collisions:
                 if bul_idx in bullets_to_cull or ast_idx in asteroids_to_cull:
                     # This pair is invalid because at least one of these are already gonzo
                     continue
@@ -278,6 +278,8 @@ class KesslerGame:
                     bullets_to_cull.append(bul_idx)
 
             # Remove bullets in O(1) using swap-and-pop based on collected indices
+            # We have to sort the list and reverse it, so that the indices of stuff
+            # yet to be deleted won't change on us.
             for bul_idx in sorted(bullets_to_cull, reverse=True):
                 bullets[bul_idx] = bullets[-1]
                 bullets.pop()
@@ -285,8 +287,7 @@ class KesslerGame:
                     game_state.remove_bullet(bul_idx)
 
             # Remove asteroids in O(1) using swap-and-pop based on collected indices
-            # We have to sort the list and reverse it, so that the indices of stuff
-            # yet to be deleted won't change on us.
+            # Sort list in reverse order, so indices are stable as we cull
             for ast_idx in sorted(asteroids_to_cull, reverse=True):
                 asteroids[ast_idx] = asteroids[-1]
                 asteroids.pop()
@@ -303,9 +304,9 @@ class KesslerGame:
 
 
             # --- MINE-ASTEROID AND MINE-SHIP COLLISIONS ---
-            # In the one-in-a-thousand chance that two mines blow up the same asteroid or ship
+            # In the ultra rare chance that two mines blow up the same asteroid or ship
             # in the same frame, this will credit the closest mine with the score
-            cull_ships: bool = False
+            cull_ships: bool = False # This is a flag set to true if any ships took damage this frame. This does not mean ships will necessarily die this frame!
             detonating_mines: list[Mine] = [mine for mine in mines if mine.detonating]
             # If no mines are detonating, skip everything
             if detonating_mines:
@@ -349,9 +350,10 @@ class KesslerGame:
                             closest_mine = mine
                     if closest_mine is not None:
                         ship.destruct(map_size=scenario.map_size)
-                        cull_ships = True  # Flagged for any ship culling logic elsewhere
+                        cull_ships = True  # Flag so we cull ships later, but ships won't necessarily die since they may still have lives
 
-                # Remove all destroyed asteroids using swap-and-pop
+                # Remove all destroyed asteroids using swap-and-pop O(1)
+                # Do in reverse order so indices are stable
                 for ast_idx in sorted(asteroids_to_cull, reverse=True):
                     asteroids[ast_idx] = asteroids[-1]
                     asteroids.pop()
@@ -363,7 +365,7 @@ class KesslerGame:
                 num_mines: int = len(mines)
                 while mine_idx < num_mines:
                     if mines[mine_idx].detonating:
-                        mines[mine_idx].destruct()
+                        mines[mine_idx].destruct() # Mine destructor actually does nothing :P
                         mines[mine_idx] = mines[-1]
                         mines.pop()
                         num_mines -= 1
@@ -383,7 +385,7 @@ class KesslerGame:
 
             
             # --- SHIP-ASTEROID COLLISIONS ---
-            # Collect all potential ship-asteroid collisions, sorted inline
+            # Collect all potential ship-asteroid collisions, and calculate the times of first collision, and sort
             ship_asteroid_collisions: list[tuple[float, int, int]] = []
             for ship_idx, ship in enumerate(liveships):
                 if ship.alive and not ship.is_respawning:
@@ -394,10 +396,10 @@ class KesslerGame:
                             self.delta_time
                         )
                         if not isnan(collision_start_time):
-                            assert -self.delta_time <= collision_start_time <= 0.0
+                            assert -self.delta_time <= collision_start_time <= 0.0 # Collision happened within past frame
                             # Insert chronologically
                             i = len(ship_asteroid_collisions)
-                            while i > 0 and ship_asteroid_collisions[i-1][0] > collision_start_time:
+                            while i > 0 and ship_asteroid_collisions[i - 1][0] > collision_start_time:
                                 i -= 1
                             ship_asteroid_collisions.insert(i, (collision_start_time, ship_idx, ast_idx))
 
@@ -433,7 +435,8 @@ class KesslerGame:
 
 
 
-            # ---------- SHIP-SHIP COLLISIONS (chronological, fair) ----------
+            # ---------- SHIP-SHIP COLLISIONS ----------
+            # Calculated continuously and chronologically, and is fair, even for multiple ships all colliding
             ship_ship_collisions: list[tuple[float, int, int]] = []
             num_ships = len(liveships)
             for ship1_idx, ship1 in enumerate(liveships):
@@ -446,11 +449,11 @@ class KesslerGame:
                                 ship2.x, ship2.y, ship2.radius, ship2.speed, ship2.integration_initial_states,
                                 self.delta_time
                             )
-                            if collision_start_time is not None and not isnan(collision_start_time):
-                                assert -self.delta_time <= collision_start_time <= 0.0
+                            if not isnan(collision_start_time):
+                                assert -self.delta_time <= collision_start_time <= 0.0 # Collision happened within past frame
                                 # Insert chronologically
                                 i = len(ship_ship_collisions)
-                                while i > 0 and ship_ship_collisions[i-1][0] > collision_start_time:
+                                while i > 0 and ship_ship_collisions[i - 1][0] > collision_start_time:
                                     i -= 1
                                 ship_ship_collisions.insert(i, (collision_start_time, ship1_idx, ship2_idx))
 
@@ -459,7 +462,7 @@ class KesslerGame:
                     continue
                 ship1 = liveships[ship1_idx]
                 ship2 = liveships[ship2_idx]
-                assert ship1.alive and ship2.alive
+                assert ship1.alive and ship2.alive # We already checked that they're alive when doing collision checks
                 ship1.destruct(map_size=scenario.map_size)
                 ship2.destruct(map_size=scenario.map_size)
                 ships_exempt_from_further_damage.append(ship1_idx)
