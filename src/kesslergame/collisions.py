@@ -17,7 +17,7 @@ collision_start_time = ship_asteroid_continuous_collision_time(
 
 
 def ship_asteroid_continuous_collision_time(ship_x: float, ship_y: float, ship_r: float, ship_speed: float,
-                                            ship_integration_initial_states: list[tuple[float, float, float, float, float, float]],
+                                            ship_integration_initial_states: list[tuple[float, float, float, float, float, float, float, float]],
                                             ast_x: float, ast_y: float, ast_vx: float, ast_vy: float, ast_r: float, ast_speed: float, delta_time: float) -> float:
     # Given the asteroid and ship states at this instant, this function checks whether a collision
     # between them has occurred anytime within the past delta_time seconds.
@@ -56,13 +56,16 @@ def ship_asteroid_continuous_collision_time(ship_x: float, ship_y: float, ship_r
         # If the integral is split into multiple time segments, add them all up going backward in time,
         # until we hit t, the end point of the integration
         for ship_initial_state in ship_integration_initial_states:
-            start_t, end_t, v0, a, theta0, omega = ship_initial_state
+            start_t, end_t, v0, a, theta0, omega, dx, dy = ship_initial_state
             assert end_t - start_t <= 0.0
             if end_t - 1e-7 <= t <= start_t + 1e-7:
                 # We need to include this interval since t lies in the middle of it
                 dx, dy = analytic_ship_movement_integration(v0, a, theta0, omega, t - start_t)
-                dx_sum += dx
-                dy_sum += dy
+            else:
+                # This interval is fully included within t. Add the full integral amount
+                assert t <= end_t
+            dx_sum += dx
+            dy_sum += dy
         sx = ship_x + dx_sum
         sy = ship_y + dy_sum
         dist_x = ax - sx
@@ -75,9 +78,9 @@ def ship_asteroid_continuous_collision_time(ship_x: float, ship_y: float, ship_r
 
 
 def ship_ship_continuous_collision_time(ship1_x: float, ship1_y: float, ship1_r: float, ship1_speed: float,
-                                        ship1_integration_initial_states: list[tuple[float, float, float, float, float, float]],
+                                        ship1_integration_initial_states: list[tuple[float, float, float, float, float, float, float, float]],
                                         ship2_x: float, ship2_y: float, ship2_r: float, ship2_speed: float,
-                                        ship2_integration_initial_states: list[tuple[float, float, float, float, float, float]], delta_time: float) -> float:
+                                        ship2_integration_initial_states: list[tuple[float, float, float, float, float, float, float, float]], delta_time: float) -> float:
     # Given the two ship states at this instant, this function checks whether a collision
     # between them has occurred anytime within the past delta_time seconds.
     # This function returns nan if not, and returns t, the earliest time of collision where -delta_time <= t <= 0.0, if a collision was detected.
@@ -112,21 +115,27 @@ def ship_ship_continuous_collision_time(ship1_x: float, ship1_y: float, ship1_r:
 
         # Integrate ship 1 position backward in time
         for state in ship1_integration_initial_states:
-            start_t, end_t, v0, a, theta0, omega = state
+            start_t, end_t, v0, a, theta0, omega, dx, dy = state
             assert end_t - start_t <= 0.0
             if end_t - 1e-7 <= t <= start_t + 1e-7:
                 dx, dy = analytic_ship_movement_integration(v0, a, theta0, omega, t - start_t)
-                dx1_sum += dx
-                dy1_sum += dy
+            else:
+                # This interval is fully included within t. Add the full integral amount
+                assert t <= end_t
+            dx1_sum += dx
+            dy1_sum += dy
 
         # Integrate ship 2 position backward in time
         for state in ship2_integration_initial_states:
-            start_t, end_t, v0, a, theta0, omega = state
+            start_t, end_t, v0, a, theta0, omega, dx, dy = state
             assert end_t - start_t <= 0.0
             if end_t - 1e-7 <= t <= start_t + 1e-7:
                 dx, dy = analytic_ship_movement_integration(v0, a, theta0, omega, t - start_t)
-                dx2_sum += dx
-                dy2_sum += dy
+            else:
+                # This interval is fully included within t. Add the full integral amount
+                assert t <= end_t
+            dx2_sum += dx
+            dy2_sum += dy
 
         sx1 = ship1_x + dx1_sum
         sy1 = ship1_y + dy1_sum

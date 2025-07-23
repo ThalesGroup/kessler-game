@@ -56,8 +56,8 @@ class Ship:
         # To be able to perform continuous collision detection between the ship and other objects,
         # We need to store the stages of integration over the previous frame
         # So that the integration can be re-done in reverse to trace out the ship's exact path
-        # The tuple is (start_time_in_s_from_beginning_of_frame, integration_duration_s, v0, a, theta0, omega)
-        self.integration_initial_states: list[tuple[float, float, float, float, float, float]] = []
+        # The tuple is (start_time_in_s_from_beginning_of_frame, integration_duration_s, v0, a, theta0, omega, full_integral_dx, full_integral_dy)
+        self.integration_initial_states: list[tuple[float, float, float, float, float, float, float, float]] = []
 
         # Controller inputs
         self.thrust: float = 0.0
@@ -320,7 +320,7 @@ class Ship:
             self.y = (y0 + dy) % map_size[1]
             self.speed = initial_speed + net_acc * delta_time
             # Append the end state, so we can reverse-integrate later by plugging in a negative time
-            self.integration_initial_states.append((0.0, -delta_time, self.speed, net_acc, theta0 + omega * delta_time, omega))
+            self.integration_initial_states.append((0.0, -delta_time, self.speed, net_acc, theta0 + omega * delta_time, omega, -dx, -dy))
         else:
             # 2-phase integration splitting frame into two periods: (i) accelerate to speed limit or zero, (ii) coasting or stationary
             # Phase 1: accelerating from v0 to v1 over t1
@@ -336,9 +336,9 @@ class Ship:
             self.speed = v1  # Either stopped or clamped
 
             # Append the end state, so we can reverse-integrate later by plugging in a negative time
-            self.integration_initial_states.append((0.0, -t2, self.speed, accel_phase2, theta1 + omega * t2, omega))
+            self.integration_initial_states.append((0.0, -t2, self.speed, accel_phase2, theta1 + omega * t2, omega, -dx2, -dy2))
             # And append the midpoint of the integration
-            self.integration_initial_states.append((-t2, -delta_time, self.speed, net_acc, theta1, omega))
+            self.integration_initial_states.append((-t2, -delta_time, self.speed, net_acc, theta1, omega, -dx1, -dy1))
 
         # Clamp speed after acceleration (This is only needed in case of floating point error, but is otherwise unnecessary)
         if abs(self.speed) > self.max_speed:
