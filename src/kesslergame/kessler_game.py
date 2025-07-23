@@ -237,8 +237,8 @@ class KesslerGame:
                             asteroid.vx, asteroid.vy,
                             asteroid.radius
                         )
-                        assert -self.delta_time <= collision_start_time <= 0.0
                         collision_time = max(-self.delta_time, collision_start_time)
+                        assert -self.delta_time <= collision_time <= 0.0
                         # Inline insertion to keep collisions sorted by time
                         i = len(collisions)
                         while i > 0 and collisions[i - 1][0] > collision_time:
@@ -390,7 +390,7 @@ class KesslerGame:
                     for ast_idx, asteroid in enumerate(asteroids):
                         collision_start_time = ship_asteroid_continuous_collision_time(
                             ship.x, ship.y, ship.radius, ship.speed, ship.integration_initial_states,
-                            asteroid.x, asteroid.y, asteroid.vx, asteroid.vy, asteroid.radius,
+                            asteroid.x, asteroid.y, asteroid.vx, asteroid.vy, asteroid.radius, asteroid.speed
                             self.delta_time
                         )
                         if not math.isnan(collision_start_time):

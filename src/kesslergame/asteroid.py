@@ -15,7 +15,7 @@ from .state_models import AsteroidDataList
 
 class Asteroid:
     """ Sprite that represents an asteroid. """
-    __slots__ = ('size', 'num_children', 'radius', 'mass', 'x', 'y', 'vx', 'vy', 'angle', 'turnrate', '_state')
+    __slots__ = ('size', 'num_children', 'radius', 'mass', 'x', 'y', 'vx', 'vy', 'angle', 'speed', 'turnrate', '_state')
     def __init__(self,
                  position: tuple[float, float],
                  speed: float | None = None,
@@ -56,11 +56,13 @@ class Asteroid:
 
         # Use optional angle and speed arguments otherwise generate random angle and speed
         starting_angle_rad: float = math.radians(angle) if angle is not None else random.random() * 2.0 * math.pi
-        starting_speed: float = speed if speed is not None else random.random() * max_speed - max_speed / 2.0
+        starting_speed: float = speed if speed is not None else max_speed * random.random()
 
         # Set velocity based on starting angle and speed
         self.vx = starting_speed * math.cos(starting_angle_rad)
         self.vy = starting_speed * math.sin(starting_angle_rad)
+
+        self.speed = starting_speed
 
         # Random rotations for use in display or future use with complex hit box
         self.angle: float = random.uniform(0.0, 360.0)

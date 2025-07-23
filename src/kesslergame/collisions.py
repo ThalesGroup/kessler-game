@@ -18,7 +18,7 @@ collision_start_time = ship_asteroid_continuous_collision_time(
 
 def ship_asteroid_continuous_collision_time(ship_x: float, ship_y: float, ship_r: float, ship_speed: float,
                                             ship_integration_initial_states: list[tuple[float, float, float, float, float, float]],
-                                            ast_x: float, ast_y: float, ast_vx: float, ast_vy: float, ast_r: float, delta_time: float) -> float:
+                                            ast_x: float, ast_y: float, ast_vx: float, ast_vy: float, ast_r: float, ast_speed: float, delta_time: float) -> float:
     # Given the asteroid and ship states at this instant, this function checks whether a collision
     # between them has occurred anytime within the past delta_time seconds.
     # This function returns nan if not, and returns t, the earliest time of collision where -delta_time <= t <= 0.0, if a collision was detected.
@@ -31,7 +31,7 @@ def ship_asteroid_continuous_collision_time(ship_x: float, ship_y: float, ship_r
 
     # First, we do an early rejection check. If the asteroid and ship are far enough away that with their combined velocities
     # it is impossible that they could have collided within the past delta_time seconds, then return nan
-    combined_vel = abs(ship_speed) + sqrt(ast_vx * ast_vx + ast_vy * ast_vy)
+    combined_vel = abs(ship_speed) + abs(ast_speed) #sqrt(ast_vx * ast_vx + ast_vy * ast_vy)
     delta_x = ship_x - ast_x
     delta_y = ship_y - ast_y
     rad_sum = ship_r + ast_r
