@@ -306,7 +306,7 @@ class Ship:
             self.speed = initial_speed + net_acc * delta_time
             # Append the end state, so we can reverse-integrate later by plugging in a negative time
             self.integration_initial_states.append((0.0, -delta_time, self.speed, net_acc, theta0 + omega * delta_time, omega, -dx, -dy))
-        elif t1 == 0.0:
+        elif abs(t1) < 1e-14:
             assert v1 is not None
             # The first period is just zero length, so just skip it
             # This happens a lot when the ship is gunning it at full throttle, so handle it separately
