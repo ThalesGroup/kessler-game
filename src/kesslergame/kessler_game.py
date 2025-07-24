@@ -156,6 +156,7 @@ class KesslerGame:
             # Loop through each controller/ship combo and apply their actions
             for ship_idx, ship in enumerate(ships):
                 if ship.alive:
+                    ship.update_state() # The ship's state might have changed between the last update call and now, if it got hit
                     if controllers[ship_idx].ship_id != ship.id:
                         raise RuntimeError("Controller and ship ID do not match")
                     
