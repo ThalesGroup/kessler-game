@@ -25,9 +25,10 @@ game = KesslerGame(settings=game_settings)
 | `graphics_type`         | `GraphicsType` enum       | `GraphicsType.Tkinter`            | Graphics engine to use. Options include: `NoGraphics`, `Tkinter`, or `UnrealEngine`.          |
 | `graphics_obj`          | `KesslerGraphics or None` | `None`                            | Custom graphics object instance, if applicable.                                               |
 | `realtime_multiplier`   | `float`                   | `1.0` (or `0.0` for `NoGraphics`) | Controls simulation speed. `1.0` is real-time, higher values speed up the game. 0 is max speed|
-| `time_limit`            | `float`                   | `math.inf`                        | Time (s) after which the scenario stops. Overrides limit defined in Scenario.                 |
+| `frame_skip`            | `int`                     | `max(1, round(realtime_multiplier))` | Renders 1 out of every frame_skip frames. Helps graphics keep up with higher game speeds |
+| `time_limit`            | `float`                   | `inf`                        | Time (s) after which the scenario stops. Overrides limit defined in Scenario.                 |
 | `random_ast_splits`     | `bool`                    | `False`                           | Whether asteroids split at random angles upon destruction                                     |
-| `competition_safe_mode` | `bool`                    | `True`                            | False sends mutable game_state and ship_state, and is over 2X faster, but riskier             |
+| `competition_safe_mode` | `bool`                    | `True`                            | False sends mutable game_state and ship_state. This is a bit faster, but riskier             |
 
 ---
 
@@ -59,15 +60,16 @@ The `UI_settings` field controls which HUD/UI elements are shown during the game
 ## Example Configuration
 
 ```python
-from kessler_sim.graphics import GraphicsType
+from kesslergame import KesslerGame, Scenario, GraphicsType
+from my_controller import MyController
 
 # Define Game Settings
 game_settings = {
     'perf_tracker': True,
-    'graphics_type': GraphicsType.NoGraphics if not GRAPHICS else GraphicsType.Tkinter,
+    'graphics_type': GraphicsType.Tkinter,
     'realtime_multiplier': 1.0,
     'graphics_obj': None,
-    'frequency': 30.0,
+    'frequency': 30,
     'UI_settings': {
         'ships': True,
         'lives_remaining': True,
@@ -81,6 +83,19 @@ game_settings = {
 }
 
 game = KesslerGame(settings=game_settings)
+
+my_controllers = [MyController(), MyController()]
+
+my_scenario = Scenario(
+    name="My Scenario",
+    asteroid_states=[{"position": (100, 200), "angle": 45.0, "speed": 50, "size": 3}],
+    ship_states=[{"position": (500, 400), "angle": 90}],
+    map_size=(1000, 800),
+    time_limit=30,
+    seed=0
+)
+
+score, perf_data = game.run(scenario=my_scenario, controllers=my_controllers)
 ```
 
 ---
