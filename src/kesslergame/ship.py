@@ -36,10 +36,10 @@ class Ship:
         Instantiate a ship with default parameters and infinite bullets if not specified
         """
 
-        # Control information
+        # The controller gets assigned later
         self.controller: KesslerController | None = None
 
-        # Ship custom graphics
+        # Ship custom graphics, assigned later
         self.custom_sprite_path: str | None = None
 
         # State info
@@ -134,10 +134,10 @@ class Ship:
         self._state[3] = self.vy
         self._state[4] = self.speed
         self._state[5] = self.heading
-        self._state[6] = self.mass
-        self._state[7] = self.radius
-        self._state[8] = self.id
-        self._state[9] = self.team
+        #self._state[6] = self.mass
+        #self._state[7] = self.radius
+        #self._state[8] = self.id
+        #self._state[9] = self.team
         self._state[10] = self.is_respawning
         self._state[11] = self.lives
         self._state[12] = self.deaths
@@ -148,18 +148,18 @@ class Ship:
         self._ownstate[14] = self.mines_remaining
         self._ownstate[15] = self.can_fire
         self._ownstate[16] = self.fire_wait_time
-        self._ownstate[17] = self.fire_rate
+        #self._ownstate[17] = self.fire_rate
         self._ownstate[18] = self.can_deploy_mine
         self._ownstate[19] = self.mine_wait_time
-        self._ownstate[20] = self.mine_deploy_rate
+        #self._ownstate[20] = self.mine_deploy_rate
         self._ownstate[21] = self.respawn_time_left
-        self._ownstate[22] = self.respawn_time
-        self._ownstate[23] = self.thrust_range[0]
-        self._ownstate[24] = self.thrust_range[1]
-        self._ownstate[25] = self.turn_rate_range[0]
-        self._ownstate[26] = self.turn_rate_range[1]
-        self._ownstate[27] = self.max_speed
-        self._ownstate[28] = self.drag
+        #self._ownstate[22] = self.respawn_time
+        #self._ownstate[23] = self.thrust_range[0]
+        #self._ownstate[24] = self.thrust_range[1]
+        #self._ownstate[25] = self.turn_rate_range[0]
+        #self._ownstate[26] = self.turn_rate_range[1]
+        #self._ownstate[27] = self.max_speed
+        #self._ownstate[28] = self.drag
 
     @property
     def position(self) -> tuple[float, float]:
