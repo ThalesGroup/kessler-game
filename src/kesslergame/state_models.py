@@ -249,7 +249,7 @@ class BulletView:
     def __repr__(self) -> str:
         return (f"<Bullet pos={self.position} vel={self.velocity} "
                 f"tail_delta={self.tail_delta} "
-                f"heading={self.heading:.1f} mass={self.mass} length={self.length}>")
+                f"heading={self.heading} mass={self.mass} length={self.length}>")
 
 
 class MineView:
@@ -415,8 +415,8 @@ class ShipView:
     def __repr__(self) -> str:
         return (
             f"<Ship position={self.position} velocity={self.velocity} "
-            f"speed={self.speed:.2f} heading={self.heading:.1f} mass={self.mass:.2f} "
-            f"radius={self.radius:.2f} id={self.id} team={self.team} "
+            f"speed={self.speed} heading={self.heading} mass={self.mass} "
+            f"radius={self.radius} id={self.id} team={self.team} "
             f"is_respawning={self.is_respawning} lives_remaining={self.lives_remaining} "
             f"deaths={self.deaths}>"
         )
@@ -520,15 +520,15 @@ class ShipOwnView(ShipView):
 
     def __repr__(self) -> str:
         return (
-            f"<OwnShip position={self.position} velocity={self.velocity} speed={self.speed:.2f} "
-            f"heading={self.heading:.1f} mass={self.mass:.2f} radius={self.radius:.2f} id={self.id} team={self.team} "
+            f"<OwnShip position={self.position} velocity={self.velocity} speed={self.speed} "
+            f"heading={self.heading} mass={self.mass} radius={self.radius} id={self.id} team={self.team} "
             f"is_respawning={self.is_respawning} lives_remaining={self.lives_remaining} deaths={self.deaths} "
             f"bullets_remaining={self.bullets_remaining} mines_remaining={self.mines_remaining} can_fire={self.can_fire} "
-            f"fire_cooldown={self.fire_cooldown:.2f} fire_rate={self.fire_rate:.2f} can_deploy_mine={self.can_deploy_mine} "
-            f"mine_cooldown={self.mine_cooldown:.2f} mine_deploy_rate={self.mine_deploy_rate:.2f} "
-            f"respawn_time_left={self.respawn_time_left:.2f} respawn_time={self.respawn_time:.2f} "
+            f"fire_cooldown={self.fire_cooldown} fire_rate={self.fire_rate} can_deploy_mine={self.can_deploy_mine} "
+            f"mine_cooldown={self.mine_cooldown} mine_deploy_rate={self.mine_deploy_rate} "
+            f"respawn_time_left={self.respawn_time_left} respawn_time={self.respawn_time} "
             f"thrust_range={self.thrust_range} turn_rate_range={self.turn_rate_range} "
-            f"max_speed={self.max_speed:.2f} drag={self.drag:.2f}>"
+            f"max_speed={self.max_speed} drag={self.drag}>"
         )
 
 
@@ -903,7 +903,7 @@ class GameState:
                 raise KeyError(f"Key '{key}' not found in GameState")
 
     def __repr__(self) -> str:
-        return (f"<GameState frame={self.frame} time={self.time:.2f}s "
+        return (f"<GameState frame={self.frame} time={self.time}s "
                 f"asteroids={len(self._asteroid_data)} "
                 f"ships={len(self._ship_data)} bullets={len(self._bullet_data)} "
                 f"mines={len(self._mine_data)}>\n"
@@ -913,7 +913,7 @@ class GameState:
                 f".dict -> dict, .fast_compact -> dict")
 
     def __str__(self) -> str:
-        return (f"GameState @ frame {self.frame} ({self.time:.2f}s)\n"
+        return (f"GameState @ frame {self.frame} ({self.time}s)\n"
                 f"  Asteroids: {len(self._asteroid_data)}\n"
                 f"  Ships:     {len(self._ship_data)}\n"
                 f"  Bullets:   {len(self._bullet_data)}\n"
