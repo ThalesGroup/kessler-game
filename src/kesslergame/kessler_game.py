@@ -182,6 +182,7 @@ class KesslerGame:
                             competition_safe_mode=self.competition_safe_mode
                         )
                     else:
+                        assert game_state is not None
                         game_state_to_controller = game_state
                     
                     # Evaluate each controller letting control be applied
@@ -225,10 +226,12 @@ class KesslerGame:
                 if new_bullet is not None:
                     bullets.append(new_bullet)
                     if not self.competition_safe_mode:
+                        assert game_state is not None
                         game_state.add_bullet(new_bullet.state)
                 if new_mine is not None:
                     mines.append(new_mine)
                     if not self.competition_safe_mode:
+                        assert game_state is not None
                         game_state.add_mine(new_mine.state)
 
             # Update performance tracker
@@ -303,6 +306,7 @@ class KesslerGame:
                 bullets[bul_idx] = bullets[-1]
                 bullets.pop()
                 if not self.competition_safe_mode:
+                    assert game_state is not None
                     game_state.remove_bullet(bul_idx)
 
             # Remove asteroids in O(1) using swap-and-pop based on collected indices
@@ -311,12 +315,14 @@ class KesslerGame:
                 asteroids[ast_idx] = asteroids[-1]
                 asteroids.pop()
                 if not self.competition_safe_mode:
+                    assert game_state is not None
                     game_state.remove_asteroid(ast_idx)
 
             # Add new asteroids
             if new_asteroids:
                 asteroids.extend(new_asteroids)
                 if not self.competition_safe_mode:
+                    assert game_state is not None
                     game_state.add_asteroids([a.state for a in new_asteroids])
                 new_asteroids.clear()
 
@@ -379,6 +385,7 @@ class KesslerGame:
                     asteroids[ast_idx] = asteroids[-1]
                     asteroids.pop()
                     if not self.competition_safe_mode:
+                        assert game_state is not None
                         game_state.remove_asteroid(ast_idx)
 
                 # Remove all detonated mines using swap-and-pop
@@ -391,6 +398,7 @@ class KesslerGame:
                         mines.pop()
                         num_mines -= 1
                         if not self.competition_safe_mode:
+                            assert game_state is not None
                             game_state.remove_mine(mine_idx)
                         # Don't increment index. Need to check swapped-in mine
                     else:
@@ -400,6 +408,7 @@ class KesslerGame:
                 if new_asteroids:
                     asteroids.extend(new_asteroids)
                     if not self.competition_safe_mode:
+                        assert game_state is not None
                         game_state.add_asteroids([asteroid.state for asteroid in new_asteroids])
                     new_asteroids.clear()
             
@@ -445,12 +454,14 @@ class KesslerGame:
                 asteroids[ast_idx] = asteroids[-1]
                 asteroids.pop()
                 if not self.competition_safe_mode:
+                    assert game_state is not None
                     game_state.remove_asteroid(ast_idx)
 
             # Add new asteroids from ship-asteroid collisions
             if new_asteroids:
                 asteroids.extend(new_asteroids)
                 if not self.competition_safe_mode:
+                    assert game_state is not None
                     game_state.add_asteroids([asteroid.state for asteroid in new_asteroids])
                 new_asteroids.clear()
 
@@ -497,6 +508,7 @@ class KesslerGame:
                 if len(liveships) != len(new_liveships):
                     liveships = new_liveships
                     if not self.competition_safe_mode:
+                        assert game_state is not None
                         game_state.update_ships([ship.state for ship in liveships])
 
             # Update performance tracker with collisions timing
@@ -527,6 +539,7 @@ class KesslerGame:
             sim_time += self.delta_time
             sim_frame += 1
             if not self.competition_safe_mode:
+                assert game_state is not None
                 game_state.time = sim_time
                 game_state.frame = sim_frame
 
