@@ -26,6 +26,7 @@ class SettingsDict(TypedDict, total=False):
     graphics_type: GraphicsType
     graphics_obj: KesslerGraphics | None
     realtime_multiplier: float
+    frame_skip: int
     time_limit: float
     random_ast_splits: bool
     competition_safe_mode: bool

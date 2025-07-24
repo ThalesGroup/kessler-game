@@ -52,6 +52,7 @@ class KesslerGame:
         self.graphics_type: GraphicsType = settings.get("graphics_type", GraphicsType.Tkinter)
         self.graphics_obj: KesslerGraphics | None = settings.get("graphics_obj", None)
         self.realtime_multiplier: float = settings.get("realtime_multiplier", 0.0 if self.graphics_type==GraphicsType.NoGraphics else 1.0)
+        self.frame_skip: int = max(1, int(settings.get("frame_skip", int(self.frequency) if self.realtime_multiplier == 0.0 else round(self.realtime_multiplier))))
         self.time_limit: float = settings.get("time_limit", inf)
         self.random_ast_splits: bool = settings.get("random_ast_splits", False)
         self.competition_safe_mode: bool = settings.get("competition_safe_mode", True)
@@ -121,24 +122,26 @@ class KesslerGame:
         asteroids_to_cull: list[int] = []
 
         # Maintain game_state dict to send to teams
-        game_state: GameState = GameState(
-            # Game entities
-            ships=[ship.state for ship in liveships],
-            asteroids=[asteroid.state for asteroid in asteroids],
-            bullets=[bullet.state for bullet in bullets],
-            mines=[mine.state for mine in mines],
-            # Environment
-            map_size=scenario.map_size,
-            time_limit=time_limit,
-            # Simulation timing
-            time=sim_time,
-            frame=sim_frame,
-            delta_time=self.delta_time,
-            frame_rate=self.frequency,
-            # Game settings
-            random_asteroid_splits=self.random_ast_splits,
-            competition_safe_mode=self.competition_safe_mode
-        )
+        game_state: GameState | None = None
+        if not self.competition_safe_mode:
+            game_state = GameState(
+                # Game entities
+                ships=[ship.state for ship in liveships],
+                asteroids=[asteroid.state for asteroid in asteroids],
+                bullets=[bullet.state for bullet in bullets],
+                mines=[mine.state for mine in mines],
+                # Environment
+                map_size=scenario.map_size,
+                time_limit=time_limit,
+                # Simulation timing
+                time=sim_time,
+                frame=sim_frame,
+                delta_time=self.delta_time,
+                frame_rate=self.frequency,
+                # Game settings
+                random_asteroid_splits=self.random_ast_splits,
+                competition_safe_mode=self.competition_safe_mode
+            )
 
         while stop_reason == StopReason.not_stopped:
             # Get perf time at the start of time step evaluation and initialize performance tracker
@@ -512,12 +515,13 @@ class KesslerGame:
 
 
             # --- UPDATE GRAPHICS --------------------------------------------------------------------------------------
-            graphics.update(score, ships, asteroids, bullets, mines)
+            if sim_frame % self.frame_skip == 0:
+                graphics.update(score, ships, asteroids, bullets, mines)
 
-            # Update performance tracker with graphics timing
-            if self.perf_tracker:
-                perf_dict['graphics_draw'] += time.perf_counter() - prev
-                prev = time.perf_counter()
+                # Update performance tracker with graphics timing
+                if self.perf_tracker:
+                    perf_dict['graphics_draw'] += time.perf_counter() - prev
+                    prev = time.perf_counter()
 
             # --- CHECK STOP CONDITIONS --------------------------------------------------------------------------------
             sim_time += self.delta_time

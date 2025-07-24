@@ -441,8 +441,8 @@ def circle_line_collision_continuous(
     # Find the min/max x/y values that the bullet can take on, and then expand by the radius of the asteroid
     # This code can be written MUCH cleaner by creating a list and using max and min on it, however this unrolled version is many times faster when compiled with mypyc
     # This code is the most called function in the game, so speed is crucial
-    
     # Find the min and max x and y coordinates that any endpoint of the line segment can take on over the past frame
+
     # X
     vx = (line_vel_x - circle_vel_x) * delta_time # Per frame velocities
     if ax0 < bx0:
