@@ -252,8 +252,9 @@ class Ship:
         drag_acc = -self.drag * motion_sign
 
         # Combine thrust and drag into one net acceleration
-        # This constant acceleration will apply for the entire duration of this frame, unless we hit the speed cap or hit 0,
-        # in which case we do 0 acceleration after that time for the rest of the frame
+        # This constant acceleration will apply for the entire duration of this frame, unless we hit the speed cap or hit 0
+        # If we hit the speed cap, we do 0 acceleration after that time for the rest of the frame
+        # If we hit 0, we change the direction of drag, but keep thrust the same
         net_acc = self.thrust + drag_acc  # m/s²
         
         # We perform analytic position integration, which is framerate independent
@@ -277,6 +278,8 @@ class Ship:
             if 0.0 <= t_to_stop < delta_time:
                 t1 = t_to_stop
                 v1 = 0.0  # Fully stopped
+                # Drag now goes the other way, since our speed has crossed the zero boundary and drag will oppose our new speed
+                accel_phase2 = self.thrust - drag_acc
         else:
             # Case 2: acceleration would exceed max speed
             max_speed = math.copysign(self.max_speed, initial_speed + net_acc * delta_time)
@@ -291,6 +294,7 @@ class Ship:
                     # at the time when we will achieve max speed from the first phase
                     t1 = to_max
                     v1 = max_speed
+                    accel_phase2 = 0.0
 
         if t1 is None or abs(t1 - delta_time) < 1e-14:
             # No exceeding limit within this step, use normal single-phase analytic integration
@@ -319,6 +323,7 @@ class Ship:
             # Phase 1: accelerating from v0 to v1 over t1
             dx1, dy1 = analytic_ship_movement_integration(initial_speed, net_acc, theta0, omega, t1)
             theta1 = theta0 + omega * t1
+            self.speed = v1  # Either stopped or clamped
 
             # Phase 2: constant speed or stopped, no acceleration
             t2 = delta_time - t1
@@ -326,7 +331,7 @@ class Ship:
 
             self.x = (x0 + dx1 + dx2) % map_size[0]
             self.y = (y0 + dy1 + dy2) % map_size[1]
-            self.speed = v1  # Either stopped or clamped
+            self.speed += accel_phase2 * t2
 
             # Append the end state, so we can reverse-integrate later by plugging in a negative time
             self.integration_initial_states.append((0.0, -t2, self.speed, accel_phase2, theta1 + omega * t2, omega, -dx2, -dy2))
