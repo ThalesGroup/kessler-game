@@ -259,6 +259,11 @@ class KesslerGame:
                             asteroid.vx, asteroid.vy,
                             asteroid.radius
                         )
+                        if isnan(collision_start_time):
+                            # This case should NEVER get hit since the circle_line_collision_continuous function
+                            # already found that there would be a collision. But just in case of numerical instability causing
+                            # these to return different results, this will prevent a crash
+                            continue
                         collision_time = max(-self.delta_time, collision_start_time)
                         assert -self.delta_time <= collision_time <= 0.0
                         # Inline insertion to keep collisions sorted by time
