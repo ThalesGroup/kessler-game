@@ -461,6 +461,10 @@ def circle_line_collision_continuous(
             min_x = bx0
             max_x = ax0 - vx
 
+    # If there's no overlap in the interval that the line segment takes on, and the interval the circle takes on, no collision is possible
+    if circle_x + circle_radius < min_x or circle_x - circle_radius > max_x:
+        return False
+
     # Y
     if ay0 < by0:
         if vy >= 0.0:
@@ -478,7 +482,7 @@ def circle_line_collision_continuous(
             max_y = ay0 - vy
 
     # If there's no overlap in the interval that the line segment takes on, and the interval the circle takes on, no collision is possible
-    if circle_x + circle_radius < min_x or circle_x - circle_radius > max_x or circle_y + circle_radius < min_y or circle_y - circle_radius > max_y:
+    if circle_y + circle_radius < min_y or circle_y - circle_radius > max_y:
         return False
 
     # The key insight is that, from the frame of reference of the asteroid, the bullet's path over the previous frame covers the shape of a parallelogram
