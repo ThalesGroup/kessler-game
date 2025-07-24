@@ -18,8 +18,8 @@ class Ship:
         'controller', 'thrust', 'turn_rate', 'id', 'speed', 'x', 'y',
         'vx', 'vy', 'heading', 'lives', 'deaths', 'team', 'team_name',
         'fire', 'drop_mine', 'thrust_range', 'turn_rate_range', 'max_speed',
-        'drag', 'radius', 'mass', '_respawning', '_respawn_time', '_fire_limiter',
-        '_fire_time', '_mine_limiter', '_mine_deploy_time', 'mines_remaining',
+        'drag', 'radius', 'mass', '_respawning', 'was_respawning_until_this_frame', '_respawn_time',
+        '_fire_limiter', '_fire_time', '_mine_limiter', '_mine_deploy_time', 'mines_remaining',
         'bullets_remaining', 'bullets_shot', 'mines_dropped', 'bullets_hit',
         'mines_hit', 'asteroids_hit', 'custom_sprite_path', 'integration_initial_states',
         '_state', '_ownstate'
@@ -80,6 +80,8 @@ class Ship:
         self._fire_time: float = 1.0 / 10.0 # seconds
         self._mine_limiter: float = 0.0 # second
         self._mine_deploy_time: float = 1.0 # seconds
+        # Track whether the respawn invulnerability came off on just this frame
+        self.was_respawning_until_this_frame = False
 
         # Track bullet/mine statistics
         self.mines_remaining: int = mines_remaining
@@ -359,10 +361,13 @@ class Ship:
         new_mine = self.deploy_mine() if self.drop_mine else None
 
         # Decrement respawn timer (if necessary)
+        self.was_respawning_until_this_frame = False
         if self._respawning != 0.0:
             self._respawning -= delta_time
             if self._respawning <= 1e-12:
                 self._respawning = 0.0
+            if self._respawning == 0.0:
+                self.was_respawning_until_this_frame = True
 
         # Decrement fire limit timer (if necessary)
         if self._fire_limiter != 0.0:

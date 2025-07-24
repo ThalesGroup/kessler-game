@@ -5,7 +5,7 @@
 
 import time
 
-from math import inf, isnan, isfinite
+from math import inf, nan, isfinite, isnan
 from typing import Any, TypedDict, cast
 from enum import Enum
 
@@ -426,11 +426,22 @@ class KesslerGame:
             for ship_idx, ship in enumerate(liveships):
                 if ship.alive and not ship.is_respawning:
                     for ast_idx, asteroid in enumerate(asteroids):
-                        collision_start_time = ship_asteroid_continuous_collision_time(
-                            ship.x, ship.y, ship.radius, ship.speed, ship.integration_initial_states,
-                            asteroid.x, asteroid.y, asteroid.vx, asteroid.vy, asteroid.radius, asteroid.speed,
-                            self.delta_time
-                        )
+                        collision_start_time: float = nan
+                        if ship.was_respawning_until_this_frame:
+                            # The ship just came out of its respawn invulnerability, so we do NOT want to
+                            # check for collisions over the past frame. Just check at this instant in time.
+                            dx = asteroid.x - ship.x
+                            dy = asteroid.y - ship.y
+                            radius_sum = asteroid.radius + ship.radius
+                            if dx * dx + dy * dy <= radius_sum * radius_sum:
+                                collision_start_time = 0.0
+                        else:
+                            # Check for collisions in time interval [t - delta_time, t]
+                            collision_start_time = ship_asteroid_continuous_collision_time(
+                                ship.x, ship.y, ship.radius, ship.speed, ship.integration_initial_states,
+                                asteroid.x, asteroid.y, asteroid.vx, asteroid.vy, asteroid.radius, asteroid.speed,
+                                self.delta_time
+                            )
                         if not isnan(collision_start_time):
                             assert -self.delta_time <= collision_start_time <= 0.0 # Collision happened within past frame
                             # Insert chronologically
@@ -482,11 +493,22 @@ class KesslerGame:
                     for ship2_idx in range(ship1_idx + 1, num_ships):
                         ship2 = liveships[ship2_idx]
                         if ship2.alive and not ship2.is_respawning:
-                            collision_start_time = ship_ship_continuous_collision_time(
-                                ship1.x, ship1.y, ship1.radius, ship1.speed, ship1.integration_initial_states,
-                                ship2.x, ship2.y, ship2.radius, ship2.speed, ship2.integration_initial_states,
-                                self.delta_time
-                            )
+                            collision_start_time: float = nan
+                            if ship1.was_respawning_until_this_frame or ship2.was_respawning_until_this_frame:
+                                # At least one of the ships just came out of its respawn invulnerability, so we do NOT want to
+                                # check for collisions over the past frame. Just check at this instant in time.
+                                dx = ship2.x - ship1.x
+                                dy = ship2.y - ship1.y
+                                radius_sum = ship1.radius + ship2.radius
+                                if dx * dx + dy * dy <= radius_sum * radius_sum:
+                                    collision_start_time = 0.0
+                            else:
+                                # Check for collisions in time interval [t - delta_time, t]
+                                collision_start_time = ship_ship_continuous_collision_time(
+                                    ship1.x, ship1.y, ship1.radius, ship1.speed, ship1.integration_initial_states,
+                                    ship2.x, ship2.y, ship2.radius, ship2.speed, ship2.integration_initial_states,
+                                    self.delta_time
+                                )
                             if not isnan(collision_start_time):
                                 assert -self.delta_time <= collision_start_time <= 0.0 # Collision happened within past frame
                                 # Insert chronologically
