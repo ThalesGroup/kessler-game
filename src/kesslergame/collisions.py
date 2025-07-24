@@ -422,18 +422,18 @@ def project_origin_onto_segment_dist_sq(x1: float, y1: float, x2: float, y2: flo
 
 
 def circle_line_collision_continuous(
-    ax0: float,
+    ax0: float, # One end of line segment at t=0
     ay0: float,
-    bx0: float,
+    bx0: float, # The other end of line segment at t=0
     by0: float,
-    line_vel_x: float,
+    line_vel_x: float, # Velocity of line in u/s
     line_vel_y: float,
-    circle_x: float,
+    circle_x: float, # Initial position of circle
     circle_y: float,
-    circle_vel_x: float,
+    circle_vel_x: float, # Velocity of circle
     circle_vel_y: float,
     circle_radius: float,
-    delta_time: float
+    delta_time: float # Duration of a frame
 ) -> bool:
     # Returns whether a moving circle and line segment collided within the time interval [-delta_time, 0]
 
@@ -441,41 +441,43 @@ def circle_line_collision_continuous(
     # Find the min/max x/y values that the bullet can take on, and then expand by the radius of the asteroid
     # This code can be written MUCH cleaner by creating a list and using max and min on it, however this unrolled version is many times faster when compiled with mypyc
     # This code is the most called function in the game, so speed is crucial
-    rel_frame_vel_x = (line_vel_x - circle_vel_x) * delta_time
-    rel_frame_vel_y = (line_vel_y - circle_vel_y) * delta_time
+    vx = (line_vel_x - circle_vel_x) * delta_time # Per frame velocities
+    vy = (line_vel_y - circle_vel_y) * delta_time
 
+    # Find the min and max x and y coordinates that any endpoint of the line segment can take on over the past frame
     # X
     if ax0 < bx0:
-        if rel_frame_vel_x >= 0.0:
-            min_x = ax0 - rel_frame_vel_x
+        if vx >= 0.0:
+            min_x = ax0 - vx
             max_x = bx0
         else:
             min_x = ax0
-            max_x = bx0 - rel_frame_vel_x
+            max_x = bx0 - vx
     else:
-        if rel_frame_vel_x >= 0.0:
-            min_x = bx0 - rel_frame_vel_x
+        if vx >= 0.0:
+            min_x = bx0 - vx
             max_x = ax0
         else:
             min_x = bx0
-            max_x = ax0 - rel_frame_vel_x
+            max_x = ax0 - vx
 
     # Y
     if ay0 < by0:
-        if rel_frame_vel_y >= 0.0:
-            min_y = ay0 - rel_frame_vel_y
+        if vy >= 0.0:
+            min_y = ay0 - vy
             max_y = by0
         else:
             min_y = ay0
-            max_y = by0 - rel_frame_vel_y
+            max_y = by0 - vy
     else:
-        if rel_frame_vel_y >= 0.0:
-            min_y = by0 - rel_frame_vel_y
+        if vy >= 0.0:
+            min_y = by0 - vy
             max_y = ay0
         else:
             min_y = by0
-            max_y = ay0 - rel_frame_vel_y
+            max_y = ay0 - vy
 
+    # If there's no overlap in the interval that the line segment takes on, and the interval the circle takes on, no collision is possible
     if circle_x + circle_radius < min_x or circle_x - circle_radius > max_x or circle_y + circle_radius < min_y or circle_y - circle_radius > max_y:
         return False
 
@@ -488,8 +490,7 @@ def circle_line_collision_continuous(
     ay = ay0 - circle_y
     bx = bx0 - circle_x
     by = by0 - circle_y
-    vx = (line_vel_x - circle_vel_x) * delta_time # Per frame velocities
-    vy = (line_vel_y - circle_vel_y) * delta_time
+    # We also use vx and vy which we calculated earlier
     # c and d are the head and tails of the bullet, delta_time in the past, forming the other two points of the parallelogram
     cx = ax - vx
     cy = ay - vy
