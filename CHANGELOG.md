@@ -27,6 +27,7 @@
 - All types of collisions in the game are handled in chronological order within their own type, for fairness and precision
 - Added more robust check to length of controllers list, to make sure there are enough controllers for ships
 - Sanitize controller outputs and make sure they cannot crash the game by outputting inf/nan values
+- Ship now shoots after moving, instead of before. This is more intuitive, correct, and makes shooting logic simpler
 
 ## [2.3.0] - 15 July 2025
 

@@ -225,28 +225,6 @@ class Ship:
         Update our position and other particulars.
         """
 
-        # Handle firing and mining
-        new_bullet = self.fire_bullet() if self.fire else None
-        new_mine = self.deploy_mine() if self.drop_mine else None
-
-        # Decrement respawn timer (if necessary)
-        if self._respawning != 0.0:
-            self._respawning -= delta_time
-            if self._respawning <= 1e-12:
-                self._respawning = 0.0
-
-        # Decrement fire limit timer (if necessary)
-        if self._fire_limiter != 0.0:
-            self._fire_limiter -= delta_time
-            if self._fire_limiter <= 1e-12:
-                self._fire_limiter = 0.0
-
-        # Decrement mine deployment limit timer (if necessary)
-        if self._mine_limiter != 0.0:
-            self._mine_limiter -= delta_time
-            if self._mine_limiter <= 1e-12:
-                self._mine_limiter = 0.0
-
         # Bounds check the thrust
         if self.thrust < self.thrust_range[0] or self.thrust > self.thrust_range[1]:
             self.thrust = min(max(self.thrust_range[0], self.thrust), self.thrust_range[1])
@@ -369,6 +347,29 @@ class Ship:
         rad_heading = math.radians(self.heading)
         self.vx = math.cos(rad_heading) * self.speed
         self.vy = math.sin(rad_heading) * self.speed
+
+        # Handle firing and mining
+        # This is done after the ship has moved, so the projectiles are from the current ship position and not the last
+        new_bullet = self.fire_bullet() if self.fire else None
+        new_mine = self.deploy_mine() if self.drop_mine else None
+
+        # Decrement respawn timer (if necessary)
+        if self._respawning != 0.0:
+            self._respawning -= delta_time
+            if self._respawning <= 1e-12:
+                self._respawning = 0.0
+
+        # Decrement fire limit timer (if necessary)
+        if self._fire_limiter != 0.0:
+            self._fire_limiter -= delta_time
+            if self._fire_limiter <= 1e-12:
+                self._fire_limiter = 0.0
+
+        # Decrement mine deployment limit timer (if necessary)
+        if self._mine_limiter != 0.0:
+            self._mine_limiter -= delta_time
+            if self._mine_limiter <= 1e-12:
+                self._mine_limiter = 0.0
 
         # Update the mutable state
         self.update_state()
