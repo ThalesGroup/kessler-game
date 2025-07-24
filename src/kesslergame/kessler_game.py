@@ -370,7 +370,9 @@ class KesslerGame:
 
                 # Remove all destroyed asteroids using swap-and-pop O(1)
                 # Do in reverse order so indices are stable
-                for ast_idx in sorted(asteroids_to_cull, reverse=True):
+                # The indices were added in ascending order, so we can simply reverse the list instead of sorting it into reverse
+                asteroids_to_cull.reverse()
+                for ast_idx in asteroids_to_cull:
                     asteroids[ast_idx] = asteroids[-1]
                     asteroids.pop()
                     if not self.competition_safe_mode:
