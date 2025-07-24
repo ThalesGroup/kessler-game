@@ -3,9 +3,9 @@
 # NOTICE: This file is subject to the license agreement defined in file 'LICENSE', which is part of
 # this source code package.
 
-from math import isnan, sqrt, hypot, dist, nan, inf, isfinite
+from math import isnan, sqrt, hypot, dist, nan, inf, isfinite, sin, cos
 
-from .math_utils import solve_quadratic, project_point_onto_segment_and_get_t, analytic_ship_movement_integration, find_first_leq_zero, circle_circle_collision_time_interval
+from .math_utils import solve_quadratic, project_point_onto_segment_and_get_t, analytic_ship_movement_integration, find_first_leq_zero
 
 
 def ship_asteroid_continuous_collision_time(ship_x: float, ship_y: float, ship_r: float, ship_speed: float,
@@ -35,7 +35,8 @@ def ship_asteroid_continuous_collision_time(ship_x: float, ship_y: float, ship_r
         return nan
 
     # This is the function we want to root find
-    def squared_separation_between_ship_and_asteroid_at_t(t: float) -> float:
+    def squared_separation_between_ship_and_asteroid_at_t(t: float) -> tuple[float, float, float]:
+        # Returns f(t), f'(t), f''(t)
         assert -delta_time <= t <= 0.0
         # Back-extrapolate the asteroid
         ax = ast_x + ast_vx * t
@@ -46,6 +47,8 @@ def ship_asteroid_continuous_collision_time(ship_x: float, ship_y: float, ship_r
         # using the integration intervals we stored in the ship state when it was integrating it forward in time.
         # If the integral is split into multiple time segments, add them all up going backward in time,
         # until we hit t, the end point of the integration
+
+        # Keep in mind that the start_t and end_t are reverse chronological! So it starts in the future, and ends in the past!
         for ship_initial_state in ship_integration_initial_states:
             start_t, end_t, v0, a, theta0, omega, dx, dy = ship_initial_state
             assert end_t - start_t <= 0.0
@@ -66,7 +69,41 @@ def ship_asteroid_continuous_collision_time(ship_x: float, ship_y: float, ship_r
         dist_y = ay - sy
         rad_sum = ship_r + ast_r
         # If this return value is positive, the objects are not colliding. If they are negative or zero, they are.
-        return dist_x * dist_x + dist_y * dist_y - rad_sum * rad_sum
+        function_value = dist_x * dist_x + dist_y * dist_y - rad_sum * rad_sum
+
+        # Find the derivative of this function. It's the derivative of the integral, so it's just the function itself!
+        # But to find the derivative, we need to know which stage of the integration it's in, because the ship's acceleration changes depending on the stage
+        ddt_sx: float = 0.0
+        ddt_sy: float = 0.0
+        ddt2_sx: float = 0.0
+        ddt2_sy: float = 0.0
+        for ship_initial_state in ship_integration_initial_states:
+            start_t, end_t, v0, a, theta0, omega, dx, dy = ship_initial_state
+            # Add some tolerance so it's more lenient and likely to fit in the first, and larger interval
+            # Differentiating along the edge is a bit wacky, so we want to find the diff in the large interval, and not like an interval of zero width!
+            if end_t - 1e-14 <= t <= start_t + 1e-14:
+                # Found the interval we differentiate in
+                theta_t = theta0 + omega * t
+                v_t = v0 + a * t
+                sin_theta_t = sin(theta_t)
+                cos_theta_t = cos(theta_t)
+                ddt_sx = v_t * cos_theta_t
+                ddt_sy = v_t * sin_theta_t
+                ddt2_sx = v_t * -sin_theta_t * omega + a * cos_theta_t
+                ddt2_sy = v_t * cos_theta_t * omega + a * sin_theta_t
+                break
+
+        deriv_dt_dist_x = ast_vx - ddt_sx
+        deriv_dt_dist_y = ast_vy - ddt_sy
+
+        second_deriv_dt_dist_x = -ddt2_sx
+        second_deriv_dt_dist_y = -ddt2_sy
+
+        derivative_value = 2.0 * (dist_x * deriv_dt_dist_x + dist_y * deriv_dt_dist_y)
+
+        second_derivative_value = 2.0 * (dist_x * second_deriv_dt_dist_x + deriv_dt_dist_x * deriv_dt_dist_x + dist_y * second_deriv_dt_dist_y + deriv_dt_dist_y * deriv_dt_dist_y)
+        
+        return function_value, derivative_value, second_derivative_value
 
     return find_first_leq_zero(squared_separation_between_ship_and_asteroid_at_t, -delta_time, 0.0)
 
@@ -98,7 +135,8 @@ def ship_ship_continuous_collision_time(ship1_x: float, ship1_y: float, ship1_r:
         return nan
 
     # This is the function we want to root find
-    def squared_separation_between_ships_at_t(t: float) -> float:
+    def squared_separation_between_ships_at_t(t: float) -> tuple[float, float, float]:
+        # Returns f(t), f'(t), f''(t)
         assert -delta_time <= t <= 0.0
 
         dx1_sum = 0.0
@@ -107,6 +145,7 @@ def ship_ship_continuous_collision_time(ship1_x: float, ship1_y: float, ship1_r:
         dy2_sum = 0.0
 
         # Integrate ship 1 position backward in time
+        # Keep in mind that the start_t and end_t are reverse chronological! So it starts in the future, and ends in the past!
         for state in ship1_integration_initial_states:
             start_t, end_t, v0, a, theta0, omega, dx, dy = state
             assert end_t - start_t <= 0.0
@@ -146,8 +185,68 @@ def ship_ship_continuous_collision_time(ship1_x: float, ship1_y: float, ship1_r:
         rad_sum = ship1_r + ship2_r
 
         # If this return value is positive, the objects are not colliding. If they are negative or zero, they are.
-        return dist_x * dist_x + dist_y * dist_y - rad_sum * rad_sum
+        function_value = dist_x * dist_x + dist_y * dist_y - rad_sum * rad_sum
 
+        # Find the derivative of this function. It's the derivative of the integral, so it's just the function itself!
+        # But to find the derivative, we need to know which stage of the integration it's in, because the ship's acceleration changes depending on the stage
+        ddt_sx1: float = 0.0
+        ddt_sy1: float = 0.0
+        ddt2_sx1: float = 0.0
+        ddt2_sy1: float = 0.0
+        # Compute derivatives for ship 1
+        for state in ship1_integration_initial_states:
+            start_t, end_t, v0, a, theta0, omega, dx, dy = state
+            # Add some tolerance so it's more lenient and likely to fit in the first, and larger interval
+            # Differentiating along the edge is a bit wacky, so we want to find the diff in the large interval, and not like an interval of zero width!
+            if end_t - 1e-14 <= t <= start_t + 1e-14:
+                # Found the interval we differentiate in
+                theta_t = theta0 + omega * t
+                v_t = v0 + a * t
+                sin_theta_t = sin(theta_t)
+                cos_theta_t = cos(theta_t)
+                ddt_sx1 = v_t * cos_theta_t
+                ddt_sy1 = v_t * sin_theta_t
+                ddt2_sx1 = v_t * -sin_theta_t * omega + a * cos_theta_t
+                ddt2_sy1 = v_t * cos_theta_t * omega + a * sin_theta_t
+                break
+
+        ddt_sx2: float = 0.0
+        ddt_sy2: float = 0.0
+        ddt2_sx2: float = 0.0
+        ddt2_sy2: float = 0.0
+        # Compute derivatives for ship 2
+        for state in ship2_integration_initial_states:
+            start_t, end_t, v0, a, theta0, omega, dx, dy = state
+            # Add some tolerance so it's more lenient and likely to fit in the first, and larger interval
+            # Differentiating along the edge is a bit wacky, so we want to find the diff in the large interval, and not like an interval of zero width!
+            if end_t - 1e-14 <= t <= start_t + 1e-14:
+                # Found the interval we differentiate in
+                theta_t = theta0 + omega * t
+                v_t = v0 + a * t
+                sin_theta_t = sin(theta_t)
+                cos_theta_t = cos(theta_t)
+                ddt_sx2 = v_t * cos_theta_t
+                ddt_sy2 = v_t * sin_theta_t
+                ddt2_sx2 = v_t * -sin_theta_t * omega + a * cos_theta_t
+                ddt2_sy2 = v_t * cos_theta_t * omega + a * sin_theta_t
+                break
+
+        # Derivatives of the distance vector (ship2 - ship1)
+        deriv_dt_dist_x = ddt_sx2 - ddt_sx1
+        deriv_dt_dist_y = ddt_sy2 - ddt_sy1
+
+        # Second derivatives of the distance vector
+        second_deriv_dt_dist_x = ddt2_sx2 - ddt2_sx1
+        second_deriv_dt_dist_y = ddt2_sy2 - ddt2_sy1
+
+        # Derivative of the function (chain rule)
+        derivative_value = 2.0 * (dist_x * deriv_dt_dist_x + dist_y * deriv_dt_dist_y)
+
+        # Second derivative (product rule + chain rule)
+        second_derivative_value = 2.0 * (dist_x * second_deriv_dt_dist_x + deriv_dt_dist_x * deriv_dt_dist_x + dist_y * second_deriv_dt_dist_y + deriv_dt_dist_y * deriv_dt_dist_y)
+
+        return function_value, derivative_value, second_derivative_value
+    
     return find_first_leq_zero(squared_separation_between_ships_at_t, -delta_time, 0.0)
 
 
@@ -165,60 +264,60 @@ def collision_time_interval(
     r: float # Circle radius
 ) -> tuple[float, float]:
     """
-    Returns the time interval [t0, t1] where the moving segment (A, B) and moving circle intersect.
-    Returns (nan, nan) if there is no interception.
+    Figure out when a moving line segment and moving circle are actually colliding.
+    Returns (nan, nan) if nothing happens at all.
 
-    Conceptually, we use the frame of reference of the asteroid, and use positions and velocities relative from it.
-    Therefore, we pretend that the asteroid lies on the origin, and with velocity 0.
-    We first find the start/end times of the bullet head and bullet tail each individually colliding with the asteroid
-    Next, we find the start/end times of somewhere on the middle of the bullet colliding with the asteroid, by solving for tangency
-    If the middle of the bullet is ever tangent with the asteroid, that will be guaranteed to be either earlier,
-    later, or both, compared to the times found for the bullet head/tail
+    Idea: Use the circle's frame of reference
+    Freeze the circle at the origin, and pretend the segment is the only thing moving
+    Figure out when the segment's head or tail individually collides with the circle
+    Also check the case of when the middle of the bullet hits first.
+    You won't miss collisions if you don't check for that (since the bullet is shorter than the asteroid diameter),
+    but the time will be wrong since it hits the edge before it hits the ends.
+    In the end, we want to know the interval where any part of the segment is inside the circle.
+    If nothing ever collides, return (nan, nan).
     """
 
     r_sq = r * r
 
-    # Relative velocity: treat circle as stationary, move A and B at (line_vel - circle_vel)
+    # Relative velocity: put the circle at rest, move the segment at (line_vel - circle_vel)
     rvx = vx - cvx
     rvy = vy - cvy
 
-    # Initial positions relative to circle's center
-    # (Place circle at origin)
+    # Where is A/B relative to the (now stationary) circle center?
     a0x = ax - cx
     a0y = ay - cy
     b0x = bx - cx
     b0y = by - cy
 
-    # Segment vector and length
+    # Direction and length of the segment
     seg_dx = b0x - a0x
     seg_dy = b0y - a0y
-    seg_len = hypot(seg_dx, seg_dy)  # Will be 12.0, the bullet length
+    seg_len = hypot(seg_dx, seg_dy)  # Should be 12.0, but calculate it to be general
 
-    # For normalization later
+    # Degenerate segment, just a point
     if seg_len == 0.0:
-        # Degenerate segment, treat as point
-        # We'll just reduce to point vs circle, i.e., treat both A and B as A
         seg_dx = seg_dy = 0.0
 
-    # Solve for when A and B independently are on the circle (corner-collisions)
-    # For A
+    # First figure out when the segment's two endpoints hit the circle (if ever)
+    # For endpoint A
     k0 = a0x * a0x + a0y * a0y - r_sq
     k1 = 2.0 * (rvx * a0x + rvy * a0y)
     k2 = rvx * rvx + rvy * rvy
 
     t0_A, t1_A = solve_quadratic(k2, k1, k0)
 
-    # For B
+    # For endpoint B
     q0 = b0x * b0x + b0y * b0y - r_sq
     q1 = 2.0 * (rvx * b0x + rvy * b0y)
-    q2 = k2  # Same as velocity terms above
+    q2 = k2
 
     t0_B, t1_B = solve_quadratic(q2, q1, q0)
 
-    # Should check for NaNs - if both are nan, there's no possibility
+    # If nothing ever collides at either endpoint, we’re done
     if isnan(t0_A) and isnan(t0_B):
         return (nan, nan)
 
+    # Get the min/max collision window from the two endpoints
     t0 = inf
     if not isnan(t0_A):
         t0 = t0_A
@@ -231,44 +330,42 @@ def collision_time_interval(
     if not isnan(t1_B) and t1_B > t1:
         t1 = t1_B
 
-    # Mid-segment "side swipe" collisions
-    # Compute the perpendicular axis n to the segment (A->B); positive to the left of AB
-    # n = (dy, -dx) / seg_len as a unit normal (right-hand swap/flop)
+    # Check the case where the segment middle collides before the head/tail does
+    # To handle that, find the normal (perpendicular) direction to the segment and project velocity there.
     if seg_len > 0:
         nx = seg_dy / seg_len
         ny = -seg_dx / seg_len
     else:
-        # Segment degenerate: side swipe not possible, skip this block
+        # No direction if it's just a point, so skip
         nx = ny = 0.0
 
-    # Project relative velocity onto normal axis
+    # Project relative velocity on normal
     v_proj_n = nx * rvx + ny * rvy
-    # We always want v_proj_n positive, flip the normal if not
+    # Flip flop the normal to always work in the positive direction
     if v_proj_n < 0.0:
         nx *= -1.0
         ny *= -1.0
         v_proj_n *= -1.0
 
-    # Project vector from A to origin (circle center) onto normal axis
+    # Project from A to origin (circle at origin) onto normal
     r_a0_to_center_x = -a0x
     r_a0_to_center_y = -a0y
     ast_proj_n = r_a0_to_center_x * nx + r_a0_to_center_y * ny
 
-    # Find when the center of the circle crosses the (possibly growing or shrinking) normal tube of radius r
+    # The bullet head and tails are both located at position 0 on the normal axis
     t_ast_center = ast_proj_n / v_proj_n if v_proj_n != 0.0 else inf
+    # The time it takes for the relative bullet vel to travel the radius of the asteroid along normal axis
     t_diff_ast_radius = r / v_proj_n if v_proj_n != 0.0 else inf
 
     t0_mid = t_ast_center - t_diff_ast_radius
     t1_mid = t_ast_center + t_diff_ast_radius
 
-    # The bullet's endpoints are at n=0; so check if these collision points lie within the inside of the segment
-
-    # At time t0_mid, the whole segment translates by t*rv; check where the circle center projects onto segment
+    # Just because the times exist (which they pretty much always do), doesn’t mean the bullet actually collides with the circle there (which it very rarely does)
+    # Need to project the circle center onto the two lines and clamp them to the bounds of the other two lines
     a0x_t0m = a0x + rvx * t0_mid
     a0y_t0m = a0y + rvy * t0_mid
     b0x_t0m = b0x + rvx * t0_mid
     b0y_t0m = b0y + rvy * t0_mid
-    # The circle remains at the origin
     t_proj_0 = project_point_onto_segment_and_get_t(a0x_t0m, a0y_t0m, b0x_t0m, b0y_t0m, 0.0, 0.0)
 
     a0x_t1m = a0x + rvx * t1_mid
@@ -277,21 +374,15 @@ def collision_time_interval(
     b0y_t1m = b0y + rvy * t1_mid
     t_proj_1 = project_point_onto_segment_and_get_t(a0x_t1m, a0y_t1m, b0x_t1m, b0y_t1m, 0.0, 0.0)
 
-    # Only if the projected t is in [0,1] do we allow t0_mid or t1_mid to extend the window
+    # Only count these times if the projection is inside the segment at all (t in [0, 1])
     if 0.0 <= t_proj_0 <= 1.0:
-        # This t0_mid corresponds to collision at the interior of the segment
-        # This definitely happens before either end of the bullet collides
-        #assert(t0_mid <= t0)
-        #t0 = min(t0, t0_mid)
+        # This is a legit "middle-of-segment" first contact
         t0 = t0_mid
     if 0.0 <= t_proj_1 <= 1.0:
-        # This t1_mid corresponds to collision at the interior of the segment
-        # This definitely happens after either end of the bullet finishes colliding
-        #assert(t1_mid >= t1)
-        #t1 = max(t1, t1_mid)
+        # This is a legit "middle-of-segment" last contact
         t1 = t1_mid
 
-    # If we never updated t0/t1, no collision
+    # If neither t0 nor t1 got set properly, there was no collision
     if not (isfinite(t0) and isfinite(t1)):
         return (nan, nan)
 

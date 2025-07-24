@@ -3,7 +3,7 @@
 # NOTICE: This file is subject to the license agreement defined in file 'LICENSE', which is part of
 # this source code package.
 
-from math import sin, cos, nan, inf, copysign, sqrt, isclose
+from math import sin, cos, nan, inf, copysign, sqrt, isclose, isnan
 from typing import Callable
 
 
@@ -197,6 +197,78 @@ def circle_circle_collision_time_interval(
 
 
 def find_first_leq_zero(
+    f: Callable[[float], tuple[float, float, float]],
+    a: float,
+    b: float,
+    tol: float = 1e-12,
+    max_iter: int = 20
+) -> float:
+    """
+    Finds the smallest t in [a, b] such that f(t) <= 0, using analytic derivatives.
+    f must return (f(t), f'(t), f''(t))
+    """
+
+    # Newton's method for root-finding: f(x) == 0
+    def newton_root(f: Callable[[float], tuple[float, float, float]], x0: float, x1: float) -> float:
+        x = x0
+        for _ in range(max_iter):
+            fx, dfx, _ = f(x)
+            if abs(fx) < tol:
+                return x
+            if dfx == 0.0 or isnan(dfx):
+                x = 0.5 * (x + x1)
+                continue
+            x_new = x - fx / dfx
+            # Clamp to [x0, x1]
+            if not (x0 <= x_new <= x1):
+                x_new = 0.5 * (x + x1 if fx > 0 else x0 + x)
+            if abs(x_new - x) < tol:
+                return x_new
+            x = x_new
+        # Fallback, check both ends
+        for t in [x, x0, x1]:
+            fx, _, _ = f(t)
+            if abs(fx) < tol or fx <= 0:
+                return t
+        return nan
+
+    # Newton's method for finding minimum: f'(x) == 0
+    def newton_minimum(f: Callable[[float], tuple[float, float, float]], a: float, b: float) -> float:
+        x = 0.5 * (a + b)
+        for _ in range(max_iter):
+            _, dfx, ddfx = f(x)
+            if abs(dfx) < tol:
+                return x
+            if ddfx == 0.0 or isnan(ddfx):
+                x = 0.5 * (x + b)
+                continue
+            x_new = x - dfx / ddfx
+            if not (a <= x_new <= b):
+                x_new = 0.5 * (a + x)
+            if abs(x_new - x) < tol:
+                return x_new
+            x = x_new
+        return x
+
+    fa, da, _ = f(a)
+    if fa <= 0.0:
+        return a
+
+    fb, db, _ = f(b)
+    if fb <= 0.0:
+        # Bracket [a, b]: Use Newton's method
+        return newton_root(f, a, b)
+
+    if da < 0 and db > 0:
+        t_min = newton_minimum(f, a, b)
+        fmin, _, _ = f(t_min)
+        if fmin <= 0.0:
+            # Root must be to left of minimum;
+            return newton_root(f, a, t_min)
+    return nan
+
+
+def find_first_leq_zero_slow(
     f: Callable[[float], float],
     a: float,
     b: float,

@@ -288,6 +288,7 @@ class Ship:
 
         # Determine if we need to break the frame into two parts
         t1: float | None = None
+        v1: float = 0.0
         accel_phase2 = 0.0  # default to coasting at max speed, or stopped in second phase
 
         # Case 1: drag will bring us to a stop
@@ -313,7 +314,7 @@ class Ship:
                     t1 = to_max
                     v1 = max_speed
 
-        if t1 is None:
+        if t1 is None or abs(t1 - delta_time) < 1e-14:
             # No exceeding limit within this step, use normal single-phase analytic integration
             dx, dy = analytic_ship_movement_integration(initial_speed, net_acc, theta0, omega, delta_time)
             self.x = (x0 + dx) % map_size[0]
@@ -321,7 +322,21 @@ class Ship:
             self.speed = initial_speed + net_acc * delta_time
             # Append the end state, so we can reverse-integrate later by plugging in a negative time
             self.integration_initial_states.append((0.0, -delta_time, self.speed, net_acc, theta0 + omega * delta_time, omega, -dx, -dy))
+        elif t1 == 0.0:
+            assert v1 is not None
+            # The first period is just zero length, so just skip it
+            # This happens a lot when the ship is gunning it at full throttle, so handle it separately
+            # Constant speed or stopped in this second phase, no acceleration
+            dx, dy = analytic_ship_movement_integration(v1, accel_phase2, theta0, omega, delta_time)
+
+            self.x = (x0 + dx) % map_size[0]
+            self.y = (y0 + dy) % map_size[1]
+            self.speed = v1  # Either stopped or clamped
+
+            # Append the end state, so we can reverse-integrate later by plugging in a negative time
+            self.integration_initial_states.append((0.0, -delta_time, self.speed, accel_phase2, theta0 + omega * delta_time, omega, -dx, -dy))
         else:
+            assert v1 is not None
             # 2-phase integration splitting frame into two periods: (i) accelerate to speed limit or zero, (ii) coasting or stationary
             # Phase 1: accelerating from v0 to v1 over t1
             dx1, dy1 = analytic_ship_movement_integration(initial_speed, net_acc, theta0, omega, t1)
