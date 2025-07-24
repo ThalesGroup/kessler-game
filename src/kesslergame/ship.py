@@ -415,6 +415,7 @@ class Ship:
         if self.can_deploy_mine:
             # Remove respawn invincibility. Mine deployment limiter
             self._respawning = 0.0
+            self.was_respawning_until_this_frame = True
             self._mine_limiter = self._mine_deploy_time
 
             if self.mines_remaining != -1: # Mines are limited
@@ -431,6 +432,7 @@ class Ship:
         if self.can_fire:
             # Remove respawn invincibility. Trigger fire limiter
             self._respawning = 0.0
+            self.was_respawning_until_this_frame = True
             self._fire_limiter = self._fire_time
 
             # Bullet counters
