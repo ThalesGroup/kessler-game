@@ -91,6 +91,7 @@ class KesslerGame:
         map_width, map_height = scenario.map_size
 
         # Assign controllers to each ship
+        assert len(controllers) >= len(ships), f"There are not enough controllers ({len(controllers)}) to assign to the {len(ships)} ships!"
         for controller, ship in zip(controllers, ships):
             controller.ship_id = ship.id
             ship.controller = controller
@@ -150,55 +151,56 @@ class KesslerGame:
                 t_start = time.perf_counter()
 
             # Loop through each controller/ship combo and apply their actions
-            for ship_idx, ship in enumerate(liveships):
-                if controllers[ship_idx].ship_id != ship.id:
-                    raise RuntimeError("Controller and ship ID do not match")
-                
-                # Generate game_state info to send to controller
-                game_state_to_controller: GameState
-                if self.competition_safe_mode:
-                    # Must recreate GameState object, so competitors do not accidentally or maliciously modify the true game state
-                    game_state_to_controller = GameState(
-                        # Game entities
-                        ships=[ship.state.copy() for ship in liveships],
-                        asteroids=[asteroid.state.copy() for asteroid in asteroids],
-                        bullets=[bullet.state.copy() for bullet in bullets],
-                        mines=[mine.state.copy() for mine in mines],
-                        # Environment
-                        map_size=scenario.map_size,
-                        time_limit=time_limit,
-                        # Simulation timing
-                        time=sim_time,
-                        frame=sim_frame,
-                        delta_time=self.delta_time,
-                        frame_rate=self.frequency,
-                        # Game settings
-                        random_asteroid_splits=self.random_ast_splits,
-                        competition_safe_mode=self.competition_safe_mode
-                    )
-                else:
-                    game_state_to_controller = game_state
-                
-                # Evaluate each controller letting control be applied
-                thrust, turn_rate, fire, drop_mine = controllers[ship_idx].actions(ShipState(ship.ownstate), game_state_to_controller)
+            for ship_idx, ship in enumerate(ships):
+                if ship.alive:
+                    if controllers[ship_idx].ship_id != ship.id:
+                        raise RuntimeError("Controller and ship ID do not match")
+                    
+                    # Generate game_state info to send to controller
+                    game_state_to_controller: GameState
+                    if self.competition_safe_mode:
+                        # Must recreate GameState object, so competitors do not accidentally or maliciously modify the true game state
+                        game_state_to_controller = GameState(
+                            # Game entities
+                            ships=[ship.state.copy() for ship in liveships],
+                            asteroids=[asteroid.state.copy() for asteroid in asteroids],
+                            bullets=[bullet.state.copy() for bullet in bullets],
+                            mines=[mine.state.copy() for mine in mines],
+                            # Environment
+                            map_size=scenario.map_size,
+                            time_limit=time_limit,
+                            # Simulation timing
+                            time=sim_time,
+                            frame=sim_frame,
+                            delta_time=self.delta_time,
+                            frame_rate=self.frequency,
+                            # Game settings
+                            random_asteroid_splits=self.random_ast_splits,
+                            competition_safe_mode=self.competition_safe_mode
+                        )
+                    else:
+                        game_state_to_controller = game_state
+                    
+                    # Evaluate each controller letting control be applied
+                    thrust, turn_rate, fire, drop_mine = controllers[ship_idx].actions(ShipState(ship.ownstate), game_state_to_controller)
 
-                assert isinstance(thrust, (int, float)),    f"Controller {ship_idx} thrust is not a number: {thrust!r}"
-                assert isfinite(float(thrust)),             f"Controller {ship_idx} thrust is not finite: {thrust!r}"
-                assert isinstance(turn_rate, (int, float)), f"Controller {ship_idx} turn_rate is not a number: {turn_rate!r}"
-                assert isfinite(float(turn_rate)),          f"Controller {ship_idx} turn_rate is not finite: {turn_rate!r}"
-                assert isinstance(fire, bool),              f"Controller {ship_idx} fire is not bool: {fire!r}"
-                assert isinstance(drop_mine, bool),         f"Controller {ship_idx} drop_mine is not bool: {drop_mine!r}"
+                    assert isinstance(thrust, (int, float)),    f"Controller {ship_idx} thrust is not a number: {thrust!r}"
+                    assert isfinite(float(thrust)),             f"Controller {ship_idx} thrust is not finite: {thrust!r}"
+                    assert isinstance(turn_rate, (int, float)), f"Controller {ship_idx} turn_rate is not a number: {turn_rate!r}"
+                    assert isfinite(float(turn_rate)),          f"Controller {ship_idx} turn_rate is not finite: {turn_rate!r}"
+                    assert isinstance(fire, bool),              f"Controller {ship_idx} fire is not bool: {fire!r}"
+                    assert isinstance(drop_mine, bool),         f"Controller {ship_idx} drop_mine is not bool: {drop_mine!r}"
 
-                ship.thrust = float(thrust) # Upcast potential ints to float
-                ship.turn_rate = float(turn_rate)
-                ship.fire = fire
-                ship.drop_mine = drop_mine
+                    ship.thrust = float(thrust) # Upcast potential ints to float
+                    ship.turn_rate = float(turn_rate)
+                    ship.fire = fire
+                    ship.drop_mine = drop_mine
 
-                # Update controller evaluation time if performance tracking
-                if self.perf_tracker:
-                    controller_time = time.perf_counter() - t_start if ship.alive else 0.00
-                    perf_dict['controller_times'][ship_idx] += controller_time
-                    t_start = time.perf_counter()
+                    # Update controller evaluation time if performance tracking
+                    if self.perf_tracker:
+                        controller_time = time.perf_counter() - t_start if ship.alive else 0.00
+                        perf_dict['controller_times'][ship_idx] += controller_time
+                        t_start = time.perf_counter()
 
             if self.perf_tracker:
                 perf_dict['total_controller_time'] += time.perf_counter() - step_start
