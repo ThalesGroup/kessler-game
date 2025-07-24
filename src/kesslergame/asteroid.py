@@ -62,7 +62,7 @@ class Asteroid:
         self.vx = starting_speed * math.cos(starting_angle_rad)
         self.vy = starting_speed * math.sin(starting_angle_rad)
 
-        self.speed = starting_speed
+        self.speed = abs(starting_speed) # This is used for early rejection in collision detection
 
         # Random rotations for use in display or future use with complex hit box
         self.angle: float = random.uniform(0.0, 360.0)

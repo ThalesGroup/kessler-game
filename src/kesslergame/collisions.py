@@ -24,7 +24,7 @@ def ship_asteroid_continuous_collision_time(ship_x: float, ship_y: float, ship_r
     # First, we do an early rejection check. If the asteroid and ship are far enough away that with their combined velocities
     # it is impossible that they could have collided within the past delta_time seconds, then return nan
     # This check can be made stronger if we find the magnitude of their relative velocity, but that's more expensive to calculate compared to this conservative check
-    combined_vel = abs(ship_speed) + abs(ast_speed) #sqrt(ast_vx * ast_vx + ast_vy * ast_vy)
+    combined_vel = abs(ship_speed) + ast_speed #sqrt(ast_vx * ast_vx + ast_vy * ast_vy)
     delta_x = ship_x - ast_x
     delta_y = ship_y - ast_y
     max_separation = delta_time * combined_vel + ship_r + ast_r
