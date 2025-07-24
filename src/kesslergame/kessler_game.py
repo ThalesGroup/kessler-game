@@ -426,7 +426,7 @@ class KesslerGame:
             for ship_idx, ship in enumerate(liveships):
                 if ship.alive and not ship.is_respawning:
                     for ast_idx, asteroid in enumerate(asteroids):
-                        collision_start_time: float = nan
+                        collision_start_time = nan
                         if ship.was_respawning_until_this_frame:
                             # The ship just came out of its respawn invulnerability, so we do NOT want to
                             # check for collisions over the past frame. Just check at this instant in time.
@@ -493,7 +493,7 @@ class KesslerGame:
                     for ship2_idx in range(ship1_idx + 1, num_ships):
                         ship2 = liveships[ship2_idx]
                         if ship2.alive and not ship2.is_respawning:
-                            collision_start_time: float = nan
+                            collision_start_time = nan
                             if ship1.was_respawning_until_this_frame or ship2.was_respawning_until_this_frame:
                                 # At least one of the ships just came out of its respawn invulnerability, so we do NOT want to
                                 # check for collisions over the past frame. Just check at this instant in time.
