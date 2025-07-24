@@ -3,6 +3,7 @@
 ## [2.X.X] - NEXT VERSION, maybe last 2.X.X aside from bug fixes or documentation
 - Fixed building MyPyC compiled wheels, so compiled modules are now actually being run to provide a 4-10X+ speed benefit over interpreted
 - Use cibuildwheel to automate building MyPyC compiled wheels, and upload to pypi and the Github release
+- Removed src module for cleaner imports, and less confusion with a duplicate module that is incompatible with MyPyC
 - Wait until all asteroid collision checks are finished before appending new asteroids
 - Optimize removal of asteroids and other game objects from O(n) to O(1), by swapping item to delete with last element, and popping
 - Optimize creation of game_state and ship_state by reusing dictionaries instead of recreating them
@@ -22,6 +23,10 @@
 - Made the rare case of two mines exploding at once more fair, such that if an asteroid is within the blast radius of two mines, it counts as the closer mine hitting it
 - Added framerate-independent dynamics to the ship by analytically integrating, instead of using an Euler approximation
 - Added more documentation for how to use the ShipState, GameState, and the game settings
+- Added continuous ship-asteroid and ship-ship collision detection using a fast root finder using first/second derivatives
+- All types of collisions in the game are handled in chronological order within their own type, for fairness and precision
+- Added more robust check to length of controllers list, to make sure there are enough controllers for ships
+- Sanitize controller outputs and make sure they cannot crash the game by outputting inf/nan values
 
 ## [2.3.0] - 15 July 2025
 
