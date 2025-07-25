@@ -3,8 +3,8 @@
 # NOTICE: This file is subject to the license agreement defined in file 'LICENSE', which is part of
 # this source code package.
 
-import math
 import warnings
+from math import cos, sin, copysign, radians
 
 from .bullet import Bullet
 from .mines import Mine
@@ -248,16 +248,16 @@ class Ship:
 
         # Store speed and heading BEFORE acceleration/thrust for integration
         initial_speed = self.speed
-        theta0 = math.radians(self.heading)  # convert to radians
+        theta0 = radians(self.heading)  # convert to radians
         self.integration_initial_states.clear()
 
         is_moving: bool = abs(initial_speed) > 1e-12
 
         # Get direction of motion for drag
         if is_moving:
-            motion_sign = math.copysign(1.0, initial_speed)
+            motion_sign = copysign(1.0, initial_speed)
         else:
-            motion_sign = math.copysign(1.0, self.thrust) if abs(self.thrust) > 1e-12 else 0.0
+            motion_sign = copysign(1.0, self.thrust) if abs(self.thrust) > 1e-12 else 0.0
 
         # Drag will always oppose the direction of motion
         # If the ship is not moving, then drag will be zero.
@@ -283,7 +283,7 @@ class Ship:
 
         x0: float = self.x
         y0: float = self.y
-        omega = math.radians(self.turn_rate)
+        omega = radians(self.turn_rate)
 
         # Determine if we need to break the frame into two parts
         t1: float | None = None
@@ -309,7 +309,7 @@ class Ship:
                     accel_phase2 = 0.0 # Infinite oscillations around 0. Essentially simulate that with 0 acceleration to bypass oscillations.
         else:
             # Case 2: acceleration would exceed max speed
-            max_speed = math.copysign(self.max_speed, initial_speed + net_acc * delta_time)
+            max_speed = copysign(self.max_speed, initial_speed + net_acc * delta_time)
             if net_acc != 0.0:
                 to_max = (max_speed - initial_speed) / net_acc
                 assert to_max >= 0.0
@@ -367,7 +367,10 @@ class Ship:
 
         # Clamp speed after acceleration (This is only needed in case of floating point error, but is otherwise unnecessary)
         if abs(self.speed) > self.max_speed:
-            self.speed = math.copysign(self.max_speed, self.speed)
+            self.speed = copysign(self.max_speed, self.speed)
+        elif abs(self.speed) <= 1e-12:
+            # Let's be nice and just make it 0.0. Because I just tripped myself up with a ship_state.speed == 0.0 comparison when testing XD
+            self.speed = 0.0
 
         # Update the angle based on turning rate
         self.heading += self.turn_rate * delta_time
@@ -376,9 +379,9 @@ class Ship:
         self.heading %= 360.0
 
         # Use speed magnitude to get velocity vector
-        rad_heading = math.radians(self.heading)
-        self.vx = math.cos(rad_heading) * self.speed
-        self.vy = math.sin(rad_heading) * self.speed
+        rad_heading = radians(self.heading)
+        self.vx = cos(rad_heading) * self.speed
+        self.vy = sin(rad_heading) * self.speed
 
         # Handle firing and mining
         # This is done after the ship has moved, so the projectiles are from the current ship position and not the last
@@ -468,9 +471,9 @@ class Ship:
             self.bullets_shot += 1
 
             # Return the bullet object that was fired
-            rad_heading = math.radians(self.heading)
-            bullet_x = self.x + self.radius * math.cos(rad_heading)
-            bullet_y = self.y + self.radius * math.sin(rad_heading)
+            rad_heading = radians(self.heading)
+            bullet_x = self.x + self.radius * cos(rad_heading)
+            bullet_y = self.y + self.radius * sin(rad_heading)
             return Bullet((bullet_x, bullet_y), self.heading, owner=self)
 
         # Return nothing if we can't fire a bullet right now
