@@ -263,6 +263,10 @@ class Ship:
         # If the ship is not moving, then drag will be zero.
         drag_acc = -self.drag * motion_sign
 
+        # NOTE: When testing this, there was identical behavior of framerates down to 2 FPS, but 1 FPS gave different behavior.
+        # Took a while to realize the issue is that at a delta_time of 1 second, the ship can both cross the 0 boundary, AND accelerate to hit the speed cap in the same frame!
+        # This does NOT handle that case robustly. It doesn't check for that. Please do not run the game at lower than 2 FPS!
+
         # Combine thrust and drag into one net acceleration
         # This constant acceleration will apply for the entire duration of this frame, unless we hit the speed cap or hit 0
         # If we hit the speed cap, we do 0 acceleration after that time for the rest of the frame
