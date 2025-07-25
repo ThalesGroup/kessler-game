@@ -340,9 +340,9 @@ Represents a single asteroid entity in the game. Each asteroid has physical prop
 | `vx`, `vy` | `float`               | Velocity components                 |
 | `position` | `tuple[float, float]` | (x, y) coordinate                   |
 | `velocity` | `tuple[float, float]` | (vx, vy) vector                     |
-| `size`     | `int`                 | Asteroid size class (1, 2, 3, 4)    |
+| `size`     | `int`                 | Asteroid size (1, 2, 3, 4)          |
 | `mass`     | `float`               | Asteroid mass (kg)                  |
-| `radius`   | `float`               | Explosion radius (m)                |
+| `radius`   | `float`               | Ship shield radius (m)              |
 
 ### Example Usage:
 
