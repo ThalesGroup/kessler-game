@@ -5,6 +5,8 @@
 
 from __future__ import annotations
 from typing import Literal, overload, cast, Iterator, TypedDict, TypeAlias, Any
+import builtins
+import copy
 
 
 ShipDataList: TypeAlias = list[float | int | bool]
@@ -185,6 +187,15 @@ class AsteroidView:
             f"radius={self.radius}>"
         )
 
+    def __copy__(self) -> AsteroidView:
+        return type(self)(self._data)
+
+    def __deepcopy__(self, memo: builtins.dict[int, Any]) -> AsteroidView:
+        copied_data = copy.deepcopy(self._data, memo)
+        result = type(self)(copied_data)
+        memo[id(self)] = result
+        return result
+
 
 class BulletView:
     __slots__ = ("_data",)
@@ -288,6 +299,15 @@ class BulletView:
             f"length={self.length}>"
         )
 
+    def __copy__(self) -> BulletView:
+        return type(self)(self._data)
+
+    def __deepcopy__(self, memo: builtins.dict[int, Any]) -> BulletView:
+        copied_data = copy.deepcopy(self._data, memo)
+        result = type(self)(copied_data)
+        memo[id(self)] = result
+        return result
+
 
 class MineView:
     __slots__ = ("_data",)
@@ -356,6 +376,15 @@ class MineView:
             f"fuse_time={self.fuse_time} "
             f"remaining_time={self.remaining_time}>"
         )
+
+    def __copy__(self) -> MineView:
+        return type(self)(self._data)
+
+    def __deepcopy__(self, memo: builtins.dict[int, Any]) -> MineView:
+        copied_data = copy.deepcopy(self._data, memo)
+        result = type(self)(copied_data)
+        memo[id(self)] = result
+        return result
 
 
 class ShipView:
@@ -492,6 +521,15 @@ class ShipView:
             f"deaths={self.deaths}>"
         )
 
+    def __copy__(self) -> ShipView:
+        return type(self)(self._data)
+
+    def __deepcopy__(self, memo: builtins.dict[int, Any]) -> ShipView:
+        copied_data = copy.deepcopy(self._data, memo)
+        result = type(self)(copied_data)
+        memo[id(self)] = result
+        return result
+
 
 class ShipOwnView(ShipView):
     __slots__ = ("_own_data",)
@@ -621,6 +659,16 @@ class ShipOwnView(ShipView):
             f"thrust_range={self.thrust_range} turn_rate_range={self.turn_rate_range} "
             f"max_speed={self.max_speed} drag={self.drag}>"
         )
+    
+    def __copy__(self) -> ShipOwnView:
+        new_obj = type(self)(self._own_data)
+        return new_obj
+
+    def __deepcopy__(self, memo: builtins.dict[int, Any]) -> ShipOwnView:
+        copied_data = copy.deepcopy(self._own_data, memo)
+        result = type(self)(copied_data)
+        memo[id(self)] = result
+        return result
 
 
 class ShipState:
@@ -829,6 +877,17 @@ class ShipState:
         if inner.startswith("<OwnShip"):
             inner = "<ShipState" + inner[len("<OwnShip"):]
         return inner
+
+    def __copy__(self) -> ShipState:
+        return type(self)(self._ship_data)
+
+    def __deepcopy__(self, memo: builtins.dict[int, Any]) -> ShipState:
+        if id(self) in memo:
+            return cast(ShipState, memo[id(self)])
+        copied_data = copy.deepcopy(self._ship_data, memo)
+        result = type(self)(copied_data)
+        memo[id(self)] = result
+        return result
 
 
 class GameState:
@@ -1055,3 +1114,39 @@ class GameState:
             "random_asteroid_splits": self._random_asteroid_splits,
             "competition_safe_mode": self._competition_safe_mode,
         }
+
+    def __copy__(self) -> GameState:
+        return type(self)(
+            ships=self._ship_data,
+            asteroids=self._asteroid_data,
+            bullets=self._bullet_data,
+            mines=self._mine_data,
+            map_size=self._map_size,
+            time_limit=self._time_limit,
+            time=self._time,
+            frame=self._frame,
+            delta_time=self._delta_time,
+            frame_rate=self._frame_rate,
+            random_asteroid_splits=self._random_asteroid_splits,
+            competition_safe_mode=self._competition_safe_mode
+        )
+
+    def __deepcopy__(self, memo: builtins.dict[int, Any]) -> GameState:
+        if id(self) in memo:
+            return cast(GameState, memo[id(self)])
+        result = type(self)(
+            ships=copy.deepcopy(self._ship_data, memo),
+            asteroids=copy.deepcopy(self._asteroid_data, memo),
+            bullets=copy.deepcopy(self._bullet_data, memo),
+            mines=copy.deepcopy(self._mine_data, memo),
+            map_size=self._map_size,
+            time_limit=self._time_limit,
+            time=self._time,
+            frame=self._frame,
+            delta_time=self._delta_time,
+            frame_rate=self._frame_rate,
+            random_asteroid_splits=self._random_asteroid_splits,
+            competition_safe_mode=self._competition_safe_mode
+        )
+        memo[id(self)] = result
+        return result
