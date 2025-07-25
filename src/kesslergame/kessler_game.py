@@ -627,7 +627,7 @@ class TrainerEnvironment(KesslerGame):
             'perf_tracker': settings.get("perf_tracker", False),
             'prints_on': settings.get("prints_on", False),
             'graphics_type': GraphicsType.NoGraphics,
-            'realtime_multiplier': 0,
+            'realtime_multiplier': 0.0,
             'time_limit': settings.get("time_limit", inf)
         }
         super().__init__(trainer_settings)

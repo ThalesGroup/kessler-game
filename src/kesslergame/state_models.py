@@ -3,7 +3,8 @@
 # NOTICE: This file is subject to the license agreement defined in file 'LICENSE', which is part of
 # this source code package.
 
-from typing import Literal, overload, cast, Iterator, TypedDict, TypeAlias
+from __future__ import annotations
+from typing import Literal, overload, cast, Iterator, TypedDict, TypeAlias, Any
 
 
 ShipDataList: TypeAlias = list[float | int | bool]
@@ -163,8 +164,26 @@ class AsteroidView:
     def __getitem__(self, key: str) -> float | int | tuple[float, float]:
         return cast(float | int | tuple[float, float], getattr(self, key))
 
+    def __format__(self, format_spec: str) -> str:
+        fmt = format_spec or ".2f"
+        return (
+            f"<Asteroid "
+            f"pos=({format(self.x, fmt)}, {format(self.y, fmt)}) "
+            f"vel=({format(self.vx, fmt)}, {format(self.vy, fmt)}) "
+            f"size={self.size} "
+            f"mass={format(self.mass, fmt)} "
+            f"radius={format(self.radius, fmt)}>"
+        )
+    
     def __repr__(self) -> str:
-        return f"<Asteroid pos={self.position} vel={self.velocity} size={self.size} mass={self.mass} radius={self.radius}>"
+        return (
+            f"<Asteroid "
+            f"position=({self.x}, {self.y}) "
+            f"velocity=({self.vx}, {self.vy}) "
+            f"size={self.size} "
+            f"mass={self.mass} "
+            f"radius={self.radius}>"
+        )
 
 
 class BulletView:
@@ -246,10 +265,28 @@ class BulletView:
     def __getitem__(self, key: str) -> float | tuple[float, float]:
         return cast(float | tuple[float, float], getattr(self, key))
 
+    def __format__(self, format_spec: str) -> str:
+        fmt = format_spec or ".2f"
+        return (
+            f"<Bullet "
+            f"pos=({format(self.x, fmt)}, {format(self.y, fmt)}) "
+            f"vel=({format(self.vx, fmt)}, {format(self.vy, fmt)}) "
+            f"tail_delta=({format(self.tail_dx, fmt)}, {format(self.tail_dy, fmt)}) "
+            f"heading={format(self.heading, fmt)} "
+            f"mass={format(self.mass, fmt)} "
+            f"length={format(self.length, fmt)}>"
+        )
+
     def __repr__(self) -> str:
-        return (f"<Bullet pos={self.position} vel={self.velocity} "
-                f"tail_delta={self.tail_delta} "
-                f"heading={self.heading} mass={self.mass} length={self.length}>")
+        return (
+            f"<Bullet "
+            f"position=({self.x}, {self.y}) "
+            f"velocity=({self.vx}, {self.vy}) "
+            f"tail_delta=({self.tail_dx}, {self.tail_dy}) "
+            f"heading={self.heading} "
+            f"mass={self.mass} "
+            f"length={self.length}>"
+        )
 
 
 class MineView:
@@ -301,8 +338,24 @@ class MineView:
     def __getitem__(self, key: str) -> float | tuple[float, float]:
         return cast(float | tuple[float, float], getattr(self, key))
 
+    def __format__(self, format_spec: str) -> str:
+        fmt = format_spec or ".2f"
+        return (
+            f"<Mine "
+            f"pos=({format(self.x, fmt)}, {format(self.y, fmt)}) "
+            f"mass={format(self.mass, fmt)} "
+            f"fuse_time={format(self.fuse_time, fmt)} "
+            f"remaining_time={format(self.remaining_time, fmt)}>"
+        )
+
     def __repr__(self) -> str:
-        return f"<Mine pos={self.position} mass={self.mass} fuse_time={self.fuse_time} remaining_time={self.remaining_time}>"
+        return (
+            f"<Mine "
+            f"position=({self.x}, {self.y}) "
+            f"mass={self.mass} "
+            f"fuse_time={self.fuse_time} "
+            f"remaining_time={self.remaining_time}>"
+        )
 
 
 class ShipView:
@@ -412,12 +465,30 @@ class ShipView:
     def __getitem__(self, key: str) -> float | int | bool | tuple[float, float]:
         return cast(float | int | bool | tuple[float, float], getattr(self, key))
 
+    def __format__(self, format_spec: str) -> str:
+        fmt = format_spec or ".2f"
+        return (
+            f"<Ship "
+            f"pos=({format(self.x, fmt)}, {format(self.y, fmt)}) "
+            f"vel=({format(self.vx, fmt)}, {format(self.vy, fmt)}) "
+            f"speed={format(self.speed, fmt)} "
+            f"heading={format(self.heading, fmt)} "
+            f"mass={format(self.mass, fmt)} "
+            f"radius={format(self.radius, fmt)} "
+            f"id={self.id} team={self.team} "
+            f"is_respawning={self.is_respawning} "
+            f"lives_remaining={self.lives_remaining} "
+            f"deaths={self.deaths}>"
+        )
+
     def __repr__(self) -> str:
         return (
-            f"<Ship position={self.position} velocity={self.velocity} "
+            f"<Ship "
+            f"position={self.position} velocity={self.velocity} "
             f"speed={self.speed} heading={self.heading} mass={self.mass} "
             f"radius={self.radius} id={self.id} team={self.team} "
-            f"is_respawning={self.is_respawning} lives_remaining={self.lives_remaining} "
+            f"is_respawning={self.is_respawning} "
+            f"lives_remaining={self.lives_remaining} "
             f"deaths={self.deaths}>"
         )
 
@@ -517,6 +588,26 @@ class ShipOwnView(ShipView):
 
     def __getitem__(self, key: str) -> float | int | bool | tuple[float, float]:
         return cast(float | int | bool | tuple[float, float], getattr(self, key))
+
+    def __format__(self, format_spec: str) -> str:
+        fmt = format_spec or ".2f"
+        return (
+            f"<OwnShip "
+            f"pos=({format(self.x, fmt)}, {format(self.y, fmt)}) "
+            f"vel=({format(self.vx, fmt)}, {format(self.vy, fmt)}) "
+            f"speed={format(self.speed, fmt)} heading={format(self.heading, fmt)} "
+            f"mass={format(self.mass, fmt)} radius={format(self.radius, fmt)} "
+            f"id={self.id} team={self.team} is_respawning={self.is_respawning} "
+            f"lives_remaining={self.lives_remaining} deaths={self.deaths} "
+            f"bullets_remaining={self.bullets_remaining} mines_remaining={self.mines_remaining} "
+            f"can_fire={self.can_fire} fire_cooldown={format(self.fire_cooldown, fmt)} "
+            f"fire_rate={format(self.fire_rate, fmt)} can_deploy_mine={self.can_deploy_mine} "
+            f"mine_cooldown={format(self.mine_cooldown, fmt)} mine_deploy_rate={format(self.mine_deploy_rate, fmt)} "
+            f"respawn_time_left={format(self.respawn_time_left, fmt)} respawn_time={format(self.respawn_time, fmt)} "
+            f"thrust_range=({format(self.thrust_range[0], fmt)}, {format(self.thrust_range[1], fmt)}) "
+            f"turn_rate_range=({format(self.turn_rate_range[0], fmt)}, {format(self.turn_rate_range[1], fmt)}) "
+            f"max_speed={format(self.max_speed, fmt)} drag={format(self.drag, fmt)}>"
+        )
 
     def __repr__(self) -> str:
         return (
@@ -732,6 +823,12 @@ class ShipState:
             inner = "<ShipState" + inner[len("<OwnShip"):]
         documentation = "\nProperties: Same as keys in ShipState, along with .dict -> dict, .fast_compact -> dict"
         return inner + documentation
+
+    def __format__(self, format_spec: str) -> str:
+        inner = format(self._view, format_spec)
+        if inner.startswith("<OwnShip"):
+            inner = "<ShipState" + inner[len("<OwnShip"):]
+        return inner
 
 
 class GameState:

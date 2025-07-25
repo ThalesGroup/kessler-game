@@ -3,15 +3,18 @@
 # NOTICE: This file is subject to the license agreement defined in file 'LICENSE', which is part of
 # this source code package.
 
-from typing import TYPE_CHECKING, Union
+from __future__ import annotations
+
 import random
 import math
 
+from typing import TYPE_CHECKING, Union
 if TYPE_CHECKING:
     from .ship import Ship
     from .bullet import Bullet
 from .mines import Mine
 from .state_models import AsteroidDataList
+
 
 class Asteroid:
     """ Sprite that represents an asteroid. """
@@ -98,7 +101,7 @@ class Asteroid:
         self._state[1] = self.y
         self.angle += delta_time * self.turnrate
 
-    def destruct(self, impactor: Union['Bullet', 'Mine', 'Ship'], random_ast_split: bool) -> list['Asteroid']:
+    def destruct(self, impactor: Union['Bullet', 'Mine', 'Ship'], random_ast_split: bool) -> list[Asteroid]:
         """ Spawn child asteroids"""
         # Split angle is the angle off of the new velocity vector for the two asteroids to the sides, the center child
         # asteroid continues on the new velocity path

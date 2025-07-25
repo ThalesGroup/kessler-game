@@ -3,6 +3,8 @@
 # NOTICE: This file is subject to the license agreement defined in file 'LICENSE', which is part of
 # this source code package.
 
+from __future__ import annotations
+
 import math
 from typing import TYPE_CHECKING
 
@@ -13,7 +15,7 @@ from .state_models import BulletDataList
 
 class Bullet:
     __slots__ = ('owner', 'speed', 'length', 'mass', 'x', 'y', 'vx', 'vy', 'heading', 'tail_delta_x', 'tail_delta_y', '_state')
-    def __init__(self, position: tuple[float, float], heading: float, owner: 'Ship') -> None:
+    def __init__(self, position: tuple[float, float], heading: float, owner: Ship) -> None:
         self.owner: Ship = owner
         self.speed: float = 800.0  # m/s
         self.length: float = 12.0 # m

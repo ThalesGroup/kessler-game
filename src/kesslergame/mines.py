@@ -3,6 +3,7 @@
 # NOTICE: This file is subject to the license agreement defined in file 'LICENSE', which is part of
 # this source code package.
 
+from __future__ import annotations
 from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
@@ -13,7 +14,7 @@ from .state_models import MineDataList
 
 class Mine:
     __slots__ = ('fuse_time', 'detonation_time', 'mass', 'radius', 'blast_radius', 'blast_pressure', 'owner', 'countdown_timer', 'detonating', 'x', 'y', '_state')
-    def __init__(self, starting_position: tuple[float, float], owner: 'Ship') -> None:
+    def __init__(self, starting_position: tuple[float, float], owner: Ship) -> None:
         self.fuse_time: float = 3.0 # s
         self.detonation_time: float = 0.25 # s
         self.mass: float = 25.0  # kg
@@ -56,7 +57,7 @@ class Mine:
     def position(self) -> tuple[float, float]:
         return (self.x, self.y)
 
-    def calculate_blast_force(self, dist: float, obj: 'Asteroid') -> float:
+    def calculate_blast_force(self, dist: float, obj: Asteroid) -> float:
         """
         Calculates the blast force based on the blast radius, blast pressure, and a linear decrease in intensity from the mine location to the blast radius
         Also takes into account asteroid diameter to resolve total acceleration based on size/mass
