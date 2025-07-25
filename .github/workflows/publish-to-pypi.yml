@@ -43,9 +43,11 @@ jobs:
 
       - name: Upload to Test PyPI
         env:
-          TWINE_USERNAME: ${{ secrets.TEST_PYPI_USERNAME }}
-          TWINE_PASSWORD: ${{ secrets.TEST_PYPI_PASSWORD }}
-        run: twine upload --verbose --repository-url https://test.pypi.org/legacy/ --skip-existing wheelhouse/*
+          TWINE_USERNAME: __token__
+          TWINE_PASSWORD: ${{ secrets.PYPI_API_TOKEN }}
+#          TWINE_USERNAME: ${{ secrets.TEST_PYPI_USERNAME }}
+#          TWINE_PASSWORD: ${{ secrets.TEST_PYPI_PASSWORD }}
+        run: twine upload --verbose --skip-existing wheelhouse/* # FOR TESTING: --repository-url https://test.pypi.org/legacy/
 
       - name: Upload wheels to GitHub Release
         uses: softprops/action-gh-release@v2

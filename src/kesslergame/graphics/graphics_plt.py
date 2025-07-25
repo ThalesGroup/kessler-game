@@ -4,15 +4,12 @@
 # this source code package.
 
 import os
-import matplotlib.markers
 import matplotlib.pyplot as plt
 import matplotlib.image as mpimg
 from matplotlib.figure import Figure
 from matplotlib.axes import Axes
 
-import scipy.ndimage as ndimage  # type: ignore[import-untyped]
-
-from typing import List, Optional
+import scipy.ndimage as ndimage
 
 from .graphics_base import KesslerGraphics
 from ..ship import Ship
@@ -27,8 +24,8 @@ class GraphicsPLT(KesslerGraphics):
     def __init__(self) -> None:
 
         # Objects for plotting data
-        self.fig: Optional[Figure] = None
-        self.ax: Optional[Axes] = None
+        self.fig: Figure | None = None
+        self.ax: Axes | None = None
         script_dir = os.path.dirname(__file__)
         self.images = ["images/playerShip1_green.png",
                        "images/playerShip1_orange.png",
@@ -42,7 +39,7 @@ class GraphicsPLT(KesslerGraphics):
         self.map_size = scenario.map_size
 
         ships = scenario.ships()
-        bullets: List[Bullet] = []
+        bullets: list[Bullet] = []
         asteroids = scenario.asteroids()
 
         plt.ion()
@@ -55,7 +52,7 @@ class GraphicsPLT(KesslerGraphics):
 
         # plt.show()
 
-    def update(self, score: Score, ships: List[Ship], asteroids: List[Asteroid], bullets: List[Bullet], mines: List[Mine]) -> None:
+    def update(self, score: Score, ships: list[Ship], asteroids: list[Asteroid], bullets: list[Bullet], mines: list[Mine]) -> None:
         # clears ax
         plt.cla()
 
@@ -67,7 +64,7 @@ class GraphicsPLT(KesslerGraphics):
         self.fig.canvas.draw()
         self.fig.canvas.flush_events()
 
-    def plot_markers(self, ships: List[Ship], bullets: List[Bullet], asteroids: List[Asteroid]) -> None:
+    def plot_markers(self, ships: list[Ship], bullets: list[Bullet], asteroids: list[Asteroid]) -> None:
 
         # marker = matplotlib.markers.MarkerStyle(marker='<')
         assert self.ax is not None

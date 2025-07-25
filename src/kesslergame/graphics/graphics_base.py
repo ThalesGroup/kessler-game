@@ -3,24 +3,24 @@
 # NOTICE: This file is subject to the license agreement defined in file 'LICENSE', which is part of
 # this source code package.
 
-#import os
+from __future__ import annotations
+from typing import TYPE_CHECKING
 from tkinter import *
-from typing import List
-#from PIL import Image, ImageTk  # type: ignore[import-untyped]
 
-from ..ship import Ship
-from ..asteroid import Asteroid
-from ..bullet import Bullet
-from ..mines import Mine
-from ..score import Score
-from ..scenario import Scenario
+if TYPE_CHECKING:
+    from ..ship import Ship
+    from ..asteroid import Asteroid
+    from ..bullet import Bullet
+    from ..mines import Mine
+    from ..score import Score
+    from ..scenario import Scenario
 
 
 class KesslerGraphics:
     def start(self, scenario: Scenario) -> None:
         raise NotImplementedError('Your derived KesslerGraphics must include a start() method.')
 
-    def update(self, score: Score, ships: List[Ship], asteroids: List[Asteroid], bullets: List[Bullet], mines: List[Mine]) -> None:
+    def update(self, score: Score, ships: list[Ship], asteroids: list[Asteroid], bullets: list[Bullet], mines: list[Mine]) -> None:
         raise NotImplementedError('Your derived KesslerGraphics must include an update() method.')
 
     def close(self) -> None:

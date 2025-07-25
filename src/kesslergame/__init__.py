@@ -3,7 +3,7 @@
 # NOTICE: This file is subject to the license agreement defined in file 'LICENSE', which is part of
 # this source code package.
 
-from .ship import Ship
+#from .ship import Ship, ShipState
 from .kessler_game import KesslerGame, TrainerEnvironment
 from .controller import KesslerController
 from .controller_gamepad import GamepadController
@@ -14,4 +14,4 @@ from ._version import __version__
 
 
 __all__ = ['KesslerGame', 'TrainerEnvironment', 'KesslerController', 'Scenario', 'Score', 'GraphicsType',
-           'KesslerGraphics', 'GamepadController', 'Ship']
+           'KesslerGraphics', 'GamepadController']

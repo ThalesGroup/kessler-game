@@ -23,8 +23,3 @@ setup(
     version=verstr,
     install_requires=requirements,
 )
-
-
-
-
-

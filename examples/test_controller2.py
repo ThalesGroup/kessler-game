@@ -3,7 +3,7 @@
 # NOTICE: This file is subject to the license agreement defined in file 'LICENSE', which is part of
 # this source code package.
 
-from src.kesslergame import KesslerController
+from kesslergame import KesslerController
 from typing import Dict, Tuple
 
 

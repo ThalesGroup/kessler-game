@@ -26,14 +26,17 @@ else:
 mypyc_modules = [
     "src/kesslergame/asteroid.py",
     "src/kesslergame/bullet.py",
+    "src/kesslergame/math_utils.py",
+    "src/kesslergame/mines.py",
     "src/kesslergame/collisions.py",
 #    "src/kesslergame/controller.py", DO NOT compile the controller.py, because adding the ship_id attribute from the derived class gets really messy and buggy
 #    "src/kesslergame/controller_gamepad.py",
     "src/kesslergame/kessler_game.py",
-    "src/kesslergame/mines.py",
     "src/kesslergame/scenario.py",
     "src/kesslergame/score.py",
+    "src/kesslergame/settings_dicts.py",
     "src/kesslergame/ship.py",
+    "src/kesslergame/state_models.py",
     "src/kesslergame/team.py",
     "src/kesslergame/graphics/graphics_base.py",
     "src/kesslergame/graphics/graphics_handler.py",
@@ -49,7 +52,7 @@ init_file = "src/__init__.py"
 
 try:
     if os.path.exists(init_file):
-        print(f"Found {init_file}, deleting it temporarily for compilation.")
+        print(f"Found {init_file}, deleting it for compilation.")
         os.remove(init_file)
     else:
         print(f"{init_file} does not exist, skipping deletion.")
@@ -69,6 +72,8 @@ except Exception as e:
     print(f"Error during setup: {e}")
     raise
 finally:
+    pass
+    '''
     try:
         if not os.path.exists(init_file):
             print(f"Recreating {init_file} as an empty file.")
@@ -77,3 +82,4 @@ finally:
     except Exception as e:
         print(f"Error while recreating {init_file}: {e}")
         raise
+    '''
