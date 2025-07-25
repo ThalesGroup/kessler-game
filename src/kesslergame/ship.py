@@ -238,6 +238,14 @@ class Ship:
             self.turn_rate = min(max(self.turn_rate_range[0], self.turn_rate), self.turn_rate_range[1])
             warnings.warn('Ship ' + str(self.id) + ' turn rate command outside of allowable range', RuntimeWarning)
 
+        # The tricky part about integration the ship's movement with thrust and drag, is that
+        # there is a speed cap, and there is also the zero boundary.
+        # If the ship hits the speed cap in the middle of the frame, the integration gets split up into two phases.
+        # If the ship has a thrust magnitude of less than drag, and drag causes the ship to stop, technically
+        # the ship undergoes INFINITELY many periods of integration, because drag will cause it to infinitely oscillate
+        # around 0 speed. But of course we will just treat this as having zero net acceleration, and the ship stays at 0 speed.
+        # This is a special case we have to detect, so we don't oscillate the ship, or cause it to bypass the zero boundary.
+
         # Store speed and heading BEFORE acceleration/thrust for integration
         initial_speed = self.speed
         theta0 = math.radians(self.heading)  # convert to radians
@@ -252,12 +260,17 @@ class Ship:
             motion_sign = math.copysign(1.0, self.thrust) if abs(self.thrust) > 1e-12 else 0.0
 
         # Drag will always oppose the direction of motion
+        # If the ship is not moving, then drag will be zero.
         drag_acc = -self.drag * motion_sign
 
         # Combine thrust and drag into one net acceleration
         # This constant acceleration will apply for the entire duration of this frame, unless we hit the speed cap or hit 0
         # If we hit the speed cap, we do 0 acceleration after that time for the rest of the frame
-        # If we hit 0, we change the direction of drag, but keep thrust the same
+        # If we hit speed 0, the direction of drag will change right after. We consider two cases:
+        # 1. Net acc doesn't change sign change, so the ship will continue accelerating in the same direction, just with 2*drag less acceleration
+        #    To handle, we split up the integration into period 1 with thrust + drag, and period 2 with thrust - drag, where these two quantities have the same sign
+        # 2. Net acc changes sign, meaning the ship will infinitely oscillate across the 0 boundary every infinitesimal timestep forward.
+        #    To handle this, we split up the integration into period 1 with net_acc, and period 2 with 0 acceleration to simulate the infinite oscillations
         net_acc = self.thrust + drag_acc  # m/s²
         
         # We perform analytic position integration, which is framerate independent
@@ -282,7 +295,14 @@ class Ship:
                 t1 = t_to_stop
                 v1 = 0.0  # Fully stopped
                 # Drag now goes the other way, since our speed has crossed the zero boundary and drag will oppose our new speed
-                accel_phase2 = self.thrust - drag_acc
+                # if sign(self.thrust + drag_acc) == sign(self.thrust - drag_acc)
+                # This statement is logically equivalent to the faster-to-evaluate:
+                if abs(drag_acc) <= abs(self.thrust):
+                    # The thrust is enough to carry us through the "zero valley" without falling back into it and infinitely oscillating
+                    accel_phase2 = self.thrust - drag_acc
+                else:
+                    # Thrust too weak. We fall into zero valley and infinitely oscillate!
+                    accel_phase2 = 0.0 # Infinite oscillations around 0. Essentially simulate that with 0 acceleration to bypass oscillations.
         else:
             # Case 2: acceleration would exceed max speed
             max_speed = math.copysign(self.max_speed, initial_speed + net_acc * delta_time)
@@ -322,7 +342,7 @@ class Ship:
             self.integration_initial_states.append((0.0, -delta_time, self.speed, accel_phase2, theta0 + omega * delta_time, omega, -dx, -dy))
         else:
             assert v1 is not None
-            # 2-phase integration splitting frame into two periods: (i) accelerate to speed limit or zero, (ii) coasting or stationary
+            # 2-phase integration splitting frame into two periods. 1: accelerate to speed limit or zero, 2: coasting or stationary
             # Phase 1: accelerating from v0 to v1 over t1
             dx1, dy1 = analytic_ship_movement_integration(initial_speed, net_acc, theta0, omega, t1)
             theta1 = theta0 + omega * t1
