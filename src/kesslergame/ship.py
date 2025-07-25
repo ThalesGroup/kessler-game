@@ -55,7 +55,8 @@ class Ship:
 
         # To be able to perform continuous collision detection between the ship and other objects,
         # We need to store the stages of integration over the previous frame
-        # So that the integration can be re-done in reverse to trace out the ship's exact path
+        # So that the integration can be re-done in reverse to trace out the ship's exact path.
+        # The start and end times are in reverse-chronological order! And the initial states are also at the start time, which is the latest time.
         # The tuple is (start_time_in_s_from_beginning_of_frame, integration_duration_s, v0, a, theta0, omega, full_integral_dx, full_integral_dy)
         self.integration_initial_states: list[tuple[float, float, float, float, float, float, float, float]] = []
 
@@ -88,7 +89,7 @@ class Ship:
         self.bullets_remaining: int = bullets_remaining
         self.bullets_shot: int = 0
         self.mines_dropped: int = 0
-        self.bullets_hit: int = 0    # Number of bullets that hit an asteroid
+        self.bullets_hit: int = 0    # Number of asteroids hit by bullets
         self.mines_hit: int = 0      # Number of asteroids hit by mines
         self.asteroids_hit: int = 0  # Number of asteroids hit (including ship collision)
 
@@ -418,11 +419,12 @@ class Ship:
             self.was_respawning_until_this_frame = True
             self._mine_limiter = self._mine_deploy_time
 
-            if self.mines_remaining != -1: # Mines are limited
+            if self.mines_remaining != -1:
+                # Mines are limited
                 self.mines_remaining -= 1
             self.mines_dropped += 1
-            mine_x = self.position[0]
-            mine_y = self.position[1]
+            mine_x = self.x
+            mine_y = self.y
             return Mine((mine_x, mine_y), owner=self)
         else:
             return None
@@ -436,14 +438,15 @@ class Ship:
             self._fire_limiter = self._fire_time
 
             # Bullet counters
-            if self.bullets_remaining != -1: # Bullets are limited
+            if self.bullets_remaining != -1:
+                # Bullets are limited
                 self.bullets_remaining -= 1
             self.bullets_shot += 1
 
             # Return the bullet object that was fired
             rad_heading = math.radians(self.heading)
-            bullet_x = self.position[0] + self.radius * math.cos(rad_heading)
-            bullet_y = self.position[1] + self.radius * math.sin(rad_heading)
+            bullet_x = self.x + self.radius * math.cos(rad_heading)
+            bullet_y = self.y + self.radius * math.sin(rad_heading)
             return Bullet((bullet_x, bullet_y), self.heading, owner=self)
 
         # Return nothing if we can't fire a bullet right now
