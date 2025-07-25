@@ -1,7 +1,5 @@
 # Kessler Game: API Documentation
 
-# For version 2.X.X
-
 ## Overview
 
 Kessler is a game designed for training and evaluating AI/ML agents in a 2D asteroid-shooter environment. Each frame, the game provides agent-controlled AIs with:
