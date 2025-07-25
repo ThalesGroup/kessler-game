@@ -18,7 +18,7 @@
 - Fix mine detonation off-by-one at 60 FPS and higher, due to floating point error accumulating over time, and the EPS checked against being way too small
 - Changed perf tracking's default setting to false, since it is rarely necessary and slows down the game measurably
 - Update PerfDict to return the aggregated times for each category over all frames, instead of one for each frame which is hard to parse and analyze, and was slow
-- Added GameState and ShipState classes, providing 3 interfaces for getting the game data: dictionary, properties, and fast_compact() modes
+- Added GameState and ShipState classes, providing 3 interfaces for getting the game data: dictionary, properties, and compact modes
 - Made bullet-asteroid collisions globally chronological, and much more fair as a result for when two ships are going for the same asteroids and the same asteroid collides with multiple bullets during the same frame
 - Made the rare case of two mines exploding at once more fair, such that if an asteroid is within the blast radius of two mines, it counts as the closer mine hitting it
 - Added framerate-independent dynamics to the ship by analytically integrating, instead of using an Euler approximation

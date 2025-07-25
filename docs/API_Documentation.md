@@ -14,7 +14,7 @@ These objects encapsulate the full exact state of the deterministic game.
 Agents can interact with these objects using:
 - **Python-style property access** (e.g. `ship_state.velocity`)
 - **Dictionary-style access** (e.g., `ship_state["velocity"]`)
-- **Raw list formats** using `.fast_compact`
+- **Raw list formats** using `.compact`
 - **Classic dictionary format** via `.dict`
 
 IMPORTANT: When the game setting competition_safe_mode is disabled, mutating game_state or ship_state will alter the internal game state, and this is undefined behavior.
@@ -31,7 +31,7 @@ Represents the full state of the agent’s own ship, including controls and cool
 - `ship_state.position` → `(x, y)` tuple
 - `ship_state["position"]`
 - `ship_state.dict` → `ShipOwnStateDict`
-- `ship_state.fast_compact` → `ShipDataList`
+- `ship_state.compact` → `ShipDataList`
 
 ### Attributes (Available in ships in GameState):
 
@@ -81,7 +81,7 @@ Represents the full state of the agent’s own ship, including controls and cool
 - `game_state.asteroids` → list of `AsteroidView`
 - `game_state["bullets"]`
 - `game_state.dict` → `GameStateDict`
-- `game_state.fast_compact` → `GameStateCompactDict`
+- `game_state.compact` → `GameStateCompactDict`
 
 ### Properties:
 
@@ -107,14 +107,14 @@ The correct way is to call .dict on the AsteroidView, which will give you your o
 
 ## Compact Representation
 
-### `fast_compact`
+### `compact`
 Returns a raw, fast format for training which should be over twice as fast to read the data from.
 This is recommended for advanced users who want the maximum speed, and are formatting the input data in their own way.
 
-- `game_state.fast_compact` → `GameStateCompactDict`
-- `ship_state.fast_compact` → `ShipDataList`
+- `game_state.compact` → `GameStateCompactDict`
+- `ship_state.compact` → `ShipDataList`
 
-#### Calling game_state.fast_compact might return a dictionary that looks like:
+#### Calling game_state.compact might return a dictionary that looks like:
 ```
 {
     "ships": [
@@ -154,7 +154,7 @@ The schema for bullets is:
 The schema for mines is:
 `[x: float, y: float, mass: float, fuse_time: float, remaining_time: float]`
 
-#### ship_state.fast_compact may return a single list that looks like:
+#### ship_state.compact may return a single list that looks like:
 `[395.29566377267156, 786.1447258308528, -120.00000000000011, -207.84609690826522, 240.0, 240.0, 300.0, 20.0, 1, 1, False, 3, 0, -1, 0, True, 0.0, 10.0, False, 0.0, 1.0, 0.0, 3.0, -480.0, 480.0, -180.0, 180.0, 240.0, 80.0]`
 
 With its schema being:

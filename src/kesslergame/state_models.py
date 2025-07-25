@@ -773,7 +773,7 @@ class ShipState:
         return [(k, getattr(self._view, k)) for k in self.keys()]
 
     @property
-    def fast_compact(self) -> ShipDataList:
+    def compact(self) -> ShipDataList:
         """Return the underlying ship list (mutable)."""
         return self._ship_data
 
@@ -821,7 +821,7 @@ class ShipState:
         inner = repr(self._view)
         if inner.startswith("<OwnShip"):
             inner = "<ShipState" + inner[len("<OwnShip"):]
-        documentation = "\nProperties: Same as keys in ShipState, along with .dict -> dict, .fast_compact -> dict"
+        documentation = "\nProperties: Same as keys in ShipState, along with .dict -> dict, .compact -> dict"
         return inner + documentation
 
     def __format__(self, format_spec: str) -> str:
@@ -1007,7 +1007,7 @@ class GameState:
                 f"Properties: ships, asteroids, bullets, mines, "
                 f"map_size, time_limit, time, frame, delta_time, "
                 f"frame_rate, random_asteroid_splits, competition_safe_mode, "
-                f".dict -> dict, .fast_compact -> dict")
+                f".dict -> dict, .compact -> dict")
 
     def __str__(self) -> str:
         return (f"GameState @ frame {self.frame} ({self.time}s)\n"
@@ -1018,7 +1018,7 @@ class GameState:
                 f"Properties: ships, asteroids, bullets, mines, "
                 f"map_size, time_limit, time, frame, delta_time, "
                 f"frame_rate, random_asteroid_splits, competition_safe_mode, "
-                f".dict -> dict, .fast_compact -> dict")
+                f".dict -> dict, .compact -> dict")
 
     @property
     def dict(self) -> GameStateDict:
@@ -1039,7 +1039,7 @@ class GameState:
         }
     
     @property
-    def fast_compact(self) -> GameStateCompactDict:
+    def compact(self) -> GameStateCompactDict:
         """Return a minimal raw list-based version of the game state for fast serialization. Recommended for agent training."""
         return {
             "ships": self._ship_data,
