@@ -81,7 +81,7 @@ def ship_asteroid_continuous_collision_time(ship_x: float, ship_y: float, ship_r
             start_t, end_t, v0, a, theta0, omega, dx, dy = ship_initial_state
             # Add some tolerance so it's more lenient and likely to fit in the first, and larger interval
             # Differentiating along the edge is a bit wacky, so we want to find the diff in the large interval, and not like an interval of zero width!
-            if end_t - 1e-14 <= t <= start_t + 1e-14:
+            if end_t - 1e-12 <= t <= start_t + 1e-12:
                 # Found the interval we differentiate in
                 theta_t = theta0 + omega * t
                 v_t = v0 + a * t
@@ -198,7 +198,7 @@ def ship_ship_continuous_collision_time(ship1_x: float, ship1_y: float, ship1_r:
             start_t, end_t, v0, a, theta0, omega, dx, dy = state
             # Add some tolerance so it's more lenient and likely to fit in the first, and larger interval
             # Differentiating along the edge is a bit wacky, so we want to find the diff in the large interval, and not like an interval of zero width!
-            if end_t - 1e-14 <= t <= start_t + 1e-14:
+            if end_t - 1e-12 <= t <= start_t + 1e-12:
                 # Found the interval we differentiate in
                 theta_t = theta0 + omega * t
                 v_t = v0 + a * t
@@ -219,7 +219,7 @@ def ship_ship_continuous_collision_time(ship1_x: float, ship1_y: float, ship1_r:
             start_t, end_t, v0, a, theta0, omega, dx, dy = state
             # Add some tolerance so it's more lenient and likely to fit in the first, and larger interval
             # Differentiating along the edge is a bit wacky, so we want to find the diff in the large interval, and not like an interval of zero width!
-            if end_t - 1e-14 <= t <= start_t + 1e-14:
+            if end_t - 1e-12 <= t <= start_t + 1e-12:
                 # Found the interval we differentiate in
                 theta_t = theta0 + omega * t
                 v_t = v0 + a * t

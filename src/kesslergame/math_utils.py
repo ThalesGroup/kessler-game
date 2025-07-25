@@ -83,7 +83,7 @@ def analytic_ship_movement_integration(v0: float, a: float, theta0: float, omega
         omega: turn rate (rad/sec)
         dt: t1 - t0, the time interval to integrate over (seconds)
     """
-    if abs(delta_t) < 1e-15:
+    if abs(delta_t) < 1e-12:
         # Integrating over basically no time into the future
         return 0.0, 0.0
     if abs(omega) < 0.15:

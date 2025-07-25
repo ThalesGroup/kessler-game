@@ -323,7 +323,7 @@ class Ship:
                     v1 = max_speed
                     accel_phase2 = 0.0
 
-        if t1 is None or abs(t1 - delta_time) < 1e-14:
+        if t1 is None or abs(t1 - delta_time) < 1e-12:
             # No exceeding limit within this step, use normal single-phase analytic integration
             dx, dy = analytic_ship_movement_integration(initial_speed, net_acc, theta0, omega, delta_time)
             self.x = (x0 + dx) % map_size[0]
@@ -331,7 +331,7 @@ class Ship:
             self.speed = initial_speed + net_acc * delta_time
             # Append the end state, so we can reverse-integrate later by plugging in a negative time
             self.integration_initial_states.append((0.0, -delta_time, self.speed, net_acc, theta0 + omega * delta_time, omega, -dx, -dy))
-        elif abs(t1) < 1e-14:
+        elif abs(t1) < 1e-12:
             assert v1 is not None
             # The first period is just zero length, so just skip it
             # This happens a lot when the ship is gunning it at full throttle, so handle it separately
