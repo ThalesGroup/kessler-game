@@ -1,6 +1,6 @@
 # Changelog
 
-## [2.X.X] - NEXT VERSION, maybe last 2.X.X aside from bug fixes or documentation
+## [2.4.0] - NEXT VERSION, maybe last 2.X.X aside from bug fixes or documentation
 - Fixed building MyPyC compiled wheels, so compiled modules are now actually being run to provide a 4-10X+ speed benefit over interpreted
 - Use cibuildwheel to automate building MyPyC compiled wheels, and upload to pypi and the Github release
 - Removed src module for cleaner imports, and less confusion with a duplicate module that is incompatible with MyPyC
