@@ -6,9 +6,8 @@
 import os
 import sys
 from tkinter import Tk, Canvas, NW
-from PIL import Image, ImageTk  # type: ignore[import-untyped]
+from PIL import Image, ImageTk
 
-from typing import Dict, Optional, List
 from .graphics_base import KesslerGraphics
 from ..ship import Ship
 from ..asteroid import Asteroid
@@ -17,9 +16,10 @@ from ..mines import Mine
 from ..score import Score
 from ..scenario import Scenario
 from ..team import Team
+from ..settings_dicts import UISettingsDict
 
 class GraphicsTK(KesslerGraphics):
-    def __init__(self, UI_settings: Optional[Dict[str, bool]] = None) -> None:
+    def __init__(self, UI_settings: UISettingsDict | None = None) -> None:
         # UI settings
         # lives, accuracy, asteroids hit, shots taken, bullets left
         # default_ui = {'ships': True, 'lives_remaining': True, 'accuracy': True, 'asteroids_hit': True}
@@ -36,9 +36,9 @@ class GraphicsTK(KesslerGraphics):
         self.script_dir = os.path.dirname(__file__)
         self.img_dir = os.path.join(self.script_dir, "images")
 
-    def sort_list(self, order, list_to_order):
+    def sort_list(self, order: list[str], list_to_order: list[str]) -> list[str]:
         i = len(order)
-        sorted_list = [None] * (len(list_to_order) + (len(order)))
+        sorted_list: list[str | None] = [None] * (len(list_to_order) + (len(order)))
         for value in list_to_order:
             try:
                 idx = order.index(value)
@@ -81,7 +81,7 @@ class GraphicsTK(KesslerGraphics):
                           "playerShip2_orange.png",
                           "playerShip3_orange.png"]
 
-        img_list = []
+        img_list: list[str] = []
         for file in os.listdir(self.img_dir):
             if file.endswith(".png") or file.endswith(".jpg"):
                 img_list.append(file)
@@ -93,10 +93,10 @@ class GraphicsTK(KesslerGraphics):
         self.ship_sprites = [ImageTk.PhotoImage(img) for img in self.ship_images]
         self.ship_icons = [ImageTk.PhotoImage((Image.open(image)).resize((ship_radius, ship_radius))) for image in self.image_paths]
 
-    def update(self, score: Score, ships: List[Ship], asteroids: List[Asteroid], bullets: List[Bullet], mines: List[Mine]) -> None:
+    def update(self, score: Score, ships: list[Ship], asteroids: list[Asteroid], bullets: list[Bullet], mines: list[Mine]) -> None:
         # Delete everything from canvas so we can re-plot
         self.game_canvas.delete("all")
-        self._per_frame_images: List[ImageTk.PhotoImage] = []  # Keep PhotoImage references for this frame, to prevent GC
+        self._per_frame_images: list[ImageTk.PhotoImage] = []  # Keep PhotoImage references for this frame, to prevent GC
 
         # Plot shields, bullets, ships, and asteroids
         self.plot_shields(ships)
@@ -114,7 +114,7 @@ class GraphicsTK(KesslerGraphics):
     def close(self) -> None:
         self.window.destroy()
 
-    def update_score(self, score: Score, ships: List[Ship]) -> None:
+    def update_score(self, score: Score, ships: list[Ship]) -> None:
 
         # offsets to deal with cleanliness and window borders covering data
         x_offset = round(5 * self.scale)
@@ -216,7 +216,7 @@ class GraphicsTK(KesslerGraphics):
 
         return team_info
 
-    def plot_ships(self, ships: List[Ship]) -> None:
+    def plot_ships(self, ships: list[Ship]) -> None:
         """
         Plots each ship on the game screen using cached sprites and rotating them
         """
@@ -243,7 +243,7 @@ class GraphicsTK(KesslerGraphics):
                     font=("Courier New", ship_id_font_size)
                 )
 
-    def plot_shields(self, ships: List[Ship]) -> None:
+    def plot_shields(self, ships: list[Ship]) -> None:
         """
         Plots each ship's shield ring
         """
@@ -265,7 +265,7 @@ class GraphicsTK(KesslerGraphics):
                     fill="black", outline=color
                 )
 
-    def plot_bullets(self, bullets: List[Bullet]) -> None:
+    def plot_bullets(self, bullets: list[Bullet]) -> None:
         """
         Plots each bullet object on the game screen
         """
@@ -278,7 +278,7 @@ class GraphicsTK(KesslerGraphics):
                 fill="#EE2737", width=round(3 * self.scale)
             )
 
-    def plot_asteroids(self, asteroids: List[Asteroid]) -> None:
+    def plot_asteroids(self, asteroids: list[Asteroid]) -> None:
         """
         Plots each asteroid object on the game screen
         """
@@ -291,7 +291,7 @@ class GraphicsTK(KesslerGraphics):
                 fill="grey"
             )
 
-    def plot_mines(self, mines: List[Mine]) -> None:
+    def plot_mines(self, mines: list[Mine]) -> None:
         """
         Plots and animates each mine object on the game screen and their detonations
         """
