@@ -22,6 +22,7 @@ class Team:
         self.deaths: int = 0
         self.eval_times: list[float] = []
         self.lives_remaining: int = 0
+        self.msg: list[str] = []
 
     @property
     def accuracy(self) -> float:

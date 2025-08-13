@@ -22,7 +22,7 @@ class Ship:
         '_fire_limiter', '_fire_time', '_mine_limiter', '_mine_deploy_time', 'mines_remaining',
         'bullets_remaining', 'bullets_shot', 'mines_dropped', 'bullets_hit',
         'mines_hit', 'asteroids_hit', 'custom_sprite_path', 'integration_initial_states',
-        '_state', '_ownstate'
+        '_state', '_ownstate', 'msg'
     )
     def __init__(self, ship_id: int,
                  position: tuple[float, float],
@@ -65,6 +65,7 @@ class Ship:
         self.turn_rate: float = 0.0
         self.fire: bool = False
         self.drop_mine: bool = False
+        self.msg: list[str] = []
 
         # Physical model constants/params
         self.thrust_range: tuple[float, float] = (-480.0, 480.0)  # m/s^2

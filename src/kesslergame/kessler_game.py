@@ -187,7 +187,7 @@ class KesslerGame:
                         game_state_to_controller = game_state
                     
                     # Evaluate each controller letting control be applied
-                    thrust, turn_rate, fire, drop_mine = controllers[ship_idx].actions(ShipState(ship.ownstate), game_state_to_controller)
+                    thrust, turn_rate, fire, drop_mine, msg = controllers[ship_idx].actions(ShipState(ship.ownstate), game_state_to_controller)
 
                     assert isinstance(thrust, (int, float)),    f"Controller {ship_idx} thrust is not a number: {thrust!r}"
                     assert isfinite(float(thrust)),             f"Controller {ship_idx} thrust is not finite: {thrust!r}"
@@ -195,11 +195,13 @@ class KesslerGame:
                     assert isfinite(float(turn_rate)),          f"Controller {ship_idx} turn_rate is not finite: {turn_rate!r}"
                     assert isinstance(fire, bool),              f"Controller {ship_idx} fire is not bool: {fire!r}"
                     assert isinstance(drop_mine, bool),         f"Controller {ship_idx} drop_mine is not bool: {drop_mine!r}"
+                    assert isinstance(msg, list),               f"Controller {ship_idx} msg is not list: {msg!r}"
 
                     ship.thrust = float(thrust) # Upcast potential ints to float
                     ship.turn_rate = float(turn_rate)
                     ship.fire = fire
                     ship.drop_mine = drop_mine
+                    ship.msg = msg
 
                     # Update controller evaluation time if performance tracking
                     if self.perf_tracker:

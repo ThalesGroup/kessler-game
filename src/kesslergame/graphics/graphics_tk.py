@@ -32,6 +32,7 @@ class GraphicsTK(KesslerGraphics):
         self.show_bullets_remaining = UI_settings.get('bullets_remaining', True)
         self.show_mines_remaining = UI_settings.get('mines_remaining', True)
         self.show_controller_name = UI_settings.get('controller_name', True)
+        self.show_msg = UI_settings.get('msg', True)
         self.scale = float(UI_settings.get('scale', 1.0))
         self.script_dir = os.path.dirname(__file__)
         self.img_dir = os.path.join(self.script_dir, "images")
@@ -213,6 +214,9 @@ class GraphicsTK(KesslerGraphics):
             team_info += "Bullets Left: " + str(team.bullets_remaining) + "\n"
         if self.show_mines_remaining:
             team_info += "Mines Left: " + str(team.mines_remaining) + "\n"
+        if self.show_msg:
+            for line in team.msg:
+                team_info += "Msg: " + line + "\n"
 
         return team_info
 

@@ -16,6 +16,7 @@ class UISettingsDict(TypedDict, total=False):
     shots_fired: bool
     bullets_remaining: bool
     controller_name: bool
+    msg: bool
     scale: float
 
 

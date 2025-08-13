@@ -14,7 +14,7 @@ class TestController(KesslerController):
         """
         ...
 
-    def actions(self, ship_state: Dict, game_state: Dict) -> Tuple[float, float, bool, bool]:
+    def actions(self, ship_state: Dict, game_state: Dict) -> Tuple[float, float, bool, bool, list[str]]:
         """
         Method processed each time step by this controller to determine what control actions to take
 
@@ -34,7 +34,9 @@ class TestController(KesslerController):
         fire = True
         drop_mine = False
 
-        return thrust, turn_rate, fire, drop_mine
+        msg = ["test1", "test2", "test3"]
+
+        return thrust, turn_rate, fire, drop_mine, msg
 
     @property
     def name(self) -> str:
