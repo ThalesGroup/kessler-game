@@ -1,6 +1,42 @@
 # Changelog
 
-## [2.4.0] - NEXT VERSION, maybe last 2.X.X aside from bug fixes or documentation
+## [2.5.0] - (INSERT DATE HERE) 2025
+- Fully overhauled physics and collision system for continuous, framerate-independent simulation
+- Unified game loop with globally chronological collision handling using a priority queue (typed version of Python heapq)
+- Continuous collision detection and resolution now occurs precisely at impact times within each frame
+- Ship respawn time can now begin and end mid-frame
+- If a ship gets hit at the instant is loses its respawn shield, it will still be protected
+- Robust numeric root finding to solve transcendental equations to detect ship-asteroid and ship-ship collisions
+- True continuous toroidal edge wrapping for all object hitboxes, including seamless corner wrapping
+- Mines and explosions now wrap continuously and accurately across map boundaries
+- Objects can now wrap across multiple edges simultaneously, and collisions still work accurately
+- Chain reactions (e.g. bullet -> asteroid -> child asteroid -> bullet) within the same frame are supported
+- Collisions are processed in deterministic priority order: bullet-asteroid > ship-asteroid > ship-ship > mine-asteroid > mine-ship
+- Distance and velocity-based tiebreakers ensure consistent behavior under simultaneous collisions
+- Bullets spawn with wrapped head position but do not wrap afterward, to preserve original game logic
+- Verified robust framerate independence through randomized testing from 5–60 FPS
+- Fixed numerous subtle bugs through extensive randomized testing across edge cases
+- Added basic pytest unit tests for math and collision utilities
+- Improved internal clarity and simplicity of the simulation code and game loop logic
+- Simulation behaves like the infinite-FPS limit of previous versions, while maintaining performance
+- Known limitation: assumes integer FPS >= 5 (definitely minimum 2 is required)
+- Known limitation: floating-point imprecision may cause long-run divergence
+- Known limitation: assumes mine detonation time is an integer number of seconds, so it always lands on a frame boundary at an integer FPS
+- Handle controller exceptions in competition safe mode
+- Added arbitrary mine fuse times, even ones that do not land on a frame boundary. This is not used in practice, but is supported.
+- Preprocess scenarios to wrap their asteroids inbounds. This is less confusing for agents, otherwise they will see out of bounds asteroids on frame 0, and inbounds asteroids on all subsequent frames
+- Simpler handling for when mine-asteroid collision distance is 0
+- More flexible bullet/mine limit definitions in both Scenario constructor, and Ship state dicts
+- Improved input data validation for scenario and game setting definitions
+- Allow defining scenario asteroid states by both speed/angle, as well as velocity (vx, vy) components
+- Added comprehensive score tracking for all 5 collision types (bullet-asteroid, ship-asteroid, ship-ship, mine-ship, mine-asteroid)
+- Added comprehensive death tracking for 3 death types (asteroid, ship, mine)
+- Sanitize Scenarios to remove numpy types, and only use builtin Python types
+- For PEP 517/518 compliance, unified setup.py and setup_mypyc.py and use "python -m build --wheel" to build wheels instead of "python setup_mypyc.py bdist_wheel"
+- Updated Tkinter graphics to display "confirmed accuracy" which ignores live bullets in accuracy calculation
+- Add version number to Tk graphics window title
+
+## [2.4.0] - 28 July 2025
 - Fixed building MyPyC compiled wheels, so compiled modules are now actually being run to provide a 4-10X+ speed benefit over interpreted
 - Use cibuildwheel to automate building MyPyC compiled wheels, and upload to pypi and the Github release
 - Removed src module for cleaner imports, and less confusion with a duplicate module that is incompatible with MyPyC

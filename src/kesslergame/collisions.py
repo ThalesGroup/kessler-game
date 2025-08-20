@@ -1,43 +1,127 @@
 # -*- coding: utf-8 -*-
-# Copyright © 2022 Thales. All Rights Reserved.
+# Copyright © 2025 Thales. All Rights Reserved.
 # NOTICE: This file is subject to the license agreement defined in file 'LICENSE', which is part of
 # this source code package.
 
-from math import isnan, sqrt, hypot, dist, nan, inf, isfinite, sin, cos
+from math import isnan, sqrt, dist, nan, inf, isfinite, sin, cos, nextafter
+from typing import Callable
 
-from .math_utils import solve_quadratic, project_point_onto_segment_and_get_t, analytic_ship_movement_integration, find_first_leq_zero
+from .math_utils import solve_quadratic, project_point_onto_segment_and_get_t, analytic_ship_movement_integration, find_first_leq_zero_segmented
+
+
+def time_until_exit(x: float, y: float, vx: float, vy: float, map_width: float, map_height: float) -> float:
+    """Returns the time when a point moving at (vx, vy) will fully exit the map."""
+    tx = inf
+    ty = inf
+
+    if vx > 0.0:
+        tx = (map_width - x) / vx
+    elif vx < 0.0:
+        tx = -x / vx
+
+    if vy > 0.0:
+        ty = (map_height - y) / vy
+    elif vy < 0.0:
+        ty = -y / vy
+
+    return min(tx, ty)
+
+
+def time_until_enter(x: float, y: float, vx: float, vy: float, map_width: float, map_height: float) -> float:
+    """Returns the time when a point moving at (vx, vy) will fully enter the map."""
+    tx = -inf
+    ty = -inf
+
+    if vx > 0.0:
+        tx = -x / vx
+    elif vx < 0.0:
+        tx = (map_width - x) / vx
+
+    if vy > 0.0:
+        ty = -y / vy
+    elif vy < 0.0:
+        ty = (map_height - y) / vy
+
+    return max(tx, ty)
+
+
+def debug_plot_function_over_time(
+    func: Callable[[float], tuple[float, float, float]],
+    time_interval_start: float,
+    time_interval_end: float,
+    root_t: float,
+    title: str
+) -> None:
+    import matplotlib.pyplot as plt
+    import numpy as np
+
+    ts = np.linspace(time_interval_start, time_interval_end, 1000)
+    fs = []
+    dfs = []
+    ddfs = []
+    for t in ts:
+        f_val, df_val, ddf_val = func(t)
+        fs.append(f_val)
+        dfs.append(df_val)
+        ddfs.append(ddf_val)
+
+    # Simple vertical scaling
+    df_scale = 1.0 / (np.max(np.abs(dfs)) + 1e-8)
+    ddf_scale = 1.0 / (np.max(np.abs(ddfs)) + 1e-8)
+
+    plt.figure(figsize=(12, 6))
+    plt.plot(ts, fs, label="f(t)", color='blue')
+    plt.plot(ts, np.array(dfs) * df_scale * np.max(np.abs(fs)), label="f'(t) (scaled)", color='green')
+    plt.plot(ts, np.array(ddfs) * ddf_scale * np.max(np.abs(fs)), label="f''(t) (scaled)", color='purple')
+
+    if not isnan(root_t):
+        plt.axvline(root_t, color='red', linestyle='--', label=f'Root t = {root_t:.6f}')
+    plt.axhline(0, color='black', linestyle=':', linewidth=0.5)
+
+    plt.xlabel("Time (t)")
+    plt.ylabel("Value")
+    plt.title(title)
+    plt.legend()
+    plt.grid(True)
+    plt.tight_layout()
+    plt.show()
 
 
 def ship_asteroid_continuous_collision_time(ship_x: float, ship_y: float, ship_r: float, ship_speed: float,
                                             ship_integration_initial_states: list[tuple[float, float, float, float, float, float, float, float]],
-                                            ast_x: float, ast_y: float, ast_vx: float, ast_vy: float, ast_r: float, ast_speed: float, delta_time: float) -> float:
+                                            ast_x: float, ast_y: float, ast_vx: float, ast_vy: float, ast_r: float, ast_speed: float,
+                                            time_interval_start: float, time_interval_end: float, debug_plot: bool = False) -> float:
     # Given the asteroid and ship states at this instant, this function checks whether a collision
-    # between them has occurred anytime within the past delta_time seconds.
-    # This function returns nan if not, and returns t, the earliest time of collision where -delta_time <= t <= 0.0, if a collision was detected.
-    
+    # between them has occurred anytime within the time interval. The current time is treated as t=0
+    # This function returns nan if not, and returns t, the earliest time of collision where time_interval_start <= t <= time_interval_end, if a collision was detected.
+
     # The asteroid moves at constant velocity
     # The ship can accelerate, and move in a spiral path. Integration is required to solve for its movement.
-
-    # Wrapping is NOT CONSIDERED. That would make things too complex, and is not necessary 99.999999% of the time.
-    # Not considering wrapping will only introduce false negatives, and not false positives, so this will be lenient for players.
 
     # First, we do an early rejection check. If the asteroid and ship are far enough away that with their combined velocities
     # it is impossible that they could have collided within the past delta_time seconds, then return nan
     # This check can be made stronger if we find the magnitude of their relative velocity, but that's more expensive to calculate compared to this conservative check
-    combined_vel = abs(ship_speed) + ast_speed #sqrt(ast_vx * ast_vx + ast_vy * ast_vy)
+    max_time_diff_from_now = max(abs(time_interval_start), abs(time_interval_end))
+    # Find the upper bound of their combined velocities
+    # Basically because the ship could have been moving faster at the start of the interval, we integrate with the at^2/2 factor added in, with max ship accel
+    combined_vel = abs(ship_speed) + (480.0 + 80.0) * 0.5 * max_time_diff_from_now + ast_speed  # sqrt(ast_vx * ast_vx + ast_vy * ast_vy)
+    assert ast_speed >= 0.0
     delta_x = ship_x - ast_x
     delta_y = ship_y - ast_y
-    max_separation = delta_time * combined_vel + ship_r + ast_r
+    max_separation = max_time_diff_from_now * combined_vel + ship_r + ast_r
     # if separation <= 0.0 then we collided, but we still go through the rest of the function to find when it first happened
     if delta_x * delta_x + delta_y * delta_y > max_separation * max_separation:
-        # There is no possible way these could have been colliding in the time interval [-delta_time, 0.0]
+        # There is no possible way these could have been colliding in the time interval [time_interval_start, time_interval_end]
         # even if they were booking it away from each other in this past frame
         return nan
 
     # This is the function we want to root find
     def squared_separation_between_ship_and_asteroid_at_t(t: float) -> tuple[float, float, float]:
         # Returns f(t), f'(t), f''(t)
-        assert -delta_time <= t <= 0.0
+        assert time_interval_start <= t <= time_interval_end, (
+            f"Time 't' is out of bounds: expected {time_interval_start} <= t <= {time_interval_end}, "
+            f"but got t = {t}"
+        )
         # Back-extrapolate the asteroid
         ax = ast_x + ast_vx * t
         ay = ast_y + ast_vy * t
@@ -57,7 +141,7 @@ def ship_asteroid_continuous_collision_time(ship_x: float, ship_y: float, ship_r
                 dx, dy = analytic_ship_movement_integration(v0, a, theta0, omega, t - start_t)
                 dx_sum += dx
                 dy_sum += dy
-                break # Break since no more full intervals will lie beyond this, as the integral is assumed to be from 0 to t, where t <= 0
+                break  # Break since no more full intervals will lie beyond this, as the integral is assumed to be from 0 to t, where t <= 0
             else:
                 # This interval is fully included within t. Add the full integral amount
                 assert t <= end_t
@@ -79,12 +163,10 @@ def ship_asteroid_continuous_collision_time(ship_x: float, ship_y: float, ship_r
         ddt2_sy: float = 0.0
         for ship_initial_state in ship_integration_initial_states:
             start_t, end_t, v0, a, theta0, omega, dx, dy = ship_initial_state
-            # Add some tolerance so it's more lenient and likely to fit in the first, and larger interval
-            # Differentiating along the edge is a bit wacky, so we want to find the diff in the large interval, and not like an interval of zero width!
-            if end_t - 1e-12 <= t <= start_t + 1e-12:
+            if end_t <= t <= start_t:
                 # Found the interval we differentiate in
-                theta_t = theta0 + omega * t
-                v_t = v0 + a * t
+                theta_t = theta0 + omega * (t - start_t)
+                v_t = v0 + a * (t - start_t)
                 sin_theta_t = sin(theta_t)
                 cos_theta_t = cos(theta_t)
                 ddt_sx = v_t * cos_theta_t
@@ -102,32 +184,60 @@ def ship_asteroid_continuous_collision_time(ship_x: float, ship_y: float, ship_r
         derivative_value = 2.0 * (dist_x * deriv_dt_dist_x + dist_y * deriv_dt_dist_y)
 
         second_derivative_value = 2.0 * (dist_x * second_deriv_dt_dist_x + deriv_dt_dist_x * deriv_dt_dist_x + dist_y * second_deriv_dt_dist_y + deriv_dt_dist_y * deriv_dt_dist_y)
-        
+
         return function_value, derivative_value, second_derivative_value
 
-    return find_first_leq_zero(squared_separation_between_ship_and_asteroid_at_t, -delta_time, 0.0)
+    ship_intervals = len(ship_integration_initial_states)
+    assert ship_intervals <= 2
+    if ship_intervals == 2:
+        # The separation function's second derivative will be discontinuous in 1 spot
+        # We need to do the root finding interval-by-interval, and not just the whole thing at once.
+        interval_mid = ship_integration_initial_states[0][1]
+        #assert time_interval_start <= interval_mid <= time_interval_end # nvm this isn't true because the start of the interval can be delayed!
+        if time_interval_start < interval_mid:
+            root_t = find_first_leq_zero_segmented(squared_separation_between_ship_and_asteroid_at_t, time_interval_start, nextafter(interval_mid, -inf))
+            if isnan(root_t):
+                # Try the next interval
+                root_t = find_first_leq_zero_segmented(squared_separation_between_ship_and_asteroid_at_t, nextafter(interval_mid, inf), time_interval_end)
+        else:
+            # The start of the interval was delayed. It's just one interval then!
+            root_t = find_first_leq_zero_segmented(squared_separation_between_ship_and_asteroid_at_t, time_interval_start, time_interval_end)
+    else:
+        root_t = find_first_leq_zero_segmented(squared_separation_between_ship_and_asteroid_at_t, time_interval_start, time_interval_end)
+
+    if debug_plot:
+        debug_plot_function_over_time(
+            squared_separation_between_ship_and_asteroid_at_t,
+            time_interval_start,
+            time_interval_end,
+            root_t,
+            "Ship-Ast Dist f(t) and Derivatives (scaled) Over Time"
+        )
+
+    return root_t
 
 
 def ship_ship_continuous_collision_time(ship1_x: float, ship1_y: float, ship1_r: float, ship1_speed: float,
                                         ship1_integration_initial_states: list[tuple[float, float, float, float, float, float, float, float]],
                                         ship2_x: float, ship2_y: float, ship2_r: float, ship2_speed: float,
-                                        ship2_integration_initial_states: list[tuple[float, float, float, float, float, float, float, float]], delta_time: float) -> float:
+                                        ship2_integration_initial_states: list[tuple[float, float, float, float, float, float, float, float]],
+                                        time_interval_start: float, time_interval_end: float, debug_plot: bool = False) -> float:
     # Given the two ship states at this instant, this function checks whether a collision
-    # between them has occurred anytime within the past delta_time seconds.
-    # This function returns nan if not, and returns t, the earliest time of collision where -delta_time <= t <= 0.0, if a collision was detected.
+    # between them has occurred anytime within the time interval
+    # This function returns nan if not, and returns t, the earliest time of collision where time_interval_start <= t <= time_interval_end, if a collision was detected.
 
     # Both ships can accelerate and move in spiral paths. Integration is required to solve for their movements.
-
-    # Wrapping is NOT CONSIDERED. That would make things too complex, and is not necessary 99.999999% of the time.
-    # Not considering wrapping will only introduce false negatives, and not false positives, so this will be lenient for players.
 
     # First, we do an early rejection check. If the ships are far enough away that with their combined velocities
     # it is impossible that they could have collided within the past delta_time seconds, then return nan
     # This check can be made stronger if we find the magnitude of their relative velocity, but that's more expensive to calculate compared to this conservative check
-    combined_vel = abs(ship1_speed) + abs(ship2_speed)
+    max_time_diff_from_now = max(abs(time_interval_start), abs(time_interval_end))
+    # Find the upper bound of their combined velocities
+    # Basically because the ships could have been moving faster at the start of the interval, we integrate with the at^2/2 factor added in, with max ship accel
+    combined_vel = abs(ship1_speed) + abs(ship2_speed) + (480.0 + 80.0) * max_time_diff_from_now
     delta_x = ship1_x - ship2_x
     delta_y = ship1_y - ship2_y
-    max_separation = delta_time * combined_vel + ship1_r + ship2_r
+    max_separation = max_time_diff_from_now * combined_vel + ship1_r + ship2_r
     # if separation <= 0.0 then we collided, but we still go through the rest of the function to find when it first happened
     if delta_x * delta_x + delta_y * delta_y > max_separation * max_separation:
         # There is no possible way these could have been colliding in the time interval [-delta_time, 0.0]
@@ -137,7 +247,7 @@ def ship_ship_continuous_collision_time(ship1_x: float, ship1_y: float, ship1_r:
     # This is the function we want to root find
     def squared_separation_between_ships_at_t(t: float) -> tuple[float, float, float]:
         # Returns f(t), f'(t), f''(t)
-        assert -delta_time <= t <= 0.0
+        assert time_interval_start <= t <= time_interval_end
 
         dx1_sum = 0.0
         dy1_sum = 0.0
@@ -153,7 +263,7 @@ def ship_ship_continuous_collision_time(ship1_x: float, ship1_y: float, ship1_r:
                 dx, dy = analytic_ship_movement_integration(v0, a, theta0, omega, t - start_t)
                 dx1_sum += dx
                 dy1_sum += dy
-                break # Break since no more full intervals will lie beyond this, as the integral is assumed to be from 0 to t, where t <= 0
+                break  # Break since no more full intervals will lie beyond this, as the integral is assumed to be from 0 to t, where t <= 0
             else:
                 # This interval is fully included within t. Add the full integral amount
                 assert t <= end_t
@@ -168,7 +278,7 @@ def ship_ship_continuous_collision_time(ship1_x: float, ship1_y: float, ship1_r:
                 dx, dy = analytic_ship_movement_integration(v0, a, theta0, omega, t - start_t)
                 dx2_sum += dx
                 dy2_sum += dy
-                break # Break since no more full intervals will lie beyond this, as the integral is assumed to be from 0 to t, where t <= 0
+                break  # Break since no more full intervals will lie beyond this, as the integral is assumed to be from 0 to t, where t <= 0
             else:
                 # This interval is fully included within t. Add the full integral amount
                 assert t <= end_t
@@ -196,12 +306,10 @@ def ship_ship_continuous_collision_time(ship1_x: float, ship1_y: float, ship1_r:
         # Compute derivatives for ship 1
         for state in ship1_integration_initial_states:
             start_t, end_t, v0, a, theta0, omega, dx, dy = state
-            # Add some tolerance so it's more lenient and likely to fit in the first, and larger interval
-            # Differentiating along the edge is a bit wacky, so we want to find the diff in the large interval, and not like an interval of zero width!
-            if end_t - 1e-12 <= t <= start_t + 1e-12:
+            if end_t <= t <= start_t:
                 # Found the interval we differentiate in
-                theta_t = theta0 + omega * t
-                v_t = v0 + a * t
+                theta_t = theta0 + omega * (t - start_t)
+                v_t = v0 + a * (t - start_t)
                 sin_theta_t = sin(theta_t)
                 cos_theta_t = cos(theta_t)
                 ddt_sx1 = v_t * cos_theta_t
@@ -217,12 +325,10 @@ def ship_ship_continuous_collision_time(ship1_x: float, ship1_y: float, ship1_r:
         # Compute derivatives for ship 2
         for state in ship2_integration_initial_states:
             start_t, end_t, v0, a, theta0, omega, dx, dy = state
-            # Add some tolerance so it's more lenient and likely to fit in the first, and larger interval
-            # Differentiating along the edge is a bit wacky, so we want to find the diff in the large interval, and not like an interval of zero width!
-            if end_t - 1e-12 <= t <= start_t + 1e-12:
+            if end_t <= t <= start_t:
                 # Found the interval we differentiate in
-                theta_t = theta0 + omega * t
-                v_t = v0 + a * t
+                theta_t = theta0 + omega * (t - start_t)
+                v_t = v0 + a * (t - start_t)
                 sin_theta_t = sin(theta_t)
                 cos_theta_t = cos(theta_t)
                 ddt_sx2 = v_t * cos_theta_t
@@ -246,22 +352,79 @@ def ship_ship_continuous_collision_time(ship1_x: float, ship1_y: float, ship1_r:
         second_derivative_value = 2.0 * (dist_x * second_deriv_dt_dist_x + deriv_dt_dist_x * deriv_dt_dist_x + dist_y * second_deriv_dt_dist_y + deriv_dt_dist_y * deriv_dt_dist_y)
 
         return function_value, derivative_value, second_derivative_value
-    
-    return find_first_leq_zero(squared_separation_between_ships_at_t, -delta_time, 0.0)
+
+    ship1_intervals = len(ship1_integration_initial_states)
+    ship2_intervals = len(ship2_integration_initial_states)
+    assert ship1_intervals <= 2 and ship2_intervals <= 2
+    if ship1_intervals == 2 and ship2_intervals == 2:
+        # The separation function's second derivative will be discontinuous in 2 spots
+        # We need to do the root finding interval-by-interval, and not just the whole thing at once.
+        interval_mid_1 = ship1_integration_initial_states[0][1]  # end_t
+        interval_mid_2 = ship2_integration_initial_states[0][1]  # end_t
+        if interval_mid_1 > interval_mid_2:
+            # Fix interval order
+            interval_mid_1, interval_mid_2 = interval_mid_2, interval_mid_1
+        if time_interval_start <= interval_mid_1 <= interval_mid_2 <= time_interval_end:
+            root_t = find_first_leq_zero_segmented(squared_separation_between_ships_at_t, time_interval_start, nextafter(interval_mid_1, -inf))
+            if isnan(root_t):
+                # Try the next interval
+                root_t = find_first_leq_zero_segmented(squared_separation_between_ships_at_t, nextafter(interval_mid_1, inf), nextafter(interval_mid_2, -inf))
+                if isnan(root_t):
+                    # Try the last interval
+                    root_t = find_first_leq_zero_segmented(squared_separation_between_ships_at_t, nextafter(interval_mid_2, inf), time_interval_end)
+        elif interval_mid_1 <= time_interval_start <= interval_mid_2 <= time_interval_end:
+            # Start got delayed, so there's only 2 intervals
+            root_t = find_first_leq_zero_segmented(squared_separation_between_ships_at_t, time_interval_start, nextafter(interval_mid_2, -inf))
+            if isnan(root_t):
+                # Try the last interval
+                root_t = find_first_leq_zero_segmented(squared_separation_between_ships_at_t, nextafter(interval_mid_2, inf), time_interval_end)
+        else:
+            # Start got SUPER delayed, so there's only one interval
+            assert interval_mid_1 <= interval_mid_2 <= time_interval_start <= time_interval_end
+            root_t = find_first_leq_zero_segmented(squared_separation_between_ships_at_t, time_interval_start, time_interval_end)
+    elif ship1_intervals == 2 or ship2_intervals == 2:
+        # The separation function's second derivative will be discontinuous in 1 spot
+        # We need to do the root finding interval-by-interval, and not just the whole thing at once.
+        if ship1_intervals == 2:
+            interval_mid = ship1_integration_initial_states[0][1]
+        else:
+            interval_mid = ship2_integration_initial_states[0][1]
+        #assert time_interval_start <= interval_mid <= time_interval_end
+        if time_interval_start < interval_mid:
+            root_t = find_first_leq_zero_segmented(squared_separation_between_ships_at_t, time_interval_start, nextafter(interval_mid, -inf))
+            if isnan(root_t):
+                # Try the next interval
+                root_t = find_first_leq_zero_segmented(squared_separation_between_ships_at_t, nextafter(interval_mid, inf), time_interval_end)
+        else:
+            # The start got delayed, so that there's only one valid interval now
+            root_t = find_first_leq_zero_segmented(squared_separation_between_ships_at_t, time_interval_start, time_interval_end)
+    else:
+        root_t = find_first_leq_zero_segmented(squared_separation_between_ships_at_t, time_interval_start, time_interval_end)
+
+    if debug_plot:
+        debug_plot_function_over_time(
+            squared_separation_between_ships_at_t,
+            time_interval_start,
+            time_interval_end,
+            root_t,
+            "Ship-Ship Dist f(t) and Derivatives (scaled) Over Time"
+        )
+
+    return root_t
 
 
-def collision_time_interval(
-    ax: float, # Line seg start
+def circle_line_collision_time_interval(
+    ax: float,  # Line seg start
     ay: float,
-    bx: float, # Line seg end
+    bx: float,  # Line seg end
     by: float,
-    vx: float, # Line vel
+    vx: float,  # Line vel
     vy: float,
-    cx: float, # Circle center
+    cx: float,  # Circle center
     cy: float,
-    cvx: float, # Circle vel
+    cvx: float,  # Circle vel
     cvy: float,
-    r: float # Circle radius
+    r: float  # Circle radius
 ) -> tuple[float, float]:
     """
     Figure out when a moving line segment and moving circle are actually colliding.
@@ -283,16 +446,23 @@ def collision_time_interval(
     rvx = vx - cvx
     rvy = vy - cvy
 
-    # Where is A/B relative to the (now stationary) circle center?
+    # A/B relative to the (now stationary) circle center
     a0x = ax - cx
     a0y = ay - cy
     b0x = bx - cx
     b0y = by - cy
 
+    # In case there is zero relative motion, check whether they collide never or always
+    if abs(rvx) < 1e-12 and abs(rvy) < 1e-12:
+        if circle_line_collision_discrete(a0x, a0y, b0x, b0y, 0.0, 0.0, r):
+            return (-inf, inf)
+        else:
+            return (nan, nan)
+
     # Direction and length of the segment
     seg_dx = b0x - a0x
     seg_dy = b0y - a0y
-    seg_len = hypot(seg_dx, seg_dy)  # Should be 12.0, but calculate it to be general
+    seg_len = sqrt(seg_dx * seg_dx + seg_dy * seg_dy)  # Should be 12.0 for a bullet, but calculate it to be general, and to allow for "virtual bullets"
 
     # Degenerate segment, just a point
     if seg_len == 0.0:
@@ -313,17 +483,21 @@ def collision_time_interval(
 
     t0_B, t1_B = solve_quadratic(q2, q1, q0)
 
-    # If nothing ever collides at either endpoint, we’re done
-    if isnan(t0_A) and isnan(t0_B):
+    # If nothing ever collides at either endpoint,
+    # and the circle is too large to fit through between endpoints,
+    # we’re done. No possible way the further check will catch a collision!
+    if isnan(t0_A) and isnan(t0_B) and seg_len < r:
         return (nan, nan)
 
     # Get the min/max collision window from the two endpoints
+    # t0 is the min of all non-nan times
     t0 = inf
     if not isnan(t0_A):
         t0 = t0_A
     if not isnan(t0_B) and t0_B < t0:
         t0 = t0_B
 
+    # t1 is the max of all non-nan times
     t1 = -inf
     if not isnan(t1_A):
         t1 = t1_A
@@ -332,7 +506,7 @@ def collision_time_interval(
 
     # Check the case where the segment middle collides before the head/tail does
     # To handle that, find the normal (perpendicular) direction to the segment and project velocity there.
-    if seg_len > 0:
+    if seg_len > 0.0:
         nx = seg_dy / seg_len
         ny = -seg_dx / seg_len
     else:
@@ -352,35 +526,43 @@ def collision_time_interval(
     r_a0_to_center_y = -a0y
     ast_proj_n = r_a0_to_center_x * nx + r_a0_to_center_y * ny
 
-    # The bullet head and tails are both located at position 0 on the normal axis
-    t_ast_center = ast_proj_n / v_proj_n if v_proj_n != 0.0 else inf
-    # The time it takes for the relative bullet vel to travel the radius of the asteroid along normal axis
-    t_diff_ast_radius = r / v_proj_n if v_proj_n != 0.0 else inf
+    # Guard against v_proj_n == 0. This case happens when the asteroids are stationary or moving parallel to the bullet
+    if abs(v_proj_n) < 1e-12:
+        t0_mid = nan
+        t1_mid = nan
+    else:
+        # The bullet head and tails are both located at position 0 on the normal axis
+        t_ast_center = ast_proj_n / v_proj_n
+        # The time it takes for the relative bullet vel to travel the radius of the asteroid along normal axis
+        t_diff_ast_radius = r / v_proj_n
 
-    t0_mid = t_ast_center - t_diff_ast_radius
-    t1_mid = t_ast_center + t_diff_ast_radius
+        t0_mid = t_ast_center - t_diff_ast_radius
+        t1_mid = t_ast_center + t_diff_ast_radius
 
-    # Just because the times exist (which they pretty much always do), doesn’t mean the bullet actually collides with the circle there (which it very rarely does)
-    # Need to project the circle center onto the two lines and clamp them to the bounds of the other two lines
-    a0x_t0m = a0x + rvx * t0_mid
-    a0y_t0m = a0y + rvy * t0_mid
-    b0x_t0m = b0x + rvx * t0_mid
-    b0y_t0m = b0y + rvy * t0_mid
-    t_proj_0 = project_point_onto_segment_and_get_t(a0x_t0m, a0y_t0m, b0x_t0m, b0y_t0m, 0.0, 0.0)
+        # Just because the times exist (which they pretty much always do), doesn’t mean the bullet actually collides with the circle there (which it very rarely does)
+        # Need to project the circle center onto the two lines and clamp them to the bounds of the other two lines
+        a0x_t0m = a0x + rvx * t0_mid
+        a0y_t0m = a0y + rvy * t0_mid
+        b0x_t0m = b0x + rvx * t0_mid
+        b0y_t0m = b0y + rvy * t0_mid
+        t_proj_0 = project_point_onto_segment_and_get_t(a0x_t0m, a0y_t0m, b0x_t0m, b0y_t0m, 0.0, 0.0)
 
-    a0x_t1m = a0x + rvx * t1_mid
-    a0y_t1m = a0y + rvy * t1_mid
-    b0x_t1m = b0x + rvx * t1_mid
-    b0y_t1m = b0y + rvy * t1_mid
-    t_proj_1 = project_point_onto_segment_and_get_t(a0x_t1m, a0y_t1m, b0x_t1m, b0y_t1m, 0.0, 0.0)
+        a0x_t1m = a0x + rvx * t1_mid
+        a0y_t1m = a0y + rvy * t1_mid
+        b0x_t1m = b0x + rvx * t1_mid
+        b0y_t1m = b0y + rvy * t1_mid
+        t_proj_1 = project_point_onto_segment_and_get_t(a0x_t1m, a0y_t1m, b0x_t1m, b0y_t1m, 0.0, 0.0)
 
-    # Only count these times if the projection is inside the segment at all (t in [0, 1])
-    if 0.0 <= t_proj_0 <= 1.0:
-        # This is a legit "middle-of-segment" first contact
-        t0 = t0_mid
-    if 0.0 <= t_proj_1 <= 1.0:
-        # This is a legit "middle-of-segment" last contact
-        t1 = t1_mid
+        # Only count these times if the projection is inside the segment at all (t in [0, 1])
+        if 0.0 <= t_proj_0 <= 1.0:
+            # This is a legit "middle-of-segment" first contact
+            # Add an eps to make this assertion easier. Due to floating point imprecision, it can fail without that! Just suuuuuuper rare.
+            assert t0_mid <= t0 + 1e-12
+            t0 = t0_mid
+        if 0.0 <= t_proj_1 <= 1.0:
+            # This is a legit "middle-of-segment" last contact
+            assert t1_mid + 1e-12 >= t1
+            t1 = t1_mid
 
     # If neither t0 nor t1 got set properly, there was no collision
     if not (isfinite(t0) and isfinite(t1)):
@@ -403,15 +585,10 @@ def project_origin_onto_segment_dist_sq(x1: float, y1: float, x2: float, y2: flo
         return x1 * x1 + y1 * y1
 
     # Compute the projection parameter t of the origin onto the segment,
-    # where t=0 yields (x1, y1) and t=1 yields (x2, y2).
+    # where t = 0 yields (x1, y1) and t = 1 yields (x2, y2).
     # Clamp t to [0, 1] to stay on the segment.
     t = -(x1 * dx + y1 * dy) / len_sq
-    # Avoid max/min to optimize for mypyc compilation
-    if t > 1.0:
-        t = 1.0
-    elif t < 0.0:
-        t = 0.0
-    #t = max(0.0, min(1.0, t))
+    t = max(0.0, min(1.0, t))
 
     # Compute the closest point's coordinates.
     px = x1 + t * dx
@@ -422,18 +599,18 @@ def project_origin_onto_segment_dist_sq(x1: float, y1: float, x2: float, y2: flo
 
 
 def circle_line_collision_continuous(
-    ax0: float, # One end of line segment at t=0
+    ax0: float,  # One end of line segment at t = 0
     ay0: float,
-    bx0: float, # The other end of line segment at t=0
+    bx0: float,  # The other end of line segment at t = 0
     by0: float,
-    line_vel_x: float, # Velocity of line in u/s
+    line_vel_x: float,  # Velocity of line in u/s
     line_vel_y: float,
-    circle_x: float, # Initial position of circle
+    circle_x: float,  # Initial position of circle
     circle_y: float,
-    circle_vel_x: float, # Velocity of circle
+    circle_vel_x: float,  # Velocity of circle
     circle_vel_y: float,
     circle_radius: float,
-    delta_time: float # Duration of a frame
+    delta_time: float  # Duration of a frame
 ) -> bool:
     # Returns whether a moving circle and line segment collided within the time interval [-delta_time, 0]
 
@@ -444,7 +621,7 @@ def circle_line_collision_continuous(
     # Find the min and max x and y coordinates that any endpoint of the line segment can take on over the past frame
 
     # X
-    vx = (line_vel_x - circle_vel_x) * delta_time # Per frame velocities
+    vx = (line_vel_x - circle_vel_x) * delta_time  # Per frame velocities
     if ax0 < bx0:
         if vx >= 0.0:
             min_x = ax0 - vx
@@ -513,22 +690,30 @@ def circle_line_collision_continuous(
 
     # Check whether any of these projected points with clamping are within the circle. If yes, there's a collision.
     if (
-        project_origin_onto_segment_dist_sq(ax, ay, bx, by) <= rad_sq or # A - B
-        project_origin_onto_segment_dist_sq(cx, cy, dx, dy) <= rad_sq or # C - D
-        project_origin_onto_segment_dist_sq(ax, ay, cx, cy) <= rad_sq or # A - C
-        project_origin_onto_segment_dist_sq(bx, by, dx, dy) <= rad_sq    # B - D
+        project_origin_onto_segment_dist_sq(ax, ay, bx, by) <= rad_sq or  # A - B
+        project_origin_onto_segment_dist_sq(cx, cy, dx, dy) <= rad_sq or  # C - D
+        project_origin_onto_segment_dist_sq(ax, ay, cx, cy) <= rad_sq or  # A - C
+        project_origin_onto_segment_dist_sq(bx, by, dx, dy) <= rad_sq     # B - D
     ):
         return True
 
     # If still no collision, then the only way this can still be a collision is if the circle is completely contained within the parallelogram,
     # which is impossible in this case because the bullet is too short for an asteroid to fit between its ends.
-    # But for completeness, for the general solution, you can uncomment the following code which checks whether the origin is within the parallelogram using a cross product orientation checker
-    '''
-    def is_origin_in_parallelogram(ax, ay, bx, by, cx, cy, dx, dy):
-        def cross(xa, ya, xb, yb):
+    # BUT we're now using a virtual bullet to do clamping, and this "virtual bullet" is super long, so we need this!
+    # Check whether the origin is within the parallelogram using a cross product orientation checker
+
+    def is_origin_in_parallelogram(
+        ax: float, ay: float,
+        bx: float, by: float,
+        cx: float, cy: float,
+        dx: float, dy: float
+    ) -> bool:
+        def cross(xa: float, ya: float, xb: float, yb: float) -> float:
             return xa * yb - ya * xb
-        corners = [(ax, ay), (bx, by), (dx, dy), (cx, cy)]
-        sign = None
+
+        corners: list[tuple[float, float]] = [(ax, ay), (bx, by), (dx, dy), (cx, cy)]
+        sign: bool | None = None
+
         for i in range(4):
             x0, y0 = corners[i]
             x1, y1 = corners[(i + 1) % 4]
@@ -545,23 +730,29 @@ def circle_line_collision_continuous(
                 if (cp > 0.0) != sign:
                     return False
         return True
-    if is_origin_in_parallelogram(ax, ay, bx, by, cx, cy, dx, dy):
-        return True
-    '''
-    return False
+
+    delta_x = ax - bx
+    delta_y = ay - by
+    seg_len_sq = delta_x * delta_x + delta_y * delta_y
+    if seg_len_sq < rad_sq:
+        # The line segment (one side of the parallelogram) is too short to contain the circle completely
+        # so there's no possible collision here
+        return False
+    else:
+        # It's possible for the parallelogram to completely contain the circle, so we check for that case
+        return is_origin_in_parallelogram(ax, ay, bx, by, cx, cy, dx, dy)
 
 
-def circle_line_collision_discrete(line_A: tuple[float, float], line_B: tuple[float, float], center: tuple[float, float], radius: float) -> bool:
-    # Unused
+def circle_line_collision_discrete(ax: float, ay: float, bx: float, by: float, cx: float, cy: float, radius: float) -> bool:
     # Accurate version of the discrete collision check
-    
+
     # Quick rejection check:
     # Check if circle edge is within the outer bounds of the line segment (offset for radius)
-    x_bounds = [min(line_A[0], line_B[0]) - radius, max(line_A[0], line_B[0]) + radius]
-    if center[0] < x_bounds[0] or center[0] > x_bounds[1]:
+    x_bounds = [min(ax, bx) - radius, max(ax, bx) + radius]
+    if cx < x_bounds[0] or cx > x_bounds[1]:
         return False
-    y_bounds = [min(line_A[1], line_B[1]) - radius, max(line_A[1], line_B[1]) + radius]
-    if center[1] < y_bounds[0] or center[1] > y_bounds[1]:
+    y_bounds = [min(ay, by) - radius, max(ay, by) + radius]
+    if cy < y_bounds[0] or cy > y_bounds[1]:
         return False
 
     # This works by taking the circle's center, and projecting it onto the line segment's line, and clamping it to the line segment.
@@ -569,10 +760,10 @@ def circle_line_collision_discrete(line_A: tuple[float, float], line_B: tuple[fl
     # We can then check whether this point is inside the circle.
 
     # Fix frame of reference to the circle center. Shift the segment so the circle is at the origin
-    ax = line_A[0] - center[0]
-    ay = line_A[1] - center[1]
-    bx = line_B[0] - center[0]
-    by = line_B[1] - center[1]
+    ax = ax - cx
+    ay = ay - cy
+    bx = bx - cx
+    by = by - cy
 
     # Now project the origin (0, 0), the center of the circle, onto the segment A-B
     dx = bx - ax
@@ -586,12 +777,7 @@ def circle_line_collision_discrete(line_A: tuple[float, float], line_B: tuple[fl
         # Compute projection parameter t of origin onto line defined by segment A-B
         # Clamp t to [0, 1] to project onto the actual segment
         t = -(ax * dx + ay * dy) / len_sq
-        # Avoid max/min to optimize for mypyc compilation
-        if t > 1.0:
-            t = 1.0
-        elif t < 0.0:
-            t = 0.0
-        #t = max(0.0, min(1.0, t))
+        t = max(0.0, min(1.0, t))
 
         # Compute closest point on segment to the circle's center (which is now at origin)
         px = ax + t * dx
@@ -607,7 +793,7 @@ def circle_line_collision_discrete(line_A: tuple[float, float], line_B: tuple[fl
 def circle_line_collision_old(line_A: tuple[float, float], line_B: tuple[float, float], center: tuple[float, float], radius: float) -> bool:
     # Unused
     # Old collision check, which was discrete, and also had false positives:
-    
+
     # Check if circle edge is within the outer bounds of the line segment (offset for radius)
     # Not 100% accurate (some false positives) but fast and rare inaccuracies
     x_bounds = [min(line_A[0], line_B[0]) - radius, max(line_A[0], line_B[0]) + radius]

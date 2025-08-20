@@ -1,11 +1,11 @@
 # -*- coding: utf-8 -*-
-# Copyright © 2022 Thales. All Rights Reserved.
+# Copyright © 2025 Thales. All Rights Reserved.
 # NOTICE: This file is subject to the license agreement defined in file 'LICENSE', which is part of
 # this source code package.
 
 from __future__ import annotations
 
-import math
+from math import radians, cos, sin
 from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
@@ -15,16 +15,17 @@ from .state_models import BulletDataList
 
 class Bullet:
     __slots__ = ('owner', 'speed', 'length', 'mass', 'x', 'y', 'vx', 'vy', 'heading', 'tail_delta_x', 'tail_delta_y', '_state')
+
     def __init__(self, position: tuple[float, float], heading: float, owner: Ship) -> None:
         self.owner: Ship = owner
         self.speed: float = 800.0  # m/s
-        self.length: float = 12.0 # m
+        self.length: float = 12.0  # m
         self.mass: float = 1.0  # kg
         self.x, self.y = position
         self.heading: float = heading
-        rad_heading: float = math.radians(heading)
-        cos_heading: float = math.cos(rad_heading)
-        sin_heading: float = math.sin(rad_heading)
+        rad_heading: float = radians(heading)
+        cos_heading: float = cos(rad_heading)
+        sin_heading: float = sin(rad_heading)
         self.tail_delta_x = -self.length * cos_heading
         self.tail_delta_y = -self.length * sin_heading
         self.vx = self.speed * cos_heading
@@ -40,13 +41,18 @@ class Bullet:
             self.length
         ]
 
-    def update(self, delta_time: float = 1 / 30) -> None:
+    def update(self, delta_time: float) -> None:
         # Update the position:
-        self.x += self.vx * delta_time
-        self.y += self.vy * delta_time
+        # Avoid attribute lookup using local var
+        x = self.x + self.vx * delta_time
+        y = self.y + self.vy * delta_time
+        self.x = x
+        self.y = y
         # Keep _state in sync
-        self._state[0] = self.x
-        self._state[1] = self.y
+        # Cache class attribute lookup
+        state = self._state
+        state[0] = x
+        state[1] = y
 
     def destruct(self) -> None:
         pass
@@ -66,3 +72,15 @@ class Bullet:
     @property
     def tail(self) -> tuple[float, float]:
         return (self.x + self.tail_delta_x, self.y + self.tail_delta_y)
+
+    def __repr__(self) -> str:
+        return (
+            f"<Bullet("
+            f"owner={self.owner}, "
+            f"x={self.x}, y={self.y}, "
+            f"vx={self.vx}, vy={self.vy}, "
+            f"heading={self.heading}, "
+            f"tail_delta_x={self.tail_delta_x}, tail_delta_y={self.tail_delta_y}, "
+            f"speed={self.speed}, mass={self.mass}, length={self.length}"
+            f")>"
+        )

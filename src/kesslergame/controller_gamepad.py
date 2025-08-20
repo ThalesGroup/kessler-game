@@ -1,4 +1,7 @@
 # -*- coding: utf-8 -*-
+# Copyright © 2025 Thales. All Rights Reserved.
+# NOTICE: This file is subject to the license agreement defined in file 'LICENSE', which is part of
+# this source code package.
 
 from .state_models import GameState, ShipState
 from .controller import KesslerController
@@ -26,8 +29,8 @@ class GamepadController(KesslerController):
         self.pause_handler()
 
         # deadzones (both left and right using same currently)
-        joystick_deadzone = 0.05
-        trigger_deadzone = 0.05
+        joystick_deadzone = 0.1
+        trigger_deadzone = 0.1
 
         # Set thrust control
         if abs(self.gamepad.LeftJoystickY) > joystick_deadzone:
@@ -74,6 +77,7 @@ class GamepadController(KesslerController):
                     break_pause = True
             self.time_last_paused = time.perf_counter()
 
+
 class XboxController(object):
     """
     Class for Xbox inputs credit to Kevin Hughes and the TensorCart project.
@@ -81,8 +85,8 @@ class XboxController(object):
     MIT License
     """
 
-    MAX_TRIG_VAL: Final[float] = 2.0**8
-    MAX_JOY_VAL: Final[float] = 2.0**15
+    MAX_TRIG_VAL: Final[float] = 2**8 - 1  # Trigger ranges from 0-255
+    MAX_JOY_VAL: Final[float] = 2**15  # Joystick ranges from -32768 to 32767. This is slightly asymmetric on the top end, but it's no biggie
 
     def __init__(self) -> None:
 
@@ -111,32 +115,30 @@ class XboxController(object):
         self._monitor_thread.daemon = True
         self._monitor_thread.start()
 
-
     def read(self) -> list[int | Any]:
         x = self.LeftJoystickX
         y = self.LeftJoystickY
         a = self.A
-        b = self.X # b=1, x=2
+        b = self.X  # b=1, x=2
         rb = self.RightBumper
         return [x, y, a, b, rb]
-
 
     def _monitor_controller(self) -> NoReturn:
         while True:
             events = get_gamepad()
             for event in events:
                 if event.code == 'ABS_Y':
-                    self.LeftJoystickY = event.state / XboxController.MAX_JOY_VAL # normalize between -1 and 1
+                    self.LeftJoystickY = event.state / XboxController.MAX_JOY_VAL  # normalize between -1 and 1
                 elif event.code == 'ABS_X':
-                    self.LeftJoystickX = event.state / XboxController.MAX_JOY_VAL # normalize between -1 and 1
+                    self.LeftJoystickX = event.state / XboxController.MAX_JOY_VAL  # normalize between -1 and 1
                 elif event.code == 'ABS_RY':
-                    self.RightJoystickY = event.state / XboxController.MAX_JOY_VAL # normalize between -1 and 1
+                    self.RightJoystickY = event.state / XboxController.MAX_JOY_VAL  # normalize between -1 and 1
                 elif event.code == 'ABS_RX':
-                    self.RightJoystickX = event.state / XboxController.MAX_JOY_VAL # normalize between -1 and 1
+                    self.RightJoystickX = event.state / XboxController.MAX_JOY_VAL  # normalize between -1 and 1
                 elif event.code == 'ABS_Z':
-                    self.LeftTrigger = event.state / XboxController.MAX_TRIG_VAL # normalize between 0 and 1
+                    self.LeftTrigger = event.state / XboxController.MAX_TRIG_VAL  # normalize between 0 and 1
                 elif event.code == 'ABS_RZ':
-                    self.RightTrigger = event.state / XboxController.MAX_TRIG_VAL # normalize between 0 and 1
+                    self.RightTrigger = event.state / XboxController.MAX_TRIG_VAL  # normalize between 0 and 1
                 elif event.code == 'BTN_TL':
                     self.LeftBumper = event.state
                 elif event.code == 'BTN_TR':

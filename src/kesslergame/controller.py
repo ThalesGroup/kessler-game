@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-# Copyright © 2022 Thales. All Rights Reserved.
+# Copyright © 2025 Thales. All Rights Reserved.
 # NOTICE: This file is subject to the license agreement defined in file 'LICENSE', which is part of
 # this source code package.
 
@@ -19,7 +19,6 @@ class KesslerController:
         """
 
         raise NotImplementedError('Your derived KesslerController must include an actions method for control input.')
-
 
     # Property to store the ID for the ship this controller is attached to during a scenario
     @property

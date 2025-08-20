@@ -1,14 +1,14 @@
 # -*- coding: utf-8 -*-
-# Copyright © 2022 Thales. All Rights Reserved.
+# Copyright © 2025 Thales. All Rights Reserved.
 # NOTICE: This file is subject to the license agreement defined in file 'LICENSE', which is part of
 # this source code package.
 
 from __future__ import annotations
 
 import random
-import math
 
-from typing import TYPE_CHECKING, Union
+from math import pi, cos, sin, sqrt, degrees, radians, atan2
+from typing import TYPE_CHECKING
 if TYPE_CHECKING:
     from .ship import Ship
     from .bullet import Bullet
@@ -19,6 +19,7 @@ from .state_models import AsteroidDataList
 class Asteroid:
     """ Sprite that represents an asteroid. """
     __slots__ = ('size', 'num_children', 'radius', 'mass', 'x', 'y', 'vx', 'vy', 'angle', 'speed', 'turnrate', '_state')
+
     def __init__(self,
                  position: tuple[float, float],
                  speed: float | None = None,
@@ -34,7 +35,7 @@ class Asteroid:
         """
 
         # Set size to 4 if none is specified. Notify if out of size range
-        if size:
+        if size is not None:
             if 1 <= size <= 4:
                 self.size = size
             else:
@@ -55,17 +56,17 @@ class Asteroid:
         # Set collision radius based on size
         self.radius: float = self.size * 8.0
 
-        self.mass: float = 0.25 * math.pi * self.radius * self.radius
+        self.mass: float = 0.25 * pi * self.radius * self.radius
 
         # Use optional angle and speed arguments otherwise generate random angle and speed
-        starting_angle_rad: float = math.radians(angle) if angle is not None else random.random() * 2.0 * math.pi
+        starting_angle_rad: float = radians(angle) if angle is not None else random.random() * 2.0 * pi
         starting_speed: float = speed if speed is not None else max_speed * random.random()
 
         # Set velocity based on starting angle and speed
-        self.vx = starting_speed * math.cos(starting_angle_rad)
-        self.vy = starting_speed * math.sin(starting_angle_rad)
+        self.vx = starting_speed * cos(starting_angle_rad)
+        self.vy = starting_speed * sin(starting_angle_rad)
 
-        self.speed = abs(starting_speed) # This is used for early rejection in collision detection
+        self.speed = abs(starting_speed)  # This is used for early rejection in collision detection
 
         # Random rotations for use in display or future use with complex hit box
         self.angle: float = random.uniform(0.0, 360.0)
@@ -83,7 +84,7 @@ class Asteroid:
     @property
     def state(self) -> AsteroidDataList:
         return self._state
-    
+
     @property
     def position(self) -> tuple[float, float]:
         return (self.x, self.y)
@@ -92,16 +93,20 @@ class Asteroid:
     def velocity(self) -> tuple[float, float]:
         return (self.vx, self.vy)
 
-    def update(self, delta_time: float = 1 / 30, map_size: tuple[int, int] = (1000, 800)) -> None:
+    def update(self, delta_time: float, map_size: tuple[int, int]) -> None:
         """ Move the asteroid based on velocity"""
-        self.x = (self.x + self.vx * delta_time) % map_size[0]
-        self.y = (self.y + self.vy * delta_time) % map_size[1]
-        # Update mutable state
-        self._state[0] = self.x
-        self._state[1] = self.y
+        # Avoid attribute lookup using local var
+        x = (self.x + self.vx * delta_time) % map_size[0]
+        y = (self.y + self.vy * delta_time) % map_size[1]
+        self.x = x
+        self.y = y
+        # Update mutable state (cache the lookup first)
+        state = self._state
+        state[0] = x
+        state[1] = y
         self.angle += delta_time * self.turnrate
 
-    def destruct(self, impactor: Union['Bullet', 'Mine', 'Ship'], random_ast_split: bool) -> list[Asteroid]:
+    def destruct(self, impactor: Bullet | Mine | Ship, map_size: tuple[int, int], random_ast_split: bool) -> list[Asteroid]:
         """ Spawn child asteroids"""
         # Split angle is the angle off of the new velocity vector for the two asteroids to the sides, the center child
         # asteroid continues on the new velocity path
@@ -110,45 +115,64 @@ class Asteroid:
         split_angle_bound: float = 30.0
         if self.size != 1:
             if isinstance(impactor, Mine):
-                delta_x = impactor.x - self.x
-                delta_y = impactor.y - self.y
-                dist = math.sqrt(delta_x * delta_x + delta_y * delta_y)
+                if impactor.x - self.x > 0.5 * map_size[0]:
+                    mine_x_wrapped = impactor.x - map_size[0]
+                elif impactor.x - self.x < -0.5 * map_size[0]:
+                    mine_x_wrapped = impactor.x + map_size[0]
+                else:
+                    mine_x_wrapped = impactor.x
+
+                if impactor.y - self.y > 0.5 * map_size[1]:
+                    mine_y_wrapped = impactor.y - map_size[1]
+                elif impactor.y - self.y < -0.5 * map_size[1]:
+                    mine_y_wrapped = impactor.y + map_size[1]
+                else:
+                    mine_y_wrapped = impactor.y
+
+                delta_x = mine_x_wrapped - self.x
+                delta_y = mine_y_wrapped - self.y
+
+                dist = sqrt(delta_x * delta_x + delta_y * delta_y)
                 force = impactor.calculate_blast_force(dist=dist, obj=self)
                 a = force / self.mass
                 # calculate "impulse" based on acc
                 if dist != 0.0:
-                    cos_theta = (self.x - impactor.x) / dist
-                    sin_theta = (self.y - impactor.y) / dist
-                    vfx = self.vx + a * cos_theta
-                    vfy = self.vy + a * sin_theta
-
-                    # Calculate speed of resultant asteroid(s) based on velocity vector
-                    v = math.sqrt(vfx * vfx + vfy * vfy)
+                    cos_theta = (self.x - mine_x_wrapped) / dist
+                    sin_theta = (self.y - mine_y_wrapped) / dist
                 else:
-                    vfx = self.vx
-                    vfy = self.vy
-                    
-                    # Calculate speed of resultant asteroid(s) based on velocity vector
-                    # This v calculation matches the speed you would get in the nonzero dist case, if you take the limit as dist -> 0
-                    v = math.sqrt(vfx * vfx + vfy * vfy + a * a)
-                    # Split angle is the angle off of the new velocity vector for the two asteroids to the sides, the center child
-                    # asteroid continues on the new velocity path
-                    split_angle_bound *= 8.0
+                    # Dist is 0! The mine is coincident with the asteroid. Just pretend the mine is right behind the asteroid
+                    ast_speed = sqrt(self.vx * self.vx + self.vy * self.vy)
+                    if ast_speed != 0.0:
+                        cos_theta = self.vx / ast_speed
+                        sin_theta = self.vy / ast_speed
+                    else:
+                        # NO WAY. The mine is coincident with the asteroid, AND the asteroid was stationary.
+                        # How is that even possible? I'm baffled.
+                        # Go buy a lottery ticket!
+                        # Anyway, just pretend the angle is 0 in this case, and calculate the cos/sin of that
+                        cos_theta = 1.0
+                        sin_theta = 0.0
+                vfx = self.vx + a * cos_theta
+                vfy = self.vy + a * sin_theta
+
+                # Calculate speed of resultant asteroid(s) based on velocity vector
+                v = sqrt(vfx * vfx + vfy * vfy)
             else:
+                # Impactor is a bullet or ship
                 # Calculating new velocity vector of asteroid children based on bullet-asteroid collision/momentum
                 # Currently collisions are considered perfectly inelastic i.e. the bullet is absorbed by the asteroid
                 # This assumption doesn't matter much now due to the fact that bullets are "destroyed" by impact with the
                 # asteroid and the bullet mass is significantly smaller than the asteroid. If this changes, these calculations
                 # may need to change
-
-                vfx = (1.0 / (impactor.mass + self.mass)) * (impactor.mass * impactor.vx + self.mass * self.vx)
-                vfy = (1.0 / (impactor.mass + self.mass)) * (impactor.mass * impactor.vy + self.mass * self.vy)
+                total_mass = impactor.mass + self.mass
+                vfx = (impactor.mass * impactor.vx + self.mass * self.vx) / total_mass
+                vfy = (impactor.mass * impactor.vy + self.mass * self.vy) / total_mass
 
                 # Calculate speed of resultant asteroid(s) based on velocity vector
-                v = math.sqrt(vfx * vfx + vfy * vfy)
+                v = sqrt(vfx * vfx + vfy * vfy)
 
             # Calculate angle of center asteroid for split (degrees)
-            theta = math.degrees(math.atan2(vfy, vfx))
+            theta = degrees(atan2(vfy, vfx))
 
             if random_ast_split:
                 # Use random angle offsets
@@ -174,3 +198,14 @@ class Asteroid:
             # return [Asteroid(position=self.position, size=self.size-1) for _ in range(self.num_children)]
         else:
             return []
+
+    def __repr__(self) -> str:
+        return (
+            f"<Asteroid("
+            f"x={self.x}, y={self.y}, "
+            f"vx={self.vx}, vy={self.vy}, "
+            f"speed={self.speed}, angle={self.angle}, turnrate={self.turnrate}, "
+            f"size={self.size}, radius={self.radius}, mass={self.mass}, "
+            f"num_children={self.num_children}"
+            f")>"
+        )

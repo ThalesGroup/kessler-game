@@ -50,7 +50,8 @@ displaying it in a 3d environment. To contribute to the UE5 project, you will ne
 - Follow installation instructions for UDP-Unreal from its included README
 - Right click `kessler_graphics.uproject` under the `kessler_graphics` directory and select "Generate Visual Studio Project Files" from the context menu
 - Launch the project by double-clicking on `kessler_graphics.uproject`, and select "Yes" if prompted to rebuild engine modules
-NOTE: UE5 graphics currently do not support the display of mines, and it also has other bugs. It is not currently recommended to be used.
+
+**NOTE: UE5 graphics currently does not support the display of mines, does not support the new continuous wrapping, and it also has other bugs. It is not recommended at the moment.**
 
 ## Documentation
 

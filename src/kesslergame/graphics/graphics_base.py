@@ -1,11 +1,10 @@
 # -*- coding: utf-8 -*-
-# Copyright © 2022 Thales. All Rights Reserved.
+# Copyright © 2025 Thales. All Rights Reserved.
 # NOTICE: This file is subject to the license agreement defined in file 'LICENSE', which is part of
 # this source code package.
 
 from __future__ import annotations
 from typing import TYPE_CHECKING
-from tkinter import *
 
 if TYPE_CHECKING:
     from ..ship import Ship

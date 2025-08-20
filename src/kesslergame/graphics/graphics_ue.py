@@ -1,10 +1,9 @@
 # -*- coding: utf-8 -*-
-# Copyright © 2022 Thales. All Rights Reserved.
+# Copyright © 2025 Thales. All Rights Reserved.
 # NOTICE: This file is subject to the license agreement defined in file 'LICENSE', which is part of
 # this source code package.
 
 import socket
-import numpy as np
 
 from ..ship import Ship
 from ..asteroid import Asteroid
@@ -28,7 +27,7 @@ class GraphicsUE(KesslerGraphics):
     def start(self, scenario: Scenario) -> None:
         self.map_size = scenario.map_size
         ship_count = len(scenario.ships())
-        team_count = len(np.unique([ship.team for ship in scenario.ships()]))
+        team_count = len(set(ship.team for ship in scenario.ships()))
 
         # TODO Launch game
 

@@ -34,3 +34,11 @@ considered for contributions. Well-commented, concise, and clean code is require
 - Once there are no errors, please also try compiling wheels with MyPyC, which use these static type hints to generate compiled extension modules which allow this game to run much more efficiently.
 - To compile the game, type `python setup_mypyc.py bdist_wheel` within the root of the repo, where setup_mypyc.py lives. If all is successful, a platform-specific wheel will be placed in dist/
 - Please then do `pip install wheelname.whl` to install and test the wheel. MyPyC wheels will do runtime type checking, so this can reveal more issues that need to be fixed.
+
+### Flake8 linter
+- You are encouraged to install flake8, and run `flake8 src --ignore=E501,E265,W503,W504` in the root of the repo to catch some potential code style issues
+
+### Tests
+- You are encouraged to run the tests within the tests directory.
+- Some of the tests are unit tests you can run with pytest
+- Some other tests are just full-game runs you can perform

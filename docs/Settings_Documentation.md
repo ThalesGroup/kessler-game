@@ -26,15 +26,15 @@ game = KesslerGame(settings=game_settings)
 | `graphics_obj`          | `KesslerGraphics or None` | `None`                            | Custom graphics object instance, if applicable.                                               |
 | `realtime_multiplier`   | `float`                   | `1.0` (or `0.0` for `NoGraphics`) | Controls simulation speed. `1.0` is real-time, higher values speed up the game. 0 is max speed|
 | `frame_skip`            | `int`                     | `max(1, round(realtime_multiplier))` | Renders 1 out of every frame_skip frames. Helps graphics keep up with higher game speeds |
-| `time_limit`            | `float`                   | `inf`                        | Time (s) after which the scenario stops. Overrides limit defined in Scenario.                 |
+| `time_limit`            | `float`                   | `inf`                        | Default time (s) after which the scenario stops. Only takes effect if scenario does not define its own time limit. |
 | `random_ast_splits`     | `bool`                    | `False`                           | Whether asteroids split at random angles upon destruction                                     |
-| `competition_safe_mode` | `bool`                    | `True`                            | False sends mutable game_state and ship_state. This is a bit faster, but riskier             |
+| `competition_safe_mode` | `bool`                    | `True`                            | False sends mutable game_state and ship_state. This is significantly faster since it avoids copying, but it's riskier. Also this handles controller exceptions and lets the game move on, and assigns a default null action to the controller at fault. |
 
 ---
 
 ## UI Settings (`UI_settings`)
 
-The `UI_settings` field controls which HUD/UI elements are shown during the game.
+The `UI_settings` field controls which HUD/UI elements are shown during the game. If this is left empty, it will default to enabling all displays, with a scale of 1.0
 
 | Key                 | Type    | Default | Description                                |
 | ------------------- | ------- | ------- | ------------------------------------------ |
@@ -42,18 +42,10 @@ The `UI_settings` field controls which HUD/UI elements are shown during the game
 | `lives_remaining`   | `bool`  | `True`  | Shows how many lives are left.             |
 | `accuracy`          | `bool`  | `True`  | Displays accuracy percentage               |
 | `asteroids_hit`     | `bool`  | `True`  | Shows number of asteroids hit by each team |
-| `shots_fired`       | `bool`  | `False` | Tracks number of shots fired.              |
+| `shots_fired`       | `bool`  | `True`  | Tracks number of shots fired.              |
 | `bullets_remaining` | `bool`  | `True`  | Displays remaining bullets.                |
 | `controller_name`   | `bool`  | `True`  | Shows the controller’s name.               |
 | `scale`             | `float` | `1.0`   | Scaling factor for UI size.                |
-
-### Special Values
-
-* `'all'`: Use `'all'` to enable all available UI elements, and with a default UI scale of `1.0`.
-
-```python
-"UI_settings": "all"
-```
 
 ---
 
@@ -69,6 +61,7 @@ game_settings = {
     'graphics_type': GraphicsType.Tkinter,
     'realtime_multiplier': 1.0,
     'graphics_obj': None,
+    'time_limit': 60,
     'frequency': 30,
     'UI_settings': {
         'ships': True,
